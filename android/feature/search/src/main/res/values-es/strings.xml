@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_search_search_title">Buscar</string>
+    <string name="feature_search_search_empty_title">Personas y mascotas</string>
+    <string name="feature_search_search_empty_message">Aquí podrás encontrar a otros dueños y a sus mascotas, y explorar fotos.</string>
+</resources>

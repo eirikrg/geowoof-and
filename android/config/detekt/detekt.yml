@@ -1,0 +1,32 @@
+# Overrides on top of detekt's default configuration (buildUponDefaultConfig = true).
+build:
+  maxIssues: 0
+
+naming:
+  FunctionNaming:
+    # Composable functions are PascalCase.
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    # Compose-style private top-level values (e.g. private val DefaultCenter).
+    privatePropertyPattern: '[A-Za-z][_A-Za-z0-9]*'
+  EnumNaming:
+    enumEntryPattern: '[A-Z][A-Za-z0-9]*'
+
+complexity:
+  LongParameterList:
+    ignoreAnnotated: ['Composable']
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+
+style:
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/designsystem/theme/ColorSchemes.kt']
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview', 'PreviewLightDark', 'PreviewFontScale', 'PreviewScreenSizes']
+  MaxLineLength:
+    maxLineLength: 120
+  ForbiddenComment:
+    # No empty TODOs in delivered code; pending work goes to docs/backlog.md.
+    comments: ['TODO:', 'FIXME:', 'STOPSHIP:']

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_social_community_title">Community</string>
+    <string name="feature_social_community_empty_title">Your community feed</string>
+    <string name="feature_social_community_empty_message">Here you will see the photos and walks your friends share with their pets.</string>
+</resources>

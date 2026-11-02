@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">GeoWoof</string>
+    <string name="destination_map">Map</string>
+    <string name="destination_community">Community</string>
+    <string name="destination_search">Search</string>
+    <string name="destination_profile">Profile</string>
+</resources>

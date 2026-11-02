@@ -1,0 +1,12 @@
+{
+  "name": "geowoof-theme-generator",
+  "private": true,
+  "description": "Generates the Material 3 color schemes of :core:designsystem from the brand seed color.",
+  "type": "module",
+  "scripts": {
+    "generate": "node generate-colors.mjs"
+  },
+  "dependencies": {
+    "@material/material-color-utilities": "0.3.0"
+  }
+}

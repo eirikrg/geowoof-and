@@ -1,0 +1,92 @@
+[versions]
+# Android SDK levels used by the convention plugins (latest stable platform: Android 17).
+compileSdk = "37"
+targetSdk = "37"
+minSdk = "26"
+
+# Build tooling (AGP, Kotlin and KSP are updated together).
+androidGradlePlugin = "9.5.0"
+kotlin = "2.4.21"
+ksp = "2.3.13"
+hilt = "2.60.1"
+secrets = "2.0.1"
+googleServices = "4.5.0"
+spotless = "8.10.4"
+ktlint = "1.8.0"
+composeRulesKtlint = "0.6.8"
+detekt = "1.23.8"
+
+# AndroidX
+androidxActivity = "1.13.0"
+androidxComposeBom = "2026.09.00"
+androidxCore = "1.19.1"
+androidxCoreSplashscreen = "1.2.0"
+androidxLifecycle = "2.11.0"
+androidxNavigation = "2.10.2"
+
+# Libraries
+kotlinxSerializationJson = "1.12.0"
+mapsCompose = "9.0.1"
+
+# Testing
+junit4 = "4.13.2"
+androidxTestCore = "1.7.0"
+androidxTestExtJunit = "1.3.0"
+# Pinned above the version pulled by compose ui-test (3.5): older Espresso calls APIs removed in Android 17.
+androidxTestEspresso = "3.7.0"
+robolectric = "4.17"
+
+[libraries]
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidxActivity" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-material3-adaptive-navigationSuite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCore" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "androidxCoreSplashscreen" }
+androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "androidxNavigation" }
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
+
+# Testing
+junit = { group = "junit", name = "junit", version.ref = "junit4" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }
+androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "androidxTestEspresso" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+
+# Build logic (convention plugins)
+android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
+kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+compose-gradlePlugin = { group = "org.jetbrains.kotlin", name = "compose-compiler-gradle-plugin", version.ref = "kotlin" }
+
+[bundles]
+compose-ui-test = ["junit", "androidx-test-core", "androidx-test-ext-junit", "androidx-test-espresso-core", "robolectric", "androidx-compose-ui-test-junit4"]
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secrets" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+
+# Convention plugins (android/build-logic)
+geowoof-android-application = { id = "geowoof.android.application" }
+geowoof-android-application-compose = { id = "geowoof.android.application.compose" }
+geowoof-android-library = { id = "geowoof.android.library" }
+geowoof-android-library-compose = { id = "geowoof.android.library.compose" }
+geowoof-android-feature = { id = "geowoof.android.feature" }
+geowoof-hilt = { id = "geowoof.hilt" }

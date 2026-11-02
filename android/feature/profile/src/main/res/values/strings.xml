@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_profile_profile_title">Profile</string>
+    <string name="feature_profile_profile_empty_title">Your profile</string>
+    <string name="feature_profile_profile_empty_message">Here you will see your profile, your pets and your walks.</string>
+</resources>

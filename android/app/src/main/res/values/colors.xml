@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand seed color (docs/architecture.md, section 4.6). -->
+    <color name="ic_launcher_background">#FFF28C38</color>
+    <color name="splash_background">#FFFFF8F5</color>
+</resources>

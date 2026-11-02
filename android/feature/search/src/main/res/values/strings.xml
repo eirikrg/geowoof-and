@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_search_search_title">Search</string>
+    <string name="feature_search_search_empty_title">People and pets</string>
+    <string name="feature_search_search_empty_message">Here you will be able to find other owners and their pets, and explore photos.</string>
+</resources>

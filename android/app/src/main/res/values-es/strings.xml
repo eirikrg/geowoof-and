@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="destination_map">Mapa</string>
+    <string name="destination_community">Comunidad</string>
+    <string name="destination_search">Buscar</string>
+    <string name="destination_profile">Perfil</string>
+</resources>
