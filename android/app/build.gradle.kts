@@ -79,6 +79,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.feature.auth)
     implementation(projects.feature.map)
+    implementation(projects.feature.pets)
     implementation(projects.feature.profile)
     implementation(projects.feature.search)
     implementation(projects.feature.settings)

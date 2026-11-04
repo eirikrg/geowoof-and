@@ -42,4 +42,23 @@
     <string name="core_ui_field_code_incomplete">Enter the 6-digit code</string>
     <string name="core_ui_code_label">Code</string>
     <string name="core_ui_continue_with_google">Continue with Google</string>
+    <string name="core_ui_error_image_invalid">That file is not an image we can use. Choose another one.</string>
+    <string name="core_ui_error_image_too_large">That image is too large. Choose a smaller one.</string>
+    <string name="core_ui_error_image_failed">The image could not be uploaded. Try again.</string>
+    <string name="core_ui_error_image_quota">You have uploaded many images today. Try again tomorrow.</string>
+    <string name="core_ui_error_pet_not_found">This pet no longer exists.</string>
+    <string name="core_ui_error_pet_limit">You have reached the maximum of 20 pets.</string>
+    <string name="core_ui_error_weight_date_taken">There is already a weight on that date.</string>
+    <string name="core_ui_pet_species_dog">Dog</string>
+    <string name="core_ui_pet_species_cat">Cat</string>
+    <string name="core_ui_pet_species_other">Other</string>
+    <string name="core_ui_pet_sex_male">Male</string>
+    <string name="core_ui_pet_sex_female">Female</string>
+    <string name="core_ui_pet_sex_unknown">Unknown</string>
+    <string name="core_ui_pet_size_small">Small</string>
+    <string name="core_ui_pet_size_medium">Medium</string>
+    <string name="core_ui_pet_size_large">Large</string>
+    <string name="core_ui_pet_size_giant">Giant</string>
+    <string name="core_ui_field_date_future">The date cannot be in the future</string>
+    <string name="core_ui_field_date_old">The date cannot be before 1990</string>
 </resources>

@@ -12,6 +12,12 @@ inline fun <T, R> Outcome<T>.map(transform: (T) -> R): Outcome<R> = when (this) 
     is Outcome.Failure -> this
 }
 
+/** Chains another step that can fail: the first failure ends the chain. */
+inline fun <T, R> Outcome<T>.flatMap(transform: (T) -> Outcome<R>): Outcome<R> = when (this) {
+    is Outcome.Success -> transform(value)
+    is Outcome.Failure -> this
+}
+
 inline fun <T> Outcome<T>.onSuccess(action: (T) -> Unit): Outcome<T> = also {
     if (it is Outcome.Success) action(it.value)
 }

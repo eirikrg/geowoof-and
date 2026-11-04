@@ -48,5 +48,19 @@ object GeoWoofIcons {
 
     @DrawableRes val Error: Int = R.drawable.core_designsystem_ic_error
 
+    @DrawableRes val Add: Int = R.drawable.core_designsystem_ic_add
+
+    @DrawableRes val Edit: Int = R.drawable.core_designsystem_ic_edit
+
+    @DrawableRes val CalendarMonth: Int = R.drawable.core_designsystem_ic_calendar_month
+
+    @DrawableRes val AddAPhoto: Int = R.drawable.core_designsystem_ic_add_a_photo
+
+    @DrawableRes val MonitorWeight: Int = R.drawable.core_designsystem_ic_monitor_weight
+
+    @DrawableRes val LocationOn: Int = R.drawable.core_designsystem_ic_location_on
+
+    @DrawableRes val ChevronRight: Int = R.drawable.core_designsystem_ic_chevron_right
+
     @DrawableRes val AlternateEmail: Int = R.drawable.core_designsystem_ic_alternate_email
 }

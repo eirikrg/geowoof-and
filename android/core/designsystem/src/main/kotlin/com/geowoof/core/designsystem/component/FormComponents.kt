@@ -87,7 +87,7 @@ fun PasswordField(
     )
 }
 
-/** Single-line text field for forms. [contentType] enables autofill (email, name…). */
+/** Text field for forms, single-line by default. [contentType] enables autofill (email, name…). */
 @Composable
 fun FormTextField(
     state: TextFieldState,
@@ -100,6 +100,7 @@ fun FormTextField(
     prefix: String? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     onKeyboardAction: KeyboardActionHandler? = null,
+    lineLimits: TextFieldLineLimits = TextFieldLineLimits.SingleLine,
 ) {
     OutlinedTextField(
         state = state,
@@ -113,7 +114,7 @@ fun FormTextField(
         isError = isError,
         keyboardOptions = keyboardOptions,
         onKeyboardAction = onKeyboardAction,
-        lineLimits = TextFieldLineLimits.SingleLine,
+        lineLimits = lineLimits,
     )
 }
 

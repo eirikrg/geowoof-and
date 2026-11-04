@@ -31,3 +31,54 @@ enum class UsernameIssue {
 enum class CodeIssue {
     Incomplete,
 }
+
+/** A short optional text that is longer than the API allows. */
+enum class TextIssue {
+    TooLong,
+}
+
+enum class PetNameIssue {
+    Empty,
+    TooLong,
+}
+
+enum class SpeciesOtherIssue {
+    Empty,
+    TooLong,
+}
+
+enum class MicrochipIssue {
+    TooLong,
+    InvalidCharacters,
+}
+
+enum class PetDateIssue {
+    InTheFuture,
+    TooOld,
+}
+
+enum class WeightIssue {
+    NotANumber,
+    OutOfRange,
+    TooManyDecimals,
+}
+
+data class ProfileIssues(
+    val displayName: DisplayNameIssue? = null,
+    val bio: TextIssue? = null,
+    val city: TextIssue? = null,
+) {
+    val isValid: Boolean get() = this == ProfileIssues()
+}
+
+data class PetIssues(
+    val name: PetNameIssue? = null,
+    val speciesOther: SpeciesOtherIssue? = null,
+    val breed: TextIssue? = null,
+    val birthDate: PetDateIssue? = null,
+    val color: TextIssue? = null,
+    val microchip: MicrochipIssue? = null,
+    val bio: TextIssue? = null,
+) {
+    val isValid: Boolean get() = this == PetIssues()
+}

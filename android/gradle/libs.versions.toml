@@ -26,9 +26,12 @@ androidxNavigation = "2.10.2"
 
 androidxCredentials = "1.6.0"
 androidxDataStore = "1.3.0"
+androidxExifInterface = "1.4.2"
+androidxRoom = "2.8.5"
 androidxHilt = "1.4.0"
 
 # Libraries
+coil = "3.6.3"
 googleId = "1.2.1"
 kotlinxCoroutines = "1.11.0"
 kotlinxSerializationJson = "1.12.0"
@@ -36,6 +39,7 @@ mapsCompose = "9.0.1"
 okhttp = "5.5.1"
 retrofit = "3.0.0"
 tink = "1.24.0"
+vico = "3.3.1"
 
 # Testing
 junit4 = "4.13.2"
@@ -62,12 +66,17 @@ androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscree
 androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "androidxCredentials" }
 androidx-credentials-playServicesAuth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "androidxCredentials" }
 androidx-dataStore = { group = "androidx.datastore", name = "datastore", version.ref = "androidxDataStore" }
+androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "androidxExifInterface" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "androidxRoom" }
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "androidxRoom" }
 androidx-hilt-lifecycle-viewModelCompose = { group = "androidx.hilt", name = "hilt-lifecycle-viewmodel-compose", version.ref = "androidxHilt" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
 androidx-lifecycle-viewModelCompose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "androidxNavigation" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 googleId = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleId" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
@@ -78,6 +87,7 @@ okhttp-loggingInterceptor = { group = "com.squareup.okhttp3", name = "logging-in
 okhttp-mockWebServer = { group = "com.squareup.okhttp3", name = "mockwebserver3", version.ref = "okhttp" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-kotlinxSerialization = { group = "com.squareup.retrofit2", name = "converter-kotlinx-serialization", version.ref = "retrofit" }
+vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 tink-android = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }
 
 # Testing
@@ -104,6 +114,7 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+room = { id = "androidx.room", version.ref = "androidxRoom" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secrets" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }

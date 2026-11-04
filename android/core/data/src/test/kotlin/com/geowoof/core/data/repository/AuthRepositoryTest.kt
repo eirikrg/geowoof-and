@@ -24,7 +24,7 @@ class AuthRepositoryTest {
     fun restoreLocale() = Locale.setDefault(originalLocale)
 
     private fun TestScope.repository(): DefaultAuthRepository {
-        val repository = DefaultAuthRepository(network, SessionManager(storage, backgroundScope))
+        val repository = DefaultAuthRepository(network, SessionManager(storage, NoUserData, backgroundScope))
         runCurrent()
         return repository
     }

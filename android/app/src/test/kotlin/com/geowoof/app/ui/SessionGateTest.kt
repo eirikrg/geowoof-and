@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.geowoof.app.AppUiState
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.testing.TestUsers
 import org.junit.Rule
@@ -19,14 +20,14 @@ class SessionGateTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    private var sessionState by mutableStateOf<SessionState>(SessionState.Loading)
+    private var uiState by mutableStateOf(AppUiState())
 
     private fun showGate() {
         composeRule.setContent {
             SessionGate(
-                sessionState = sessionState,
+                uiState = uiState,
                 signedOut = { Text("welcome") },
-                onboarding = { user -> Text(if (user.emailVerified) "choose username" else "verify email") },
+                onboarding = { user -> Text(if (user.needsOnboarding) "onboarding" else "first pet") },
                 main = { Text("main shell") },
             )
         }
@@ -44,19 +45,21 @@ class SessionGateTest {
     fun follows_the_session_from_sign_up_to_the_main_shell_and_back() {
         showGate()
 
-        sessionState = SessionState.SignedOut
+        uiState = AppUiState(SessionState.SignedOut)
         composeRule.onNodeWithText("welcome").assertIsDisplayed()
 
-        sessionState = SessionState.SignedIn(TestUsers.user(username = null, emailVerified = false))
-        composeRule.onNodeWithText("verify email").assertIsDisplayed()
+        uiState = AppUiState(SessionState.SignedIn(TestUsers.user(username = null)))
+        composeRule.onNodeWithText("onboarding").assertIsDisplayed()
 
-        sessionState = SessionState.SignedIn(TestUsers.user(username = null, emailVerified = true))
-        composeRule.onNodeWithText("choose username").assertIsDisplayed()
+        // With the username chosen, the onboarding stays for its last step.
+        val onboarded = SessionState.SignedIn(TestUsers.user(username = "ana"))
+        uiState = AppUiState(onboarded, offerFirstPet = true)
+        composeRule.onNodeWithText("first pet").assertIsDisplayed()
 
-        sessionState = SessionState.SignedIn(TestUsers.user(username = "ana"))
+        uiState = AppUiState(onboarded)
         composeRule.onNodeWithText("main shell").assertIsDisplayed()
 
-        sessionState = SessionState.SignedOut
+        uiState = AppUiState(SessionState.SignedOut)
         composeRule.onNodeWithText("welcome").assertIsDisplayed()
         composeRule.onNodeWithText("main shell").assertDoesNotExist()
     }

@@ -1,0 +1,255 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "39fb98de3cc01de12011627f79158138",
+    "entities": [
+      {
+        "tableName": "profiles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `username` TEXT, `displayName` TEXT NOT NULL, `bio` TEXT, `city` TEXT, `avatarAssetId` TEXT, `avatarThumbUrl` TEXT, `avatarMediumUrl` TEXT, `createdAtEpochMs` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "username",
+            "columnName": "username",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bio",
+            "columnName": "bio",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "city",
+            "columnName": "city",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "avatarAssetId",
+            "columnName": "avatarAssetId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "avatarThumbUrl",
+            "columnName": "avatarThumbUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "avatarMediumUrl",
+            "columnName": "avatarMediumUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAtEpochMs",
+            "columnName": "createdAtEpochMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "pets",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `ownerId` TEXT NOT NULL, `name` TEXT NOT NULL, `species` TEXT NOT NULL, `speciesOther` TEXT, `breed` TEXT, `birthDateEpochDay` INTEGER, `sex` TEXT NOT NULL, `size` TEXT, `color` TEXT, `neutered` INTEGER NOT NULL, `microchip` TEXT, `avatarAssetId` TEXT, `avatarThumbUrl` TEXT, `avatarMediumUrl` TEXT, `bio` TEXT, `createdAtEpochMs` INTEGER NOT NULL, `updatedAtEpochMs` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ownerId",
+            "columnName": "ownerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "species",
+            "columnName": "species",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "speciesOther",
+            "columnName": "speciesOther",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "breed",
+            "columnName": "breed",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "birthDateEpochDay",
+            "columnName": "birthDateEpochDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sex",
+            "columnName": "sex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "size",
+            "columnName": "size",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "neutered",
+            "columnName": "neutered",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "microchip",
+            "columnName": "microchip",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "avatarAssetId",
+            "columnName": "avatarAssetId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "avatarThumbUrl",
+            "columnName": "avatarThumbUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "avatarMediumUrl",
+            "columnName": "avatarMediumUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "bio",
+            "columnName": "bio",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAtEpochMs",
+            "columnName": "createdAtEpochMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAtEpochMs",
+            "columnName": "updatedAtEpochMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_pets_ownerId",
+            "unique": false,
+            "columnNames": [
+              "ownerId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pets_ownerId` ON `${TABLE_NAME}` (`ownerId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "pet_weights",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `petId` TEXT NOT NULL, `measuredOnEpochDay` INTEGER NOT NULL, `weightKg` REAL NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`petId`) REFERENCES `pets`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "petId",
+            "columnName": "petId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "measuredOnEpochDay",
+            "columnName": "measuredOnEpochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weightKg",
+            "columnName": "weightKg",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_pet_weights_petId_measuredOnEpochDay",
+            "unique": false,
+            "columnNames": [
+              "petId",
+              "measuredOnEpochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pet_weights_petId_measuredOnEpochDay` ON `${TABLE_NAME}` (`petId`, `measuredOnEpochDay`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "pets",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "petId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '39fb98de3cc01de12011627f79158138')"
+    ]
+  }
+}

@@ -1,7 +1,10 @@
 package com.geowoof.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -18,6 +21,11 @@ import com.geowoof.feature.auth.navigation.navigateToVerifyEmail
 import com.geowoof.feature.auth.navigation.verifyEmailScreen
 import com.geowoof.feature.map.navigation.MapRoute
 import com.geowoof.feature.map.navigation.mapScreen
+import com.geowoof.feature.pets.navigation.firstPetScreen
+import com.geowoof.feature.pets.navigation.navigateToFirstPet
+import com.geowoof.feature.pets.navigation.navigateToPet
+import com.geowoof.feature.pets.navigation.navigateToPetEditor
+import com.geowoof.feature.pets.navigation.petScreens
 import com.geowoof.feature.profile.navigation.profileScreen
 import com.geowoof.feature.search.navigation.searchScreen
 import com.geowoof.feature.settings.navigation.navigateToSettings
@@ -37,7 +45,13 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
         mapScreen()
         communityScreen()
         searchScreen()
-        profileScreen(onOpenSettings = { navController.navigateToSettings() })
+        profileScreen(
+            navController = navController,
+            onOpenSettings = { navController.navigateToSettings() },
+            onOpenPet = { petId -> navController.navigateToPet(petId) },
+            onAddPet = { navController.navigateToPetEditor() },
+        )
+        petScreens(navController)
         settingsScreens(navController, onVerifyEmail = { navController.navigateToVerifyEmail() })
         verifyEmailScreen(
             onDone = { navController.popBackStack() },
@@ -54,21 +68,30 @@ fun AuthNavHost(modifier: Modifier = Modifier, navController: NavHostController 
     }
 }
 
-/** Signed in without a username: verify the email (optional) and choose the username. */
+/** Signed in without a username: verify the email (optional), choose the username and add a pet (optional). */
 @Composable
 fun OnboardingNavHost(
     emailVerified: Boolean,
+    offerFirstPet: Boolean,
+    onFinishFirstPetStep: () -> Unit,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
     // Chosen once: verifying the email later must not rebuild the graph and reset the back stack.
     val startDestination: Any = remember { if (emailVerified) ChooseUsernameRoute else VerifyEmailRoute }
+    val currentOnFinish by rememberUpdatedState(onFinishFirstPetStep)
     NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
         verifyEmailScreen(
             onDone = { navController.continueToUsername() },
             onSkip = { navController.continueToUsername() },
         )
         chooseUsernameScreen()
+        firstPetScreen(onDone = { currentOnFinish() })
+    }
+    LaunchedEffect(offerFirstPet) {
+        if (offerFirstPet) {
+            navController.navigateToFirstPet(navOptions { popUpTo(navController.graph.id) { inclusive = true } })
+        }
     }
 }
 

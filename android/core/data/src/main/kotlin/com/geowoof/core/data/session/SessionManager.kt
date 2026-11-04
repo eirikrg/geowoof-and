@@ -27,6 +27,7 @@ import javax.inject.Singleton
 @Singleton
 class SessionManager @Inject constructor(
     private val storage: SessionStorage,
+    private val userData: UserDataCleaner,
     @ApplicationScope scope: CoroutineScope,
 ) : SessionTokenProvider {
     private val current = MutableStateFlow<Snapshot>(Snapshot.Loading)
@@ -72,7 +73,10 @@ class SessionManager @Inject constructor(
         save(session.copy(accessToken = accessToken, accessTokenExpiresAtEpochMs = expiresAtEpochMs, user = user))
     }
 
-    suspend fun clear() = save(null)
+    suspend fun clear() {
+        save(null)
+        userData.clear()
+    }
 
     private suspend fun save(session: StoredSession?) {
         current.update { Snapshot.Loaded(session) }

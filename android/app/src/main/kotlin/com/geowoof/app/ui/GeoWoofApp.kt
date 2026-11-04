@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavHostController
+import com.geowoof.app.AppUiState
 import com.geowoof.app.navigation.AuthNavHost
 import com.geowoof.app.navigation.GeoWoofNavHost
 import com.geowoof.app.navigation.OnboardingNavHost
@@ -20,11 +22,17 @@ import com.geowoof.core.model.User
 
 /** Root of the UI: the session decides between the signed-out flow, the onboarding and the main shell. */
 @Composable
-fun GeoWoofApp(sessionState: SessionState, modifier: Modifier = Modifier) {
+fun GeoWoofApp(uiState: AppUiState, onFinishFirstPetStep: () -> Unit, modifier: Modifier = Modifier) {
     SessionGate(
-        sessionState = sessionState,
+        uiState = uiState,
         signedOut = { AuthNavHost() },
-        onboarding = { user -> OnboardingNavHost(emailVerified = user.emailVerified) },
+        onboarding = { user ->
+            OnboardingNavHost(
+                emailVerified = user.emailVerified,
+                offerFirstPet = uiState.offerFirstPet,
+                onFinishFirstPetStep = onFinishFirstPetStep,
+            )
+        },
         main = { MainShell() },
         modifier = modifier,
     )
@@ -36,20 +44,21 @@ fun GeoWoofApp(sessionState: SessionState, modifier: Modifier = Modifier) {
  */
 @Composable
 internal fun SessionGate(
-    sessionState: SessionState,
+    uiState: AppUiState,
     signedOut: @Composable () -> Unit,
     onboarding: @Composable (User) -> Unit,
     main: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier) {
-        when (sessionState) {
+        when (val session = uiState.sessionState) {
             // The splash screen stays visible until the stored session has been read.
             SessionState.Loading -> Unit
 
             SessionState.SignedOut -> signedOut()
 
-            is SessionState.SignedIn -> if (sessionState.user.needsOnboarding) onboarding(sessionState.user) else main()
+            is SessionState.SignedIn ->
+                if (session.user.needsOnboarding || uiState.offerFirstPet) onboarding(session.user) else main()
         }
     }
 }
@@ -60,10 +69,14 @@ internal fun SessionGate(
  * from a destination, such as settings, use the whole window.
  */
 @Composable
-fun MainShell(modifier: Modifier = Modifier, appState: GeoWoofAppState = rememberGeoWoofAppState()) {
+fun MainShell(
+    modifier: Modifier = Modifier,
+    appState: GeoWoofAppState = rememberGeoWoofAppState(),
+    navHost: @Composable (NavHostController) -> Unit = { GeoWoofNavHost(navController = it) },
+) {
     val currentDestination = appState.currentDestination
-    val showNavigation =
-        currentDestination == null || TopLevelDestination.entries.any { currentDestination.isInHierarchyOf(it) }
+    val showNavigation = currentDestination == null ||
+        TopLevelDestination.entries.any { currentDestination.isInHierarchyOf(it) }
     NavigationSuiteScaffold(
         modifier = modifier,
         layoutType = if (showNavigation) {
@@ -91,6 +104,6 @@ fun MainShell(modifier: Modifier = Modifier, appState: GeoWoofAppState = remembe
             }
         },
     ) {
-        GeoWoofNavHost(navController = appState.navController)
+        navHost(appState.navController)
     }
 }

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_pets_add_title">Añadir mascota</string>
+    <string name="feature_pets_first_title">Añade tu primera mascota</string>
+    <string name="feature_pets_edit_title">Editar mascota</string>
+    <string name="feature_pets_skip">Ahora no</string>
+    <string name="feature_pets_back">Volver</string>
+    <string name="feature_pets_photo">Foto de la mascota</string>
+    <string name="feature_pets_choose_photo">Elegir foto</string>
+    <string name="feature_pets_remove_photo">Quitar</string>
+    <string name="feature_pets_name_label">Nombre</string>
+    <string name="feature_pets_name_empty">Escribe su nombre</string>
+    <string name="feature_pets_species_other_label">¿Qué especie?</string>
+    <string name="feature_pets_species_other_empty">Indica qué especie es</string>
+    <string name="feature_pets_breed_label">Raza</string>
+    <string name="feature_pets_birth_date_label">Fecha de nacimiento</string>
+    <string name="feature_pets_birth_date_empty">Sin indicar</string>
+    <string name="feature_pets_clear">Borrar</string>
+    <string name="feature_pets_sex_label">Sexo</string>
+    <string name="feature_pets_size_label">Tamaño</string>
+    <string name="feature_pets_color_label">Color</string>
+    <string name="feature_pets_neutered_label">Esterilizado</string>
+    <string name="feature_pets_microchip_label">Microchip</string>
+    <string name="feature_pets_microchip_private">Solo lo ves tú</string>
+    <string name="feature_pets_microchip_invalid">Usa solo letras y números</string>
+    <string name="feature_pets_bio_label">Sobre tu mascota</string>
+    <string name="feature_pets_too_long">Este texto es demasiado largo</string>
+    <string name="feature_pets_save">Guardar</string>
+    <string name="feature_pets_accept">Aceptar</string>
+    <string name="feature_pets_cancel">Cancelar</string>
+    <string name="feature_pets_yes">Sí</string>
+    <string name="feature_pets_no">No</string>
+    <string name="feature_pets_delete">Eliminar</string>
+    <string name="feature_pets_delete_title">¿Eliminar a %1$s?</string>
+    <string name="feature_pets_delete_message">Se borrarán sus datos y su historial de peso. No se puede deshacer.</string>
+    <string name="feature_pets_weight_title">Peso</string>
+    <string name="feature_pets_add_weight">Añadir peso</string>
+    <string name="feature_pets_edit_weight">Editar peso</string>
+    <string name="feature_pets_weight_label">Peso en kg</string>
+    <string name="feature_pets_weight_value">%1$s kg</string>
+    <string name="feature_pets_no_weights">Añade su peso de vez en cuando para ver cómo cambia.</string>
+    <string name="feature_pets_weight_not_a_number">Escribe un número, por ejemplo 18,4</string>
+    <string name="feature_pets_weight_out_of_range">Debe ser mayor que 0 y de hasta 200 kg</string>
+    <string name="feature_pets_weight_decimals">Usa como máximo 2 decimales</string>
+    <string name="feature_pets_chart_description">Gráfica de peso: de %1$s kg a %2$s kg</string>
+</resources>

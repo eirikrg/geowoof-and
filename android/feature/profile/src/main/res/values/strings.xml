@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_profile_profile_title">Profile</string>
-    <string name="feature_profile_profile_empty_title">Your profile</string>
-    <string name="feature_profile_profile_empty_message">Here you will see your profile, your pets and your walks.</string>
     <string name="feature_profile_settings">Settings</string>
+    <string name="feature_profile_edit">Edit profile</string>
+    <string name="feature_profile_photo">Profile photo</string>
+    <string name="feature_profile_username">\@%1$s</string>
+    <string name="feature_profile_my_pets">My pets</string>
+    <string name="feature_profile_add_pet">Add pet</string>
+    <string name="feature_profile_no_pets_title">No pets yet</string>
+    <string name="feature_profile_no_pets_message">Add your first pet to record its weight and take it on walks.</string>
+    <string name="feature_profile_choose_photo">Choose photo</string>
+    <string name="feature_profile_remove_photo">Remove photo</string>
+    <string name="feature_profile_name_label">Your name</string>
+    <string name="feature_profile_city_label">City</string>
+    <string name="feature_profile_bio_label">About you</string>
+    <string name="feature_profile_too_long">This text is too long</string>
+    <string name="feature_profile_save">Save</string>
 </resources>

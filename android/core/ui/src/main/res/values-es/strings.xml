@@ -42,4 +42,23 @@
     <string name="core_ui_field_code_incomplete">Escribe el código de 6 dígitos</string>
     <string name="core_ui_code_label">Código</string>
     <string name="core_ui_continue_with_google">Continuar con Google</string>
+    <string name="core_ui_error_image_invalid">Ese archivo no es una imagen que podamos usar. Elige otra.</string>
+    <string name="core_ui_error_image_too_large">Esa imagen es demasiado grande. Elige una más pequeña.</string>
+    <string name="core_ui_error_image_failed">No se ha podido subir la imagen. Inténtalo de nuevo.</string>
+    <string name="core_ui_error_image_quota">Hoy has subido muchas imágenes. Inténtalo mañana.</string>
+    <string name="core_ui_error_pet_not_found">Esta mascota ya no existe.</string>
+    <string name="core_ui_error_pet_limit">Has llegado al máximo de 20 mascotas.</string>
+    <string name="core_ui_error_weight_date_taken">Ya hay un peso en esa fecha.</string>
+    <string name="core_ui_pet_species_dog">Perro</string>
+    <string name="core_ui_pet_species_cat">Gato</string>
+    <string name="core_ui_pet_species_other">Otro</string>
+    <string name="core_ui_pet_sex_male">Macho</string>
+    <string name="core_ui_pet_sex_female">Hembra</string>
+    <string name="core_ui_pet_sex_unknown">No lo sé</string>
+    <string name="core_ui_pet_size_small">Pequeño</string>
+    <string name="core_ui_pet_size_medium">Mediano</string>
+    <string name="core_ui_pet_size_large">Grande</string>
+    <string name="core_ui_pet_size_giant">Gigante</string>
+    <string name="core_ui_field_date_future">La fecha no puede ser futura</string>
+    <string name="core_ui_field_date_old">La fecha no puede ser anterior a 1990</string>
 </resources>

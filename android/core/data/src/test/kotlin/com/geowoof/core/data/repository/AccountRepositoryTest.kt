@@ -17,7 +17,7 @@ class AccountRepositoryTest {
     private val storage = InMemorySessionStorage()
 
     private suspend fun TestScope.signedIn(): Pair<DefaultAccountRepository, SessionManager> {
-        val sessions = SessionManager(storage, backgroundScope)
+        val sessions = SessionManager(storage, NoUserData, backgroundScope)
         runCurrent()
         sessions.start(networkSession(user = networkUser(username = null)))
         runCurrent()

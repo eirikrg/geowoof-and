@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_pets_add_title">Add a pet</string>
+    <string name="feature_pets_first_title">Add your first pet</string>
+    <string name="feature_pets_edit_title">Edit pet</string>
+    <string name="feature_pets_skip">Not now</string>
+    <string name="feature_pets_back">Back</string>
+    <string name="feature_pets_photo">Pet photo</string>
+    <string name="feature_pets_choose_photo">Choose photo</string>
+    <string name="feature_pets_remove_photo">Remove</string>
+    <string name="feature_pets_name_label">Name</string>
+    <string name="feature_pets_name_empty">Enter its name</string>
+    <string name="feature_pets_species_other_label">Which species?</string>
+    <string name="feature_pets_species_other_empty">Say which species it is</string>
+    <string name="feature_pets_breed_label">Breed</string>
+    <string name="feature_pets_birth_date_label">Birth date</string>
+    <string name="feature_pets_birth_date_empty">Not set</string>
+    <string name="feature_pets_clear">Clear</string>
+    <string name="feature_pets_sex_label">Sex</string>
+    <string name="feature_pets_size_label">Size</string>
+    <string name="feature_pets_color_label">Color</string>
+    <string name="feature_pets_neutered_label">Neutered</string>
+    <string name="feature_pets_microchip_label">Microchip</string>
+    <string name="feature_pets_microchip_private">Only you can see this</string>
+    <string name="feature_pets_microchip_invalid">Use only letters and numbers</string>
+    <string name="feature_pets_bio_label">About your pet</string>
+    <string name="feature_pets_too_long">This text is too long</string>
+    <string name="feature_pets_save">Save</string>
+    <string name="feature_pets_accept">OK</string>
+    <string name="feature_pets_cancel">Cancel</string>
+    <string name="feature_pets_yes">Yes</string>
+    <string name="feature_pets_no">No</string>
+    <string name="feature_pets_delete">Delete</string>
+    <string name="feature_pets_delete_title">Delete %1$s?</string>
+    <string name="feature_pets_delete_message">Its data and weight history will be deleted. This cannot be undone.</string>
+    <string name="feature_pets_weight_title">Weight</string>
+    <string name="feature_pets_add_weight">Add weight</string>
+    <string name="feature_pets_edit_weight">Edit weight</string>
+    <string name="feature_pets_weight_label">Weight in kg</string>
+    <string name="feature_pets_weight_value">%1$s kg</string>
+    <string name="feature_pets_no_weights">Add its weight from time to time to see how it changes.</string>
+    <string name="feature_pets_weight_not_a_number">Enter a number, such as 18.4</string>
+    <string name="feature_pets_weight_out_of_range">It must be above 0 and up to 200 kg</string>
+    <string name="feature_pets_weight_decimals">Use at most 2 decimals</string>
+    <string name="feature_pets_chart_description">Weight chart: from %1$s kg to %2$s kg</string>
+</resources>

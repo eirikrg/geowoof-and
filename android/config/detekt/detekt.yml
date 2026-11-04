@@ -18,6 +18,8 @@ complexity:
     # (one function per endpoint): splitting them would only hide the size of the API.
     ignoreOverridden: true
     thresholdInInterfaces: 20
+    # A ViewModel has one function per user action, and a form has many of them.
+    thresholdInClasses: 15
   LongParameterList:
     ignoreAnnotated: ['Composable']
   LongMethod:

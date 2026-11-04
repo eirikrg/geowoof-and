@@ -1,5 +1,6 @@
 package com.geowoof.core.data.repository
 
+import com.geowoof.core.data.session.UserDataCleaner
 import com.geowoof.core.datastore.SessionStorage
 import com.geowoof.core.datastore.StoredSession
 import com.geowoof.core.model.Outcome
@@ -44,6 +45,10 @@ internal class InMemorySessionStorage(initial: StoredSession? = null) : SessionS
     override suspend fun write(session: StoredSession?) {
         this.session.value = session
     }
+}
+
+internal object NoUserData : UserDataCleaner {
+    override suspend fun clear() = Unit
 }
 
 /** Answers each call with the outcome set by the test and records its relevant arguments. */

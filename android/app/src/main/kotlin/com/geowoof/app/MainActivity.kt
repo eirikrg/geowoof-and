@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
-        splashScreen.setKeepOnScreenCondition { viewModel.sessionState.value == SessionState.Loading }
+        splashScreen.setKeepOnScreenCondition { viewModel.uiState.value.sessionState == SessionState.Loading }
         enableEdgeToEdge()
 
         // Credential Manager needs an activity, and the form that asked for the save is already gone.
@@ -42,9 +42,9 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val sessionState by viewModel.sessionState.collectAsStateWithLifecycle()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             GeoWoofTheme {
-                GeoWoofApp(sessionState = sessionState)
+                GeoWoofApp(uiState = uiState, onFinishFirstPetStep = viewModel::onFirstPetStepDone)
             }
         }
     }

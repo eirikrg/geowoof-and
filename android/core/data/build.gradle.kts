@@ -11,7 +11,12 @@ dependencies {
     api(projects.core.model)
     api(projects.core.common)
     implementation(projects.core.network)
+    implementation(projects.core.database)
     implementation(projects.core.datastore)
+    implementation(libs.androidx.exifinterface)
 
     testImplementation(projects.core.testing)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.ext.junit)
 }
