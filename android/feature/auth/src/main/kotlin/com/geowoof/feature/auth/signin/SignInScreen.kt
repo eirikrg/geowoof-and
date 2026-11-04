@@ -27,6 +27,7 @@ import com.geowoof.core.ui.FormScaffold
 import com.geowoof.core.ui.GoogleSignInButton
 import com.geowoof.core.ui.PasswordRequired
 import com.geowoof.core.ui.messageRes
+import com.geowoof.core.ui.rememberCredentialSubmit
 import com.geowoof.core.ui.rememberGoogleSignInLauncher
 import com.geowoof.feature.auth.R
 
@@ -48,7 +49,7 @@ internal fun SignInScreen(
         uiState = uiState,
         email = viewModel.email,
         password = viewModel.password,
-        onSubmit = viewModel::submit,
+        onSubmit = rememberCredentialSubmit(viewModel::submit),
         onForgotPassword = { onForgotPassword(viewModel.email.text.toString().trim()) },
         onSignUp = onSignUp,
         onBack = onBack,

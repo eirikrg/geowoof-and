@@ -23,6 +23,7 @@ import com.geowoof.core.ui.FormScaffold
 import com.geowoof.core.ui.PasswordRequired
 import com.geowoof.core.ui.PasswordRulesHint
 import com.geowoof.core.ui.messageRes
+import com.geowoof.core.ui.rememberCredentialSubmit
 import com.geowoof.feature.settings.R
 
 @Composable
@@ -41,7 +42,7 @@ internal fun ChangePasswordScreen(
         uiState = uiState,
         currentPassword = viewModel.currentPassword,
         newPassword = viewModel.newPassword,
-        onSubmit = viewModel::submit,
+        onSubmit = rememberCredentialSubmit(viewModel::submit),
         onBack = onBack,
         modifier = modifier,
     )

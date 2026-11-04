@@ -23,6 +23,7 @@ import com.geowoof.core.ui.FormError
 import com.geowoof.core.ui.FormScaffold
 import com.geowoof.core.ui.PasswordRulesHint
 import com.geowoof.core.ui.messageRes
+import com.geowoof.core.ui.rememberCredentialSubmit
 import com.geowoof.feature.auth.R
 import com.geowoof.feature.auth.signin.SwitchFormButton
 
@@ -39,7 +40,7 @@ internal fun SignUpScreen(
         displayName = viewModel.displayName,
         email = viewModel.email,
         password = viewModel.password,
-        onSubmit = viewModel::submit,
+        onSubmit = rememberCredentialSubmit(viewModel::submit),
         onSignIn = { onSignIn(viewModel.email.text.toString().trim()) },
         onBack = onBack,
         modifier = modifier,

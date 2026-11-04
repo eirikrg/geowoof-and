@@ -23,6 +23,7 @@ import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.ui.FormError
 import com.geowoof.core.ui.FormScaffold
 import com.geowoof.core.ui.PasswordRequired
+import com.geowoof.core.ui.rememberCredentialSubmit
 import com.geowoof.core.ui.rememberGoogleSignInLauncher
 import com.geowoof.feature.settings.R
 
@@ -41,7 +42,7 @@ internal fun DeleteAccountScreen(
     DeleteAccountContent(
         uiState = uiState,
         password = viewModel.password,
-        onDelete = viewModel::requestDeletion,
+        onDelete = rememberCredentialSubmit(viewModel::requestDeletion),
         onConfirm = {
             when {
                 uiState.hasPassword -> viewModel.deleteWithPassword()

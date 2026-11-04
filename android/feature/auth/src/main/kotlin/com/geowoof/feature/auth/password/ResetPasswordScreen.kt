@@ -26,6 +26,7 @@ import com.geowoof.core.ui.FormScaffold
 import com.geowoof.core.ui.PasswordRulesHint
 import com.geowoof.core.ui.VerificationCodeField
 import com.geowoof.core.ui.messageRes
+import com.geowoof.core.ui.rememberCredentialSubmit
 import com.geowoof.feature.auth.R
 
 @Composable
@@ -44,7 +45,7 @@ internal fun ResetPasswordScreen(
         uiState = uiState,
         code = viewModel.code,
         newPassword = viewModel.newPassword,
-        onSubmit = viewModel::submit,
+        onSubmit = rememberCredentialSubmit(viewModel::submit),
         onResendCode = viewModel::resendCode,
         onBack = onBack,
         modifier = modifier,
