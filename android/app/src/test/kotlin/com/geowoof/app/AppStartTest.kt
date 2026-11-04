@@ -13,9 +13,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Starts the real activity with the real Hilt graph (no backend needed: nothing here reaches the
- * network). Checks the wiring that unit tests replace with fakes: the session gate, hiltViewModel
- * in each destination and the signed-out navigation.
+ * Starts the real activity with the real Hilt graph. Checks the wiring that unit tests replace with
+ * fakes: the session gate, hiltViewModel in each destination and the signed-out navigation.
+ *
+ * It needs no backend and must pass with or without local keys. With a Google client ID in
+ * secrets.properties the welcome screen asks the configured API whether Google is available, so
+ * nothing here can depend on that button; SignInFlowTest and GetGoogleClientIdUseCaseTest cover it.
  */
 @RunWith(AndroidJUnit4::class)
 class AppStartTest {
@@ -31,12 +34,11 @@ class AppStartTest {
     }
 
     @Test
-    fun a_new_install_shows_the_welcome_screen_without_the_google_button() {
+    fun a_new_install_shows_the_welcome_screen() {
         waitForWelcome()
 
         button("Create account").assertIsDisplayed()
         button("Sign in").assertIsDisplayed()
-        composeRule.onNodeWithText("Continue with Google").assertDoesNotExist()
     }
 
     @Test
