@@ -58,6 +58,8 @@ android {
 // Keys and URLs from android/secrets.properties (git-ignored), falling back to local.defaults.properties:
 // the plugin exposes each one as a BuildConfig field and a manifest placeholder.
 secrets {
+    // The plugin reads local.properties unless told otherwise.
+    propertiesFileName = "secrets.properties"
     defaultPropertiesFileName = "local.defaults.properties"
     ignoreList.add("GOOGLE_SERVER_CLIENT_ID")
 }
