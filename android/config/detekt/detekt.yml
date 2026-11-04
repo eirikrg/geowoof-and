@@ -13,6 +13,11 @@ naming:
     enumEntryPattern: '[A-Z][A-Za-z0-9]*'
 
 complexity:
+  TooManyFunctions:
+    # Implementations are as long as the interface they implement, and those mirror the API
+    # (one function per endpoint): splitting them would only hide the size of the API.
+    ignoreOverridden: true
+    thresholdInInterfaces: 20
   LongParameterList:
     ignoreAnnotated: ['Composable']
   LongMethod:

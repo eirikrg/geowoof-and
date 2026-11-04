@@ -3,4 +3,5 @@
     <string name="feature_profile_profile_title">Perfil</string>
     <string name="feature_profile_profile_empty_title">Tu perfil</string>
     <string name="feature_profile_profile_empty_message">Aquí verás tu perfil, tus mascotas y tus paseos.</string>
+    <string name="feature_profile_settings">Ajustes</string>
 </resources>

@@ -52,6 +52,10 @@ gradlePlugin {
             id = libs.plugins.geowoof.android.feature.get().pluginId
             implementationClass = "AndroidFeatureConventionPlugin"
         }
+        register("jvmLibrary") {
+            id = libs.plugins.geowoof.jvm.library.get().pluginId
+            implementationClass = "JvmLibraryConventionPlugin"
+        }
         register("hilt") {
             id = libs.plugins.geowoof.hilt.get().pluginId
             implementationClass = "HiltConventionPlugin"

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_settings_title">Settings</string>
+    <string name="feature_settings_back">Back</string>
+    <string name="feature_settings_account">Account</string>
+    <string name="feature_settings_username">\@%1$s</string>
+    <string name="feature_settings_email_verified">Verified</string>
+    <string name="feature_settings_email_unverified">Not verified</string>
+    <string name="feature_settings_verify">Verify</string>
+    <string name="feature_settings_change_password">Change password</string>
+    <string name="feature_settings_create_password">Create a password</string>
+    <string name="feature_settings_create_password_summary">To sign in with your email too, not only with Google</string>
+    <string name="feature_settings_sign_out">Sign out</string>
+    <string name="feature_settings_delete_account">Delete account</string>
+    <string name="feature_settings_change_password_message">Your other devices will be signed out.</string>
+    <string name="feature_settings_current_password">Current password</string>
+    <string name="feature_settings_new_password">New password</string>
+    <string name="feature_settings_save">Save</string>
+    <string name="feature_settings_delete_message">Your account will be deleted together with your pets, walks, photos and messages. This cannot be undone.</string>
+    <string name="feature_settings_delete_password_message">Enter your password to confirm.</string>
+    <string name="feature_settings_delete_google_message">You will confirm it with your Google account.</string>
+    <string name="feature_settings_password_label">Password</string>
+    <string name="feature_settings_delete_confirm_title">Delete your account?</string>
+    <string name="feature_settings_delete_confirm_message">This cannot be undone.</string>
+    <string name="feature_settings_delete">Delete</string>
+    <string name="feature_settings_cancel">Cancel</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_designsystem_show_password">Mostrar contraseña</string>
+    <string name="core_designsystem_hide_password">Ocultar contraseña</string>
+    <string name="core_designsystem_loading">Cargando</string>
+</resources>

@@ -26,11 +26,18 @@ internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_17
             allWarningsAsErrors = true
+            // Flow operators and coroutine test APIs (setMain, runTest dispatchers) are still experimental.
+            freeCompilerArgs.add("-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi")
         }
     }
 
-    // Robolectric needs access to JDK internals to emulate Android 16+ (shared memory file descriptors).
+    // Hilt generates test sources even in modules without tests of their own, and Gradle fails when
+    // it finds sources but no tests. Modules with written tests keep that check: it catches a
+    // misconfigured test runner.
+    val hasWrittenTests = file("src/test").exists()
     tasks.withType<Test>().configureEach {
+        failOnNoDiscoveredTests.set(hasWrittenTests)
+        // Robolectric needs access to JDK internals to emulate Android 16+ (shared memory file descriptors).
         jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
     }
 }

@@ -27,4 +27,26 @@ object GeoWoofIcons {
     @DrawableRes val PhotoLibrary: Int = R.drawable.core_designsystem_ic_photo_library
 
     @DrawableRes val Pets: Int = R.drawable.core_designsystem_ic_pets
+
+    @DrawableRes val Visibility: Int = R.drawable.core_designsystem_ic_visibility
+
+    @DrawableRes val VisibilityOff: Int = R.drawable.core_designsystem_ic_visibility_off
+
+    @DrawableRes val ArrowBack: Int = R.drawable.core_designsystem_ic_arrow_back
+
+    @DrawableRes val Settings: Int = R.drawable.core_designsystem_ic_settings
+
+    @DrawableRes val Logout: Int = R.drawable.core_designsystem_ic_logout
+
+    @DrawableRes val Mail: Int = R.drawable.core_designsystem_ic_mail
+
+    @DrawableRes val Lock: Int = R.drawable.core_designsystem_ic_lock
+
+    @DrawableRes val Delete: Int = R.drawable.core_designsystem_ic_delete
+
+    @DrawableRes val CheckCircle: Int = R.drawable.core_designsystem_ic_check_circle
+
+    @DrawableRes val Error: Int = R.drawable.core_designsystem_ic_error
+
+    @DrawableRes val AlternateEmail: Int = R.drawable.core_designsystem_ic_alternate_email
 }

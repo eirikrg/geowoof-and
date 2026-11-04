@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.geowoof.android.application)
     alias(libs.plugins.geowoof.android.application.compose)
@@ -22,6 +24,8 @@ android {
         // The Secrets Gradle Plugin overrides this per variant, but does not reach the unit-test
         // components of AGP 9; they get the same default as local.defaults.properties.
         manifestPlaceholders["MAPS_API_KEY"] = "DEFAULT_API_KEY"
+        // Optional and empty by default, which the Secrets Gradle Plugin cannot turn into a field.
+        buildConfigField("String", "GOOGLE_SERVER_CLIENT_ID", "\"${secretProperty("GOOGLE_SERVER_CLIENT_ID")}\"")
     }
 
     buildFeatures {
@@ -51,16 +55,31 @@ android {
     }
 }
 
-// Maps API key from android/secrets.properties (git-ignored); falls back to local.defaults.properties.
+// Keys and URLs from android/secrets.properties (git-ignored), falling back to local.defaults.properties:
+// the plugin exposes each one as a BuildConfig field and a manifest placeholder.
 secrets {
     defaultPropertiesFileName = "local.defaults.properties"
+    ignoreList.add("GOOGLE_SERVER_CLIENT_ID")
 }
 
+/** Value from secrets.properties, else from local.defaults.properties; empty if neither has it. */
+fun secretProperty(name: String): String = listOf("secrets.properties", "local.defaults.properties")
+    .map(rootProject::file)
+    .filter { it.exists() }
+    .firstNotNullOfOrNull { file -> Properties().apply { file.inputStream().use(::load) }.getProperty(name)?.trim() }
+    .orEmpty()
+
 dependencies {
+    implementation(projects.core.common)
+    implementation(projects.core.data)
     implementation(projects.core.designsystem)
+    implementation(projects.core.model)
+    implementation(projects.core.ui)
+    implementation(projects.feature.auth)
     implementation(projects.feature.map)
     implementation(projects.feature.profile)
     implementation(projects.feature.search)
+    implementation(projects.feature.settings)
     implementation(projects.feature.social)
 
     implementation(libs.androidx.activity.compose)
@@ -70,4 +89,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
+
+    testImplementation(projects.core.testing)
 }

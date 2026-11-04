@@ -13,6 +13,7 @@ data object ProfileRoute
 
 fun NavController.navigateToProfile(navOptions: NavOptions? = null) = navigate(ProfileRoute, navOptions)
 
-fun NavGraphBuilder.profileScreen() {
-    composable<ProfileRoute> { ProfileScreen() }
+/** Settings is another feature: the app provides [onOpenSettings]. */
+fun NavGraphBuilder.profileScreen(onOpenSettings: () -> Unit) {
+    composable<ProfileRoute> { ProfileScreen(onOpenSettings = onOpenSettings) }
 }

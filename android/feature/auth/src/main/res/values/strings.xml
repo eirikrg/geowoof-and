@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_auth_welcome_title">GeoWoof</string>
+    <string name="feature_auth_welcome_message">Walk with your dog, see who is out right now and share it with your friends.</string>
+    <string name="feature_auth_create_account">Create account</string>
+    <string name="feature_auth_sign_in">Sign in</string>
+    <string name="feature_auth_sign_in_title">Sign in</string>
+    <string name="feature_auth_sign_up_title">Create your account</string>
+    <string name="feature_auth_email_label">Email</string>
+    <string name="feature_auth_password_label">Password</string>
+    <string name="feature_auth_new_password_label">New password</string>
+    <string name="feature_auth_name_label">Your name</string>
+    <string name="feature_auth_forgot_password">Forgot your password?</string>
+    <string name="feature_auth_no_account">New to GeoWoof? Create an account</string>
+    <string name="feature_auth_have_account">Already have an account? Sign in</string>
+    <string name="feature_auth_password_reset_done">Your password has been changed. Sign in with the new one.</string>
+    <string name="feature_auth_forgot_title">Reset your password</string>
+    <string name="feature_auth_forgot_message">Enter the email of your account and we will send you a code to choose a new password.</string>
+    <string name="feature_auth_send_code">Send code</string>
+    <string name="feature_auth_reset_title">Choose a new password</string>
+    <string name="feature_auth_reset_message">If there is an account for %1$s, we have sent it a 6-digit code. It expires in 15 minutes.</string>
+    <string name="feature_auth_change_password">Change password</string>
+    <string name="feature_auth_resend_code">Send a new code</string>
+    <string name="feature_auth_resend_code_in">Send a new code in %1$d s</string>
+    <string name="feature_auth_code_resent">We have sent you a new code.</string>
+    <string name="feature_auth_verify_title">Verify your email</string>
+    <string name="feature_auth_verify_message">Enter the 6-digit code we sent to %1$s. It expires in 15 minutes.</string>
+    <string name="feature_auth_verify">Verify</string>
+    <string name="feature_auth_skip">Not now</string>
+    <string name="feature_auth_sign_out">Sign out</string>
+    <string name="feature_auth_username_title">Choose your username</string>
+    <string name="feature_auth_username_message">Your friends will find you by your @username. Your name is what they will see on your walks and posts.</string>
+    <string name="feature_auth_username_label">Username</string>
+    <string name="feature_auth_username_hint">3–30 characters: letters, numbers, _ and .</string>
+    <string name="feature_auth_username_checking">Checking availability…</string>
+    <string name="feature_auth_username_available">\@%1$s is available</string>
+    <string name="feature_auth_username_taken">Already taken</string>
+    <string name="feature_auth_username_reserved">Reserved, choose another one</string>
+    <string name="feature_auth_username_invalid">Not a valid username</string>
+    <string name="feature_auth_username_check_failed">Could not check availability. You can still continue.</string>
+    <string name="feature_auth_continue">Continue</string>
+</resources>

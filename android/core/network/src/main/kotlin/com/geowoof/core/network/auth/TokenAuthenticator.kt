@@ -1,0 +1,105 @@
+package com.geowoof.core.network.auth
+
+import com.geowoof.core.model.AppError
+import com.geowoof.core.model.Outcome
+import com.geowoof.core.network.RefreshApi
+import com.geowoof.core.network.apiCall
+import com.geowoof.core.network.auth.AuthInterceptor.Companion.AUTHORIZATION
+import com.geowoof.core.network.auth.AuthInterceptor.Companion.BEARER
+import com.geowoof.core.network.model.RefreshBody
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.Json
+import okhttp3.Authenticator
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.Route
+import java.io.IOException
+
+/**
+ * Refreshes the session when an authenticated request gets a 401 and retries it once.
+ * A mutex makes concurrent 401s share a single refresh; a request that failed with a token that
+ * was already replaced is simply retried with the new one. Network errors never sign the user
+ * out; a rejected refresh token does.
+ */
+internal class TokenAuthenticator(
+    private val tokens: SessionTokenProvider,
+    private val refreshApi: RefreshApi,
+    private val json: Json,
+) : Authenticator {
+    private val mutex = Mutex()
+
+    override fun authenticate(route: Route?, response: Response): Request? {
+        val failedToken = response.request.header(AUTHORIZATION)?.removePrefix(BEARER)
+        if (failedToken == null || response.priorResponse != null) {
+            return null
+        }
+
+        return when (val result = runBlocking { mutex.withLock { refreshUnlessAlreadyRefreshed(failedToken) } }) {
+            is RefreshResult.Refreshed -> response.request.newBuilder().header(
+                AUTHORIZATION,
+                BEARER + result.accessToken,
+            ).build()
+
+            RefreshResult.Rejected -> null
+
+            // Surfaces as a network error: the session may still be valid, so it is kept.
+            RefreshResult.Unavailable -> throw IOException("The session could not be refreshed right now.")
+        }
+    }
+
+    private suspend fun refreshUnlessAlreadyRefreshed(failedToken: String): RefreshResult {
+        val currentToken = tokens.accessToken()
+        val refreshToken = tokens.refreshToken()
+        return when {
+            currentToken != null && currentToken != failedToken -> RefreshResult.Refreshed(currentToken)
+            refreshToken == null -> RefreshResult.Rejected
+            else -> refresh(refreshToken)
+        }
+    }
+
+    private suspend fun refresh(refreshToken: String): RefreshResult {
+        val body = RefreshBody(refreshToken)
+        var outcome = apiCall(json) { refreshApi.refresh(body) }
+        // Another request rotated the same token at the same moment (docs/api.md): retry once.
+        if (outcome is Outcome.Failure && outcome.error.isRefreshInProgress()) {
+            delay(RETRY_DELAY_MS)
+            outcome = apiCall(json) { refreshApi.refresh(body) }
+        }
+
+        return when (outcome) {
+            is Outcome.Success -> {
+                tokens.onTokensRefreshed(outcome.value)
+                RefreshResult.Refreshed(outcome.value.accessToken)
+            }
+
+            is Outcome.Failure -> if (outcome.error.isRejectedSession()) {
+                tokens.onSessionExpired()
+                RefreshResult.Rejected
+            } else {
+                RefreshResult.Unavailable
+            }
+        }
+    }
+
+    private sealed interface RefreshResult {
+        data class Refreshed(val accessToken: String) : RefreshResult
+
+        data object Rejected : RefreshResult
+
+        data object Unavailable : RefreshResult
+    }
+
+    private fun AppError.isRefreshInProgress() = this is AppError.Api && status == HTTP_CONFLICT
+
+    private fun AppError.isRejectedSession() =
+        this is AppError.SessionExpired || (this is AppError.Api && status == HTTP_UNAUTHORIZED)
+
+    private companion object {
+        const val RETRY_DELAY_MS = 300L
+        const val HTTP_CONFLICT = 409
+        const val HTTP_UNAUTHORIZED = 401
+    }
+}

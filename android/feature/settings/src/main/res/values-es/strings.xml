@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_settings_title">Ajustes</string>
+    <string name="feature_settings_back">Volver</string>
+    <string name="feature_settings_account">Cuenta</string>
+    <string name="feature_settings_username">\@%1$s</string>
+    <string name="feature_settings_email_verified">Verificado</string>
+    <string name="feature_settings_email_unverified">Sin verificar</string>
+    <string name="feature_settings_verify">Verificar</string>
+    <string name="feature_settings_change_password">Cambiar contraseña</string>
+    <string name="feature_settings_create_password">Crear una contraseña</string>
+    <string name="feature_settings_create_password_summary">Para entrar también con tu email, no solo con Google</string>
+    <string name="feature_settings_sign_out">Cerrar sesión</string>
+    <string name="feature_settings_delete_account">Eliminar cuenta</string>
+    <string name="feature_settings_change_password_message">Se cerrará la sesión en tus otros dispositivos.</string>
+    <string name="feature_settings_current_password">Contraseña actual</string>
+    <string name="feature_settings_new_password">Contraseña nueva</string>
+    <string name="feature_settings_save">Guardar</string>
+    <string name="feature_settings_delete_message">Se eliminará tu cuenta junto con tus mascotas, paseos, fotos y mensajes. No se puede deshacer.</string>
+    <string name="feature_settings_delete_password_message">Escribe tu contraseña para confirmar.</string>
+    <string name="feature_settings_delete_google_message">Lo confirmarás con tu cuenta de Google.</string>
+    <string name="feature_settings_password_label">Contraseña</string>
+    <string name="feature_settings_delete_confirm_title">¿Eliminar tu cuenta?</string>
+    <string name="feature_settings_delete_confirm_message">No se puede deshacer.</string>
+    <string name="feature_settings_delete">Eliminar</string>
+    <string name="feature_settings_cancel">Cancelar</string>
+</resources>

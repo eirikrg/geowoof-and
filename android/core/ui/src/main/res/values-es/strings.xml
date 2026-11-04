@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_ui_error_network">Sin conexión. Revisa tu internet y vuelve a intentarlo.</string>
+    <string name="core_ui_error_session_expired">Tu sesión ha terminado. Vuelve a iniciar sesión.</string>
+    <string name="core_ui_error_unexpected">Algo ha fallado. Vuelve a intentarlo.</string>
+    <string name="core_ui_error_server">GeoWoof tiene problemas ahora mismo. Inténtalo de nuevo en un momento.</string>
+    <string name="core_ui_error_rate_limited">Demasiados intentos. Espera un momento y vuelve a intentarlo.</string>
+    <string name="core_ui_error_invalid_credentials">El email o la contraseña no son correctos.</string>
+    <string name="core_ui_error_locked_out">Demasiados intentos fallidos. Vuelve a intentarlo en unos minutos.</string>
+    <string name="core_ui_error_email_taken">Ya existe una cuenta con este email.</string>
+    <string name="core_ui_error_google_disabled">El inicio de sesión con Google no está disponible.</string>
+    <string name="core_ui_error_google_failed">No se ha podido iniciar sesión con Google. Vuelve a intentarlo.</string>
+    <string name="core_ui_error_google_email_unverified">El email de tu cuenta de Google no está verificado.</string>
+    <string name="core_ui_error_code_invalid">El código no es correcto.</string>
+    <string name="core_ui_error_code_expired">El código ha caducado. Pide uno nuevo.</string>
+    <string name="core_ui_error_code_attempts">Demasiados intentos fallidos. Pide un código nuevo.</string>
+    <string name="core_ui_error_code_cooldown">Espera un minuto antes de pedir otro código.</string>
+    <string name="core_ui_error_email_already_verified">Tu email ya está verificado.</string>
+    <string name="core_ui_error_password_incorrect">La contraseña no es correcta.</string>
+    <string name="core_ui_error_reauthentication_required">Confirma tu identidad para continuar.</string>
+    <string name="core_ui_error_username_taken">Ese nombre de usuario ya está en uso.</string>
+    <string name="core_ui_error_username_reserved">Ese nombre de usuario está reservado.</string>
+    <string name="core_ui_error_email_delivery">No hemos podido enviar el email. Inténtalo más tarde.</string>
+    <string name="core_ui_error_validation">Revisa los campos marcados.</string>
+    <string name="core_ui_field_email_empty">Escribe tu email</string>
+    <string name="core_ui_field_email_invalid">Escribe un email válido</string>
+    <string name="core_ui_field_password_empty">Escribe tu contraseña</string>
+    <string name="core_ui_field_password_short">Usa al menos 8 caracteres</string>
+    <string name="core_ui_field_password_long">Usa como máximo 128 caracteres</string>
+    <string name="core_ui_field_password_letter">Incluye al menos una letra</string>
+    <string name="core_ui_field_password_digit">Incluye al menos un número</string>
+    <string name="core_ui_field_password_hint">Mínimo 8 caracteres, con letras y números</string>
+    <string name="core_ui_field_name_empty">Escribe tu nombre</string>
+    <string name="core_ui_field_name_long">Usa como máximo 50 caracteres</string>
+    <string name="core_ui_field_username_short">Usa al menos 3 caracteres</string>
+    <string name="core_ui_field_username_long">Usa como máximo 30 caracteres</string>
+    <string name="core_ui_field_username_start">Empieza por una letra</string>
+    <string name="core_ui_field_username_characters">Solo letras a-z, números, _ y .</string>
+    <string name="core_ui_field_username_dots">Sin dos puntos seguidos ni punto al final</string>
+    <string name="core_ui_back">Volver</string>
+    <string name="core_ui_error_credential_unavailable">No se ha podido obtener tu cuenta de Google. Comprueba que el dispositivo tiene una e inténtalo de nuevo.</string>
+    <string name="core_ui_field_code_incomplete">Escribe el código de 6 dígitos</string>
+    <string name="core_ui_code_label">Código</string>
+    <string name="core_ui_continue_with_google">Continuar con Google</string>
+</resources>
