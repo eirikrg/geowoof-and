@@ -122,6 +122,44 @@ class ProfileViewModelsTest {
         assertNull(viewModel.uiState.value.loadError)
     }
 
+    /** The screen opens and comes to the front right away: that second load must not hide the first failure. */
+    @Test
+    fun without_a_saved_profile_or_a_connection_the_screen_offers_to_retry_instead_of_waiting_forever() = runTest {
+        val empty = FakeProfileRepository().apply { refreshResult = Outcome.Failure(AppError.Network) }
+        val viewModel = ProfileViewModel(auth, empty, pets, walks, people, social)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+        assertEquals(AppError.Network, viewModel.uiState.value.loadError)
+
+        viewModel.onResume()
+
+        assertNull(viewModel.uiState.value.profile)
+        assertEquals(AppError.Network, viewModel.uiState.value.loadError)
+    }
+
+    @Test
+    fun retrying_clears_the_failure_while_it_loads_and_when_it_works() = runTest {
+        val empty = FakeProfileRepository().apply { refreshResult = Outcome.Failure(AppError.Network) }
+        val viewModel = ProfileViewModel(auth, empty, pets, walks, people, social)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+        empty.refreshResult = Outcome.Success(Unit)
+        viewModel.refresh()
+
+        assertNull(viewModel.uiState.value.loadError)
+    }
+
+    @Test
+    fun with_a_saved_profile_a_failure_when_coming_back_says_nothing() = runTest {
+        val viewModel = profile()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+        profiles.refreshResult = Outcome.Failure(AppError.Network)
+
+        viewModel.onResume()
+
+        assertEquals("Ana", viewModel.uiState.value.profile?.displayName)
+        assertNull(viewModel.uiState.value.loadError)
+    }
+
     @Test
     fun the_numbers_that_could_not_be_refreshed_stay_as_they_were() = runTest {
         val viewModel = profile()

@@ -59,7 +59,8 @@ class ProfileViewModel @Inject constructor(
             pets = myPets,
             receivedRequests = received.size,
             sentRequests = sent.size,
-            loadError = current.error,
+            // With nothing on screen, a failure has to stay there, with its button to retry.
+            loadError = current.error ?: current.lastFailure.takeIf { profile == null },
         )
     }.stateIn(
         viewModelScope,
@@ -73,7 +74,7 @@ class ProfileViewModel @Inject constructor(
 
     /** What Room already has stays on screen while this runs (docs/decisions/0009). */
     fun refresh() {
-        status.update { it.copy(isLoading = true) }
+        status.update { it.copy(isLoading = true, error = null, lastFailure = null) }
         load()
     }
 
@@ -103,6 +104,7 @@ class ProfileViewModel @Inject constructor(
                     isLoading = false,
                     counts = (countsResult as? Outcome.Success)?.value ?: current.counts,
                     error = failure.takeIf { current.isLoading },
+                    lastFailure = failure,
                 )
             }
             isLoadingNow = false
@@ -114,7 +116,10 @@ class ProfileViewModel @Inject constructor(
     private data class LoadStatus(
         val isLoading: Boolean = false,
         val counts: ProfileCounts? = null,
+        /** What the person asked for failed, and it is said once. */
         val error: AppError? = null,
+        /** The last load failed, also if it was silent. */
+        val lastFailure: AppError? = null,
     )
 
     private companion object {
