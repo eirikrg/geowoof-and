@@ -176,7 +176,7 @@ class SocialRepositoriesTest {
     ).allowMainThreadQueries().build()
     private val network = FakeSocialNetwork()
     private val people = FakePeopleNetwork()
-    private val repository = DefaultSocialRepository(network, people, database.socialDao())
+    private val repository = DefaultSocialRepository(network, people, database.socialDao(), database.feedDao())
     private val peopleRepository = DefaultPeopleRepository(people)
 
     @After

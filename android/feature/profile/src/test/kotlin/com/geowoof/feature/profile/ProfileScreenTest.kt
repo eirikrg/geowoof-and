@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -25,14 +26,18 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.PeopleListKind
+import com.geowoof.core.model.Post
 import com.geowoof.core.model.ProfileCounts
 import com.geowoof.core.model.Relationship
 import com.geowoof.core.model.RelationshipStatus
 import com.geowoof.core.model.ReportReason
+import com.geowoof.core.model.TimelineItem
 import com.geowoof.core.model.Walk
 import com.geowoof.core.testing.FakePeopleRepository
+import com.geowoof.core.testing.FakePostsRepository
 import com.geowoof.core.testing.FakeSocialRepository
 import com.geowoof.core.testing.TestPets
+import com.geowoof.core.testing.TestPosts
 import com.geowoof.core.testing.TestSocial
 import com.geowoof.core.testing.TestWalks
 import com.geowoof.feature.profile.navigation.PeopleListRoute
@@ -62,6 +67,8 @@ class ProfileScreenTest {
         onOpenWalk = { calls += "walk:$it" },
         onOpenPet = { calls += "pet:$it" },
         onAddPet = { calls += "add" },
+        onOpenPost = { calls += "post:$it" },
+        onCreatePost = { calls += "create" },
     )
 
     private val userActions = ProfileActions(
@@ -69,6 +76,7 @@ class ProfileScreenTest {
         onRefresh = { calls += "refresh" },
         onOpenPeople = { calls += "people:$it" },
         onOpenWalk = { calls += "walk:$it" },
+        onOpenPost = { calls += "post:$it" },
         onFollow = { calls += "follow" },
         onUnfollow = { calls += "unfollow" },
         onAcceptRequest = { calls += "accept" },
@@ -85,12 +93,22 @@ class ProfileScreenTest {
         onMessageShown = { calls += "shown" },
     )
 
-    private fun show(uiState: ProfileUiState, actions: ProfileActions = userActions, walks: List<Walk> = emptyList()) {
+    private fun show(
+        uiState: ProfileUiState,
+        actions: ProfileActions = userActions,
+        walks: List<Walk> = emptyList(),
+        posts: List<TimelineItem> = emptyList(),
+        saved: List<Post>? = null,
+    ) {
         composeRule.setContent {
             GeoWoofTheme(dynamicColor = false) {
                 ProfileContent(
                     uiState = uiState,
-                    walks = flowOf(TestSocial.pages(walks)).collectAsLazyPagingItems(),
+                    lists = ProfileLists(
+                        posts = flowOf(TestSocial.pages(posts)).collectAsLazyPagingItems(),
+                        walks = flowOf(TestSocial.pages(walks)).collectAsLazyPagingItems(),
+                        saved = saved?.let { flowOf(TestSocial.pages(it)).collectAsLazyPagingItems() },
+                    ),
                     reportDetails = TextFieldState(),
                     actions = actions,
                 )
@@ -128,6 +146,8 @@ class ProfileScreenTest {
     )
 
     private fun openPetsTab() = composeRule.onNodeWithText("Pets").performClick()
+
+    private fun openWalksTab() = composeRule.onNodeWithText("Walks").performClick()
 
     /** The screen of these tests is small, and what is below the header has to come into view. */
     private fun scrollTo(text: String) {
@@ -380,6 +400,7 @@ class ProfileScreenTest {
         composeRule.onNodeWithText("3").assertIsDisplayed()
         composeRule.onNodeWithText("This profile is private").assertIsDisplayed()
         composeRule.onNodeWithText("dani").assertDoesNotExist()
+        composeRule.onNodeWithText("Photos").assertDoesNotExist()
         composeRule.onNodeWithText("Walks").assertDoesNotExist()
         composeRule.onNodeWithText("Pets").assertDoesNotExist()
     }
@@ -401,6 +422,7 @@ class ProfileScreenTest {
     fun the_totals_are_on_the_walks_tab() {
         show(bea(RelationshipStatus.Following).copy(totals = TestWalks.totals(walkCount = 42)))
 
+        openWalksTab()
         scrollTo("42")
         composeRule.onNodeWithText("42").assertIsDisplayed()
     }
@@ -464,6 +486,7 @@ class ProfileScreenTest {
     @Test
     fun a_walk_of_the_person_opens() {
         show(bea(RelationshipStatus.Friends, followsYou = true), walks = listOf(TestWalks.walk(id = "walk-9")))
+        openWalksTab()
 
         // The pages arrive through a coroutine, and the list only has what fits on the screen.
         composeRule.waitUntil(WAIT_MILLIS) {
@@ -479,9 +502,91 @@ class ProfileScreenTest {
     @Test
     fun no_walks_to_see_says_so() {
         show(bea(RelationshipStatus.None))
+        openWalksTab()
 
         composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("No walks you can see."))
         composeRule.onNodeWithText("No walks you can see.").assertIsDisplayed()
+    }
+
+    @Test
+    fun the_photos_come_first_and_a_post_opens() {
+        show(bea(RelationshipStatus.Following), posts = listOf(TestPosts.item(TestPosts.post("post-9"))))
+
+        composeRule.waitUntil(WAIT_MILLIS) {
+            runCatching {
+                composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasContentDescription("Open post"))
+            }.isSuccess
+        }
+        composeRule.onNodeWithContentDescription("Open post").performClick()
+
+        assertEquals(listOf("post:post-9"), calls)
+    }
+
+    @Test
+    fun a_repost_in_the_photos_says_so() {
+        val item = TestPosts.item(TestPosts.post("post-9"), repostedBy = TestSocial.user())
+        show(bea(RelationshipStatus.Following), posts = listOf(item))
+
+        composeRule.waitUntil(WAIT_MILLIS) {
+            runCatching {
+                composeRule.onNode(
+                    hasScrollToNodeAction(),
+                ).performScrollToNode(hasContentDescription("Open reposted post"))
+            }.isSuccess
+        }
+    }
+
+    @Test
+    fun without_photos_each_profile_says_something_different() {
+        show(bea(RelationshipStatus.Following))
+
+        scrollTo("No photos you can see.")
+        composeRule.onNodeWithText("No photos you can see.").assertIsDisplayed()
+    }
+
+    @Test
+    fun a_photo_is_added_to_your_profile_by_creating_a_post() {
+        show(own(), ownActions)
+
+        scrollTo("Add photo")
+        composeRule.onNodeWithText("Add photo").performClick()
+
+        assertEquals(listOf("create"), calls)
+    }
+
+    @Test
+    fun only_you_see_what_you_saved() {
+        show(own(), ownActions, saved = listOf(TestPosts.post("post-3")))
+
+        composeRule.onNodeWithText("Saved").performClick()
+        composeRule.waitUntil(WAIT_MILLIS) {
+            runCatching {
+                composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasContentDescription("Open post"))
+            }.isSuccess
+        }
+        composeRule.onNodeWithContentDescription("Open post").performClick()
+
+        assertEquals(listOf("post:post-3"), calls)
+    }
+
+    @Test
+    fun someone_else_has_no_saved_tab() {
+        show(bea(RelationshipStatus.Friends, followsYou = true))
+
+        composeRule.onNodeWithText("Saved").assertDoesNotExist()
+    }
+
+    @Test
+    fun without_saved_posts_it_says_that_only_you_see_them() {
+        show(own(), ownActions, saved = emptyList())
+
+        composeRule.onNodeWithText("Saved").performClick()
+        composeRule.waitUntil(WAIT_MILLIS) {
+            runCatching {
+                composeRule.onNode(hasScrollToNodeAction())
+                    .performScrollToNode(hasText("Only you can see them", substring = true))
+            }.isSuccess
+        }
     }
 
     @Serializable
@@ -499,7 +604,7 @@ class ProfileScreenTest {
                     LaunchedEffect(Unit) { navController.navigate(UserProfileRoute("bea-id")) }
                 }
                 composable<UserProfileRoute> { entry ->
-                    viewModel { UserProfileViewModel(createSavedStateHandle(), people, social) }
+                    viewModel { UserProfileViewModel(createSavedStateHandle(), people, social, FakePostsRepository()) }
                     LaunchedEffect(Unit) {
                         navController.navigate(PeopleListRoute("bea-id", PeopleListKind.Friends.name))
                     }

@@ -7,15 +7,18 @@ import androidx.paging.cachedIn
 import com.geowoof.core.data.repository.AuthRepository
 import com.geowoof.core.data.repository.PeopleRepository
 import com.geowoof.core.data.repository.PetsRepository
+import com.geowoof.core.data.repository.PostsRepository
 import com.geowoof.core.data.repository.ProfileRepository
 import com.geowoof.core.data.repository.SocialRepository
 import com.geowoof.core.data.repository.WalksRepository
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.Outcome
+import com.geowoof.core.model.Post
 import com.geowoof.core.model.ProfileCounts
 import com.geowoof.core.model.Relationship
 import com.geowoof.core.model.RelationshipStatus
 import com.geowoof.core.model.SessionState
+import com.geowoof.core.model.TimelineItem
 import com.geowoof.core.model.Walk
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -25,12 +28,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** Your own profile. What is yours comes from Room, and the numbers from the server (docs/decisions/0009). */
+@Suppress("LongParameterList")
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val auth: AuthRepository,
@@ -39,11 +44,17 @@ class ProfileViewModel @Inject constructor(
     private val walksRepository: WalksRepository,
     private val people: PeopleRepository,
     private val social: SocialRepository,
+    postsRepository: PostsRepository,
 ) : ViewModel() {
     private val status = MutableStateFlow(LoadStatus(isLoading = true))
     private var isLoadingNow = false
 
     val walks: Flow<PagingData<Walk>> = walksRepository.walks().cachedIn(viewModelScope)
+
+    val posts: Flow<PagingData<TimelineItem>> =
+        (myId()?.let { postsRepository.userPosts(it) } ?: flowOf(PagingData.empty())).cachedIn(viewModelScope)
+
+    val saved: Flow<PagingData<Post>> = postsRepository.savedPosts().cachedIn(viewModelScope)
 
     val uiState: StateFlow<ProfileUiState> = combine(
         combine(profiles.myProfile, pets.myPets, walksRepository.observeTotals(), ::Triple),

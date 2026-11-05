@@ -18,7 +18,7 @@ internal fun NetworkImage.toModel() = RemoteImage(assetId, thumbUrl, mediumUrl)
 
 internal fun NetworkUserSummary.toModel() = UserSummary(id, username, displayName, city, avatar?.toModel())
 
-private fun NetworkUserSummary.toColumns() = UserColumns(
+internal fun NetworkUserSummary.toColumns() = UserColumns(
     userId = id,
     username = username,
     displayName = displayName,
@@ -28,7 +28,7 @@ private fun NetworkUserSummary.toColumns() = UserColumns(
     avatarMediumUrl = avatar?.mediumUrl,
 )
 
-private fun UserColumns.toModel() = UserSummary(
+internal fun UserColumns.toModel() = UserSummary(
     id = userId,
     username = username,
     displayName = displayName,

@@ -30,7 +30,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.LoadStates
 import androidx.paging.PagingData
-import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
@@ -40,6 +39,7 @@ import com.geowoof.core.model.Profile
 import com.geowoof.core.model.ProfileCounts
 import com.geowoof.core.model.Relationship
 import com.geowoof.core.model.RelationshipStatus
+import com.geowoof.core.model.TimelineItem
 import com.geowoof.core.model.Walk
 import com.geowoof.core.ui.userMessage
 import kotlinx.coroutines.flow.flowOf
@@ -55,17 +55,24 @@ fun ProfileScreen(
     onAddPet: () -> Unit,
     onOpenPeople: (userId: String, kind: PeopleListKind) -> Unit,
     onOpenRequests: () -> Unit,
+    onOpenPost: (postId: String) -> Unit,
+    onCreatePost: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    LifecycleResumeEffect(viewModel) {
+    val posts = viewModel.posts.collectAsLazyPagingItems()
+    val saved = viewModel.saved.collectAsLazyPagingItems()
+    // Back from creating a post, or from saving or deleting one.
+    LifecycleResumeEffect(viewModel, posts, saved) {
         viewModel.onResume()
+        posts.refresh()
+        saved.refresh()
         onPauseOrDispose {}
     }
     ProfileContent(
         uiState = uiState,
-        walks = viewModel.walks.collectAsLazyPagingItems(),
+        lists = ProfileLists(posts, viewModel.walks.collectAsLazyPagingItems(), saved),
         reportDetails = remember { TextFieldState() },
         actions = ProfileActions(
             onRefresh = viewModel::refresh,
@@ -76,6 +83,8 @@ fun ProfileScreen(
             onOpenWalk = onOpenWalk,
             onOpenPet = onOpenPet,
             onAddPet = onAddPet,
+            onOpenPost = onOpenPost,
+            onCreatePost = onCreatePost,
             onMessageShown = viewModel::onErrorShown,
         ),
         modifier = modifier,
@@ -89,22 +98,25 @@ internal fun UserProfileScreen(
     onEditProfile: () -> Unit,
     onOpenWalk: (walkId: String) -> Unit,
     onOpenPeople: (userId: String, kind: PeopleListKind) -> Unit,
+    onOpenPost: (postId: String) -> Unit,
     onVerifyEmail: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: UserProfileViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val posts = viewModel.posts.collectAsLazyPagingItems()
     val currentOnBack by rememberUpdatedState(onBack)
     LaunchedEffect(uiState.isFinished) {
         if (uiState.isFinished) currentOnBack()
     }
-    LifecycleResumeEffect(viewModel) {
+    LifecycleResumeEffect(viewModel, posts) {
         viewModel.onResume()
+        posts.refresh()
         onPauseOrDispose {}
     }
     ProfileContent(
         uiState = uiState,
-        walks = viewModel.walks.collectAsLazyPagingItems(),
+        lists = ProfileLists(posts, viewModel.walks.collectAsLazyPagingItems(), saved = null),
         reportDetails = viewModel.reportDetails,
         actions = ProfileActions(
             onBack = onBack,
@@ -112,6 +124,7 @@ internal fun UserProfileScreen(
             onEditProfile = onEditProfile,
             onOpenPeople = { kind -> uiState.profile?.let { onOpenPeople(it.id, kind) } },
             onOpenWalk = onOpenWalk,
+            onOpenPost = onOpenPost,
             onFollow = viewModel::onFollow,
             onUnfollow = viewModel::onUnfollow,
             onAcceptRequest = viewModel::onAcceptRequest,
@@ -138,7 +151,7 @@ internal fun UserProfileScreen(
 @Composable
 internal fun ProfileContent(
     uiState: ProfileUiState,
-    walks: LazyPagingItems<Walk>,
+    lists: ProfileLists,
     reportDetails: TextFieldState,
     actions: ProfileActions,
     modifier: Modifier = Modifier,
@@ -179,7 +192,7 @@ internal fun ProfileContent(
                 onRefresh = actions.onRefresh,
                 modifier = contentModifier,
             ) {
-                ProfileList(uiState, profile, walks, actions)
+                ProfileList(uiState, profile, lists, actions)
             }
         }
     }
@@ -230,7 +243,11 @@ private fun ProfilePreview() {
                 relationship = Relationship(RelationshipStatus.None, followsYou = true),
                 counts = ProfileCounts(followers = 12, following = 8, friends = 5),
             ),
-            walks = flowOf(PagingData.empty<Walk>(finished)).collectAsLazyPagingItems(),
+            lists = ProfileLists(
+                posts = flowOf(PagingData.empty<TimelineItem>(finished)).collectAsLazyPagingItems(),
+                walks = flowOf(PagingData.empty<Walk>(finished)).collectAsLazyPagingItems(),
+                saved = null,
+            ),
             reportDetails = TextFieldState(),
             actions = ProfileActions(),
         )
@@ -249,7 +266,11 @@ private fun RestrictedProfilePreview() {
                 relationship = Relationship(RelationshipStatus.Requested),
                 counts = ProfileCounts(followers = 12, following = 8, friends = 5),
             ),
-            walks = flowOf(PagingData.empty<Walk>(finished)).collectAsLazyPagingItems(),
+            lists = ProfileLists(
+                posts = flowOf(PagingData.empty<TimelineItem>(finished)).collectAsLazyPagingItems(),
+                walks = flowOf(PagingData.empty<Walk>(finished)).collectAsLazyPagingItems(),
+                saved = null,
+            ),
             reportDetails = TextFieldState(),
             actions = ProfileActions(),
         )

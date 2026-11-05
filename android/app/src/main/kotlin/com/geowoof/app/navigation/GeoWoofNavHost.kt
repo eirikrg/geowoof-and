@@ -31,7 +31,9 @@ import com.geowoof.feature.profile.navigation.profileScreens
 import com.geowoof.feature.search.navigation.searchScreen
 import com.geowoof.feature.settings.navigation.navigateToSettings
 import com.geowoof.feature.settings.navigation.settingsScreens
-import com.geowoof.feature.social.navigation.communityScreen
+import com.geowoof.feature.social.navigation.navigateToCreatePost
+import com.geowoof.feature.social.navigation.navigateToPost
+import com.geowoof.feature.social.navigation.socialScreens
 import com.geowoof.feature.walks.navigation.navigateToUserWalk
 import com.geowoof.feature.walks.navigation.navigateToWalkDetail
 import com.geowoof.feature.walks.navigation.navigateToWalks
@@ -48,8 +50,11 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
         modifier = modifier,
     ) {
         mapScreens(navController, onAddPet = { navController.navigateToPetEditor() })
-        communityScreen()
-        searchScreen(onOpenUser = { userId -> navController.navigateToUserProfile(userId) })
+        socialScreens(navController, onOpenUser = { userId -> navController.navigateToUserProfile(userId) })
+        searchScreen(
+            onOpenUser = { userId -> navController.navigateToUserProfile(userId) },
+            onOpenPost = { postId -> navController.navigateToPost(postId) },
+        )
         profileScreens(
             navController = navController,
             onOpenSettings = { navController.navigateToSettings() },
@@ -58,6 +63,8 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
             onOpenPet = { petId -> navController.navigateToPet(petId) },
             onAddPet = { navController.navigateToPetEditor() },
             onVerifyEmail = { navController.navigateToVerifyEmail() },
+            onOpenPost = { postId -> navController.navigateToPost(postId) },
+            onCreatePost = { navController.navigateToCreatePost() },
         )
         petScreens(navController, onOpenWalks = { petId -> navController.navigateToWalks(petId) })
         walkScreens(navController)

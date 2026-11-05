@@ -18,6 +18,9 @@ internal class ProfileActions(
     val onOpenWalk: (walkId: String) -> Unit = {},
     val onOpenPet: ((petId: String) -> Unit)? = null,
     val onAddPet: (() -> Unit)? = null,
+    val onOpenPost: (postId: String) -> Unit = {},
+    /** Only in your own profile: uploading a photo to it is creating a post. */
+    val onCreatePost: (() -> Unit)? = null,
     val onFollow: () -> Unit = {},
     val onUnfollow: () -> Unit = {},
     val onAcceptRequest: () -> Unit = {},

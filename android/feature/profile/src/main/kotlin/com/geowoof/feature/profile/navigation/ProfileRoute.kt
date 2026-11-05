@@ -48,6 +48,8 @@ fun NavGraphBuilder.profileScreens(
     onOpenPet: (petId: String) -> Unit,
     onAddPet: () -> Unit,
     onVerifyEmail: () -> Unit,
+    onOpenPost: (postId: String) -> Unit,
+    onCreatePost: () -> Unit,
 ) {
     val openPeople = { userId: String, kind: PeopleListKind ->
         navController.navigate(PeopleListRoute(userId, kind.name)) { launchSingleTop = true }
@@ -62,6 +64,8 @@ fun NavGraphBuilder.profileScreens(
             onAddPet = onAddPet,
             onOpenPeople = openPeople,
             onOpenRequests = { navController.navigate(FollowRequestsRoute) { launchSingleTop = true } },
+            onOpenPost = onOpenPost,
+            onCreatePost = onCreatePost,
         )
     }
     composable<EditProfileRoute> {
@@ -73,6 +77,7 @@ fun NavGraphBuilder.profileScreens(
             onEditProfile = editProfile,
             onOpenWalk = onOpenUserWalk,
             onOpenPeople = openPeople,
+            onOpenPost = onOpenPost,
             onVerifyEmail = onVerifyEmail,
         )
     }

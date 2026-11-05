@@ -88,7 +88,20 @@
     <string name="core_ui_error_user_not_found">This profile is not available.</string>
     <string name="core_ui_error_email_required">Verify your email to do this.</string>
     <string name="core_ui_error_request_gone">This request has already been answered.</string>
+    <string name="core_ui_error_post_not_found">This post is no longer available.</string>
+    <string name="core_ui_error_post_pet_not_owned">Only your own pets can appear in your posts.</string>
+    <string name="core_ui_error_cannot_repost">You can only repost what friends or public profiles publish.</string>
     <string name="core_ui_error_lists_private">Only this person and their friends can see this list.</string>
     <string name="core_ui_error_profile_private">This profile is private.</string>
     <string name="core_ui_error_cannot_target_self">You cannot do this with your own account.</string>
+    <string name="core_ui_open_post">Open post</string>
+    <string name="core_ui_open_repost">Open reposted post</string>
+    <string name="core_ui_report_spam">Spam</string>
+    <string name="core_ui_report_harassment">Harassment</string>
+    <string name="core_ui_report_inappropriate">Inappropriate content</string>
+    <string name="core_ui_report_impersonation">Pretending to be someone else</string>
+    <string name="core_ui_report_other">Something else</string>
+    <string name="core_ui_report_details">Details (optional)</string>
+    <string name="core_ui_report_send">Send</string>
+    <string name="core_ui_report_dismiss">Cancel</string>
 </resources>

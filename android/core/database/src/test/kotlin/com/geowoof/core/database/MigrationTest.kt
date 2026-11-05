@@ -97,4 +97,24 @@ class MigrationTest {
             }
         }
     }
+
+    @Test
+    fun the_feed_starts_empty_and_nothing_else_changes() {
+        helper.createDatabase(4).use { connection ->
+            connection.execSQL(
+                "INSERT INTO profiles (id, displayName, createdAtEpochMs, isPrivate) VALUES ('ana', 'Ana', 1, 1)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(5).use { connection ->
+            connection.prepare("SELECT isPrivate FROM profiles").use { statement ->
+                statement.step()
+                assertEquals(1L, statement.getLong(0))
+            }
+            connection.prepare("SELECT COUNT(*) FROM feed_items").use { statement ->
+                statement.step()
+                assertEquals(0L, statement.getLong(0))
+            }
+        }
+    }
 }

@@ -165,6 +165,11 @@ class FakePeopleRepository : PeopleRepository {
         return flowOf(TestSocial.pages(users))
     }
 
+    override suspend fun suggestUsers(query: String): Outcome<List<UserSummary>> {
+        searches += "suggest:$query"
+        return Outcome.Success(users)
+    }
+
     override fun searchPets(query: String): Flow<PagingData<PetSearchResult>> {
         searches += "pets:$query"
         return flowOf(TestSocial.pages(pets))

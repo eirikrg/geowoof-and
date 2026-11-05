@@ -9,6 +9,7 @@ import com.geowoof.core.model.Relationship
 import com.geowoof.core.model.RelationshipStatus
 import com.geowoof.core.model.ReportReason
 import com.geowoof.core.testing.FakePeopleRepository
+import com.geowoof.core.testing.FakePostsRepository
 import com.geowoof.core.testing.FakeSocialRepository
 import com.geowoof.core.testing.MainDispatcherRule
 import com.geowoof.core.testing.TestPets
@@ -29,10 +30,11 @@ class UserProfileViewModelTest {
 
     private val people = FakePeopleRepository()
     private val social = FakeSocialRepository()
+    private val posts = FakePostsRepository()
     private val notFound = AppError.Api(status = 404, code = "identity.user_not_found")
     private val profilePrivate = AppError.Api(status = 403, code = "identity.profile_private")
 
-    private fun viewModel() = UserProfileViewModel(SavedStateHandle(mapOf("userId" to "bea-id")), people, social)
+    private fun viewModel() = UserProfileViewModel(SavedStateHandle(mapOf("userId" to "bea-id")), people, social, posts)
 
     private fun relationship(
         status: RelationshipStatus,
@@ -80,9 +82,11 @@ class UserProfileViewModelTest {
 
         val viewModel = viewModel()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.walks.collect {} }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.posts.collect {} }
 
         assertTrue(viewModel.uiState.value.isRestricted)
         assertEquals(emptyList<String>(), people.reads)
+        assertEquals(emptyList<String>(), posts.reads)
         assertNull(viewModel.uiState.value.totals)
         assertEquals(12, viewModel.uiState.value.counts?.followers)
     }
@@ -383,6 +387,20 @@ class UserProfileViewModelTest {
         relationship(RelationshipStatus.Friends)
         viewModel.onResume()
         assertEquals(before + 1, people.reads.count { it == "walks:bea-id" })
+    }
+
+    @Test
+    fun being_able_to_see_the_profile_brings_its_posts() = runTest {
+        privateProfile()
+        relationship(RelationshipStatus.Requested, requestId = "request-1")
+        val viewModel = viewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.posts.collect {} }
+        assertEquals(emptyList<String>(), posts.reads)
+
+        relationship(RelationshipStatus.Following)
+        viewModel.onResume()
+
+        assertEquals(listOf("user:bea-id"), posts.reads)
     }
 
     @Test

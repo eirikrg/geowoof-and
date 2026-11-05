@@ -8,11 +8,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.geowoof.core.data.repository.PeopleRepository
+import com.geowoof.core.data.repository.PostsRepository
 import com.geowoof.core.data.repository.SocialRepository
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.Relationship
 import com.geowoof.core.model.ReportReason
+import com.geowoof.core.model.TimelineItem
 import com.geowoof.core.model.Walk
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,6 +41,7 @@ class UserProfileViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val people: PeopleRepository,
     private val social: SocialRepository,
+    private val postsRepository: PostsRepository,
 ) : ViewModel() {
     private val userId: String = checkNotNull(savedStateHandle["userId"])
     private val state = MutableStateFlow(ProfileUiState())
@@ -52,6 +55,11 @@ class UserProfileViewModel @Inject constructor(
     /** Which walks can be seen depends on the relationship. A private profile is not even asked. */
     val walks: Flow<PagingData<Walk>> = walkReloads.flatMapLatest {
         if (state.value.canSeeContent) people.walks(userId) else flowOf(PagingData.empty())
+    }.cachedIn(viewModelScope)
+
+    /** The same for the posts. */
+    val posts: Flow<PagingData<TimelineItem>> = walkReloads.flatMapLatest {
+        if (state.value.canSeeContent) postsRepository.userPosts(userId) else flowOf(PagingData.empty())
     }.cachedIn(viewModelScope)
 
     init {

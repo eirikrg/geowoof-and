@@ -8,7 +8,9 @@ import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.geowoof.core.data.repository.PeopleRepository
+import com.geowoof.core.data.repository.PostsRepository
 import com.geowoof.core.model.PetSearchResult
+import com.geowoof.core.model.Post
 import com.geowoof.core.model.UserSummary
 import com.geowoof.core.ui.textChanges
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,7 +39,7 @@ data class SearchUiState(
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
-class SearchViewModel @Inject constructor(private val people: PeopleRepository) : ViewModel() {
+class SearchViewModel @Inject constructor(private val people: PeopleRepository, posts: PostsRepository) : ViewModel() {
     val query = TextFieldState()
 
     private val tab = MutableStateFlow(SearchTab.People)
@@ -48,6 +50,9 @@ class SearchViewModel @Inject constructor(private val people: PeopleRepository) 
         .debounce(DEBOUNCE_MILLIS)
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
+    /** What is shown before searching. */
+    val explore: Flow<PagingData<Post>> = posts.explore().cachedIn(viewModelScope)
 
     val users: Flow<PagingData<UserSummary>> = results(people::searchUsers).cachedIn(viewModelScope)
 

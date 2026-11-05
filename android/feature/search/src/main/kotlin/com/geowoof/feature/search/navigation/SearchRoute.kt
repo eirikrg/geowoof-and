@@ -13,7 +13,7 @@ data object SearchRoute
 
 fun NavController.navigateToSearch(navOptions: NavOptions? = null) = navigate(SearchRoute, navOptions)
 
-/** The profile of a person is another feature: the app provides how to reach it. */
-fun NavGraphBuilder.searchScreen(onOpenUser: (userId: String) -> Unit) {
-    composable<SearchRoute> { SearchScreen(onOpenUser = onOpenUser) }
+/** Profiles and posts are other features: the app provides how to reach them. */
+fun NavGraphBuilder.searchScreen(onOpenUser: (userId: String) -> Unit, onOpenPost: (postId: String) -> Unit) {
+    composable<SearchRoute> { SearchScreen(onOpenUser = onOpenUser, onOpenPost = onOpenPost) }
 }

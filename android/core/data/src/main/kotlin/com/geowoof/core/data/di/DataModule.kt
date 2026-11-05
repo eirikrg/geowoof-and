@@ -13,6 +13,7 @@ import com.geowoof.core.data.repository.DefaultAuthRepository
 import com.geowoof.core.data.repository.DefaultMediaRepository
 import com.geowoof.core.data.repository.DefaultPeopleRepository
 import com.geowoof.core.data.repository.DefaultPetsRepository
+import com.geowoof.core.data.repository.DefaultPostsRepository
 import com.geowoof.core.data.repository.DefaultProfileRepository
 import com.geowoof.core.data.repository.DefaultSocialRepository
 import com.geowoof.core.data.repository.DefaultWalkSynchronizer
@@ -20,6 +21,7 @@ import com.geowoof.core.data.repository.DefaultWalksRepository
 import com.geowoof.core.data.repository.MediaRepository
 import com.geowoof.core.data.repository.PeopleRepository
 import com.geowoof.core.data.repository.PetsRepository
+import com.geowoof.core.data.repository.PostsRepository
 import com.geowoof.core.data.repository.ProfileRepository
 import com.geowoof.core.data.repository.SocialRepository
 import com.geowoof.core.data.repository.WalkSynchronizer
@@ -77,4 +79,7 @@ internal interface DataModule {
 
     @Binds
     fun bindsPeopleRepository(repository: DefaultPeopleRepository): PeopleRepository
+
+    @Binds
+    fun bindsPostsRepository(repository: DefaultPostsRepository): PostsRepository
 }

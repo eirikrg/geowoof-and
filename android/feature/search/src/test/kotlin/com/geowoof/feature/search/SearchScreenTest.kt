@@ -2,8 +2,10 @@ package com.geowoof.feature.search
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.paging.LoadState
@@ -15,7 +17,9 @@ import com.geowoof.core.data.repository.RemoteLoadException
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.PetSearchResult
+import com.geowoof.core.model.Post
 import com.geowoof.core.model.UserSummary
+import com.geowoof.core.testing.TestPosts
 import com.geowoof.core.testing.TestSocial
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
@@ -35,6 +39,7 @@ class SearchScreenTest {
         uiState: SearchUiState,
         users: PagingData<UserSummary> = TestSocial.pages(emptyList()),
         pets: PagingData<PetSearchResult> = TestSocial.pages(emptyList()),
+        explore: PagingData<Post> = TestSocial.pages(emptyList()),
     ) {
         composeRule.setContent {
             GeoWoofTheme(dynamicColor = false) {
@@ -43,8 +48,10 @@ class SearchScreenTest {
                     query = TextFieldState(),
                     users = flowOf(users).collectAsLazyPagingItems(),
                     pets = flowOf(pets).collectAsLazyPagingItems(),
+                    explore = flowOf(explore).collectAsLazyPagingItems(),
                     onSelectTab = { tabs += it },
                     onOpenUser = { opened += it },
+                    onOpenPost = { opened += "post:$it" },
                 )
             }
         }
@@ -59,6 +66,20 @@ class SearchScreenTest {
         show(SearchUiState())
 
         composeRule.onNodeWithText("People and pets").assertIsDisplayed()
+    }
+
+    @Test
+    fun before_searching_it_shows_what_people_publish_and_a_post_opens() {
+        show(SearchUiState(), explore = TestSocial.pages(listOf(TestPosts.post("post-9"))))
+
+        composeRule.waitUntil(WAIT_MILLIS) {
+            composeRule.onAllNodes(hasContentDescription("Open post")).fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithText("People and pets").assertDoesNotExist()
+        composeRule.onNodeWithText("Pets").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Open post").performClick()
+
+        assertEquals(listOf("post:post-9"), opened)
     }
 
     @Test
@@ -110,7 +131,7 @@ class SearchScreenTest {
 
     @Test
     fun the_tabs_change_the_list() {
-        show(SearchUiState())
+        show(SearchUiState(hasEnoughText = true))
 
         composeRule.onNodeWithText("Pets").performClick()
 

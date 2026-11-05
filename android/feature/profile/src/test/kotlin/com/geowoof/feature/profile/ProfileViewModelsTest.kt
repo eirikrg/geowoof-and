@@ -17,6 +17,7 @@ import com.geowoof.core.testing.FakeAuthRepository
 import com.geowoof.core.testing.FakeMediaRepository
 import com.geowoof.core.testing.FakePeopleRepository
 import com.geowoof.core.testing.FakePetsRepository
+import com.geowoof.core.testing.FakePostsRepository
 import com.geowoof.core.testing.FakeProfileRepository
 import com.geowoof.core.testing.FakeSocialRepository
 import com.geowoof.core.testing.FakeWalksRepository
@@ -47,9 +48,10 @@ class ProfileViewModelsTest {
     private val walks = FakeWalksRepository()
     private val people = FakePeopleRepository()
     private val social = FakeSocialRepository()
+    private val posts = FakePostsRepository()
     private val media = FakeMediaRepository()
 
-    private fun profile() = ProfileViewModel(auth, profiles, pets, walks, people, social)
+    private fun profile() = ProfileViewModel(auth, profiles, pets, walks, people, social, posts)
 
     private fun editor() = EditProfileViewModel(profiles, media, ValidateProfileUseCase(ValidateDisplayNameUseCase()))
 
@@ -126,7 +128,7 @@ class ProfileViewModelsTest {
     @Test
     fun without_a_saved_profile_or_a_connection_the_screen_offers_to_retry_instead_of_waiting_forever() = runTest {
         val empty = FakeProfileRepository().apply { refreshResult = Outcome.Failure(AppError.Network) }
-        val viewModel = ProfileViewModel(auth, empty, pets, walks, people, social)
+        val viewModel = ProfileViewModel(auth, empty, pets, walks, people, social, posts)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
         assertEquals(AppError.Network, viewModel.uiState.value.loadError)
 
@@ -139,7 +141,7 @@ class ProfileViewModelsTest {
     @Test
     fun retrying_clears_the_failure_while_it_loads_and_when_it_works() = runTest {
         val empty = FakeProfileRepository().apply { refreshResult = Outcome.Failure(AppError.Network) }
-        val viewModel = ProfileViewModel(auth, empty, pets, walks, people, social)
+        val viewModel = ProfileViewModel(auth, empty, pets, walks, people, social, posts)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
 
         empty.refreshResult = Outcome.Success(Unit)
@@ -158,6 +160,15 @@ class ProfileViewModelsTest {
 
         assertEquals("Ana", viewModel.uiState.value.profile?.displayName)
         assertNull(viewModel.uiState.value.loadError)
+    }
+
+    @Test
+    fun your_posts_and_what_you_saved_are_asked_for() = runTest {
+        val viewModel = profile()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.posts.collect {} }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.saved.collect {} }
+
+        assertEquals(listOf("user:${TestUsers.user().id}", "saved"), posts.reads)
     }
 
     @Test

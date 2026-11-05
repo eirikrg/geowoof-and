@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.CircularProgressIndicator
@@ -46,7 +48,9 @@ import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.PetSearchResult
 import com.geowoof.core.model.PetSpecies
+import com.geowoof.core.model.Post
 import com.geowoof.core.model.UserSummary
+import com.geowoof.core.ui.PostGridItem
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.UserRow
 import com.geowoof.core.ui.labelRes
@@ -56,16 +60,19 @@ import kotlinx.coroutines.flow.flowOf
 @Composable
 fun SearchScreen(
     onOpenUser: (userId: String) -> Unit,
+    onOpenPost: (postId: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val users = viewModel.users.collectAsLazyPagingItems()
     val pets = viewModel.pets.collectAsLazyPagingItems()
+    val explore = viewModel.explore.collectAsLazyPagingItems()
     // Back from a profile, someone may have been blocked or may have changed their name.
-    LifecycleResumeEffect(users, pets) {
+    LifecycleResumeEffect(users, pets, explore) {
         users.refresh()
         pets.refresh()
+        explore.refresh()
         onPauseOrDispose {}
     }
     SearchContent(
@@ -73,8 +80,10 @@ fun SearchScreen(
         query = viewModel.query,
         users = users,
         pets = pets,
+        explore = explore,
         onSelectTab = viewModel::onSelectTab,
         onOpenUser = onOpenUser,
+        onOpenPost = onOpenPost,
         modifier = modifier,
     )
 }
@@ -86,8 +95,10 @@ internal fun SearchContent(
     query: TextFieldState,
     users: LazyPagingItems<UserSummary>,
     pets: LazyPagingItems<PetSearchResult>,
+    explore: LazyPagingItems<Post>,
     onSelectTab: (SearchTab) -> Unit,
     onOpenUser: (userId: String) -> Unit,
+    onOpenPost: (postId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val spacing = GeoWoofTheme.spacing
@@ -109,24 +120,22 @@ internal fun SearchContent(
                 leadingIcon = { Icon(painterResource(GeoWoofIcons.Search), contentDescription = null) },
                 lineLimits = TextFieldLineLimits.SingleLine,
             )
-            PrimaryTabRow(selectedTabIndex = uiState.tab.ordinal) {
-                Tab(
-                    selected = uiState.tab == SearchTab.People,
-                    onClick = { onSelectTab(SearchTab.People) },
-                    text = { Text(stringResource(R.string.feature_search_tab_people)) },
-                )
-                Tab(
-                    selected = uiState.tab == SearchTab.Pets,
-                    onClick = { onSelectTab(SearchTab.Pets) },
-                    text = { Text(stringResource(R.string.feature_search_tab_pets)) },
-                )
+            if (uiState.hasEnoughText) {
+                PrimaryTabRow(selectedTabIndex = uiState.tab.ordinal) {
+                    Tab(
+                        selected = uiState.tab == SearchTab.People,
+                        onClick = { onSelectTab(SearchTab.People) },
+                        text = { Text(stringResource(R.string.feature_search_tab_people)) },
+                    )
+                    Tab(
+                        selected = uiState.tab == SearchTab.Pets,
+                        onClick = { onSelectTab(SearchTab.Pets) },
+                        text = { Text(stringResource(R.string.feature_search_tab_pets)) },
+                    )
+                }
             }
             when {
-                !uiState.hasEnoughText -> EmptyState(
-                    icon = GeoWoofIcons.PersonSearch,
-                    title = stringResource(R.string.feature_search_search_empty_title),
-                    message = stringResource(R.string.feature_search_search_empty_message),
-                )
+                !uiState.hasEnoughText -> ExploreGrid(explore, onOpenPost)
 
                 uiState.tab == SearchTab.People -> Results(
                     items = users,
@@ -144,6 +153,40 @@ internal fun SearchContent(
                     items(pets.itemCount, key = pets.itemKey(PetSearchResult::id)) { index ->
                         pets[index]?.let { pet -> PetResultRow(pet, onClick = { onOpenUser(pet.owner.id) }) }
                     }
+                }
+            }
+        }
+    }
+}
+
+/** Before searching: the most recent of what anyone can see. Without anything, it explains what the field is for. */
+@Composable
+private fun ExploreGrid(
+    posts: LazyPagingItems<Post>,
+    onOpenPost: (postId: String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (posts.itemCount == 0) {
+        EmptyState(
+            icon = GeoWoofIcons.PersonSearch,
+            title = stringResource(R.string.feature_search_search_empty_title),
+            message = stringResource(R.string.feature_search_search_empty_message),
+            modifier = modifier,
+        )
+    } else {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(EXPLORE_COLUMNS),
+            modifier = modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(ExploreSpacing),
+            verticalArrangement = Arrangement.spacedBy(ExploreSpacing),
+        ) {
+            items(posts.itemCount, key = posts.itemKey(Post::id)) { index ->
+                posts[index]?.let { post ->
+                    PostGridItem(
+                        image = post.media.firstOrNull(),
+                        isRepost = false,
+                        onClick = { onOpenPost(post.id) },
+                    )
                 }
             }
         }
@@ -206,6 +249,8 @@ private fun PetResultRow(pet: PetSearchResult, onClick: () -> Unit, modifier: Mo
 }
 
 private val PetAvatarSize = 40.dp
+private val ExploreSpacing = 2.dp
+private const val EXPLORE_COLUMNS = 3
 
 private val FINISHED = LoadStates(
     refresh = LoadState.NotLoading(endOfPaginationReached = true),
@@ -223,8 +268,10 @@ private fun SearchIdlePreview() {
             query = TextFieldState(),
             users = flowOf(PagingData.empty<UserSummary>(FINISHED)).collectAsLazyPagingItems(),
             pets = flowOf(PagingData.empty<PetSearchResult>(FINISHED)).collectAsLazyPagingItems(),
+            explore = flowOf(PagingData.empty<Post>(FINISHED)).collectAsLazyPagingItems(),
             onSelectTab = {},
             onOpenUser = {},
+            onOpenPost = {},
         )
     }
 }
@@ -244,8 +291,10 @@ private fun SearchPetsPreview() {
                     FINISHED,
                 ),
             ).collectAsLazyPagingItems(),
+            explore = flowOf(PagingData.empty<Post>(FINISHED)).collectAsLazyPagingItems(),
             onSelectTab = {},
             onOpenUser = {},
+            onOpenPost = {},
         )
     }
 }

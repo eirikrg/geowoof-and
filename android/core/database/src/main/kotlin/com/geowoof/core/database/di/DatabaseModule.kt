@@ -3,6 +3,7 @@ package com.geowoof.core.database.di
 import android.content.Context
 import androidx.room.Room
 import com.geowoof.core.database.ActiveWalkDao
+import com.geowoof.core.database.FeedDao
 import com.geowoof.core.database.GeoWoofDatabase
 import com.geowoof.core.database.PetDao
 import com.geowoof.core.database.PetWeightDao
@@ -41,4 +42,7 @@ object DatabaseModule {
 
     @Provides
     fun providesSocialDao(database: GeoWoofDatabase): SocialDao = database.socialDao()
+
+    @Provides
+    fun providesFeedDao(database: GeoWoofDatabase): FeedDao = database.feedDao()
 }

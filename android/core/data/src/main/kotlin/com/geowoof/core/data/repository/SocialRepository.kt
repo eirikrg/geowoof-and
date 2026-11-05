@@ -2,6 +2,7 @@ package com.geowoof.core.data.repository
 
 import com.geowoof.core.data.mapper.toEntity
 import com.geowoof.core.data.mapper.toModel
+import com.geowoof.core.database.FeedDao
 import com.geowoof.core.database.SocialDao
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.BlockedUser
@@ -66,6 +67,7 @@ internal class DefaultSocialRepository @Inject constructor(
     private val network: SocialNetworkDataSource,
     private val people: PeopleNetworkDataSource,
     private val dao: SocialDao,
+    private val feed: FeedDao,
 ) : SocialRepository {
     override val receivedRequests: Flow<List<FollowRequest>> = requests(RequestDirection.Received)
 
@@ -124,6 +126,7 @@ internal class DefaultSocialRepository @Inject constructor(
 
     override suspend fun block(userId: String): Outcome<Unit> = network.block(userId).onSuccess {
         dao.deleteRequestsWith(userId)
+        feed.deleteAllOf(userId)
         refreshBlockedUsers()
     }
 

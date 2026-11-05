@@ -38,6 +38,9 @@ interface PeopleRepository {
 
     fun searchPets(query: String): Flow<PagingData<PetSearchResult>>
 
+    /** A few people for the text after an `@`, while the person writes. */
+    suspend fun suggestUsers(query: String): Outcome<List<UserSummary>>
+
     suspend fun profile(userId: String): Outcome<Profile>
 
     suspend fun counts(userId: String): Outcome<ProfileCounts>
@@ -57,27 +60,30 @@ interface PeopleRepository {
 
 internal class DefaultPeopleRepository @Inject constructor(private val network: PeopleNetworkDataSource) :
     PeopleRepository {
-    override fun searchUsers(query: String): Flow<PagingData<UserSummary>> = pager { limit, cursor ->
+    override fun searchUsers(query: String): Flow<PagingData<UserSummary>> = cursorPager { limit, cursor ->
         network.searchUsers(query, limit, cursor).map { page -> page.mapItems { it.toModel() } }
     }
 
-    override fun searchPets(query: String): Flow<PagingData<PetSearchResult>> = pager { limit, cursor ->
+    override fun searchPets(query: String): Flow<PagingData<PetSearchResult>> = cursorPager { limit, cursor ->
         network.searchPets(query, limit, cursor).map { page -> page.mapItems { it.toModel() } }
     }
+
+    override suspend fun suggestUsers(query: String): Outcome<List<UserSummary>> =
+        network.searchUsers(query, SUGGESTIONS, null).map { page -> page.items.map { it.toModel() } }
 
     override suspend fun profile(userId: String): Outcome<Profile> =
         network.profile(userId).map { it.toEntity().toModel() }
 
     override suspend fun counts(userId: String): Outcome<ProfileCounts> = network.counts(userId).map { it.toModel() }
 
-    override fun people(userId: String, kind: PeopleListKind): Flow<PagingData<Person>> = pager { limit, cursor ->
+    override fun people(userId: String, kind: PeopleListKind): Flow<PagingData<Person>> = cursorPager { limit, cursor ->
         network.people(userId, kind.name.lowercase(), limit, cursor).map { page -> page.mapItems { it.toModel() } }
     }
 
     override suspend fun pets(userId: String): Outcome<List<Pet>> =
         network.pets(userId).map { page -> page.items.map { it.toEntity().toModel() } }
 
-    override fun walks(userId: String): Flow<PagingData<Walk>> = pager { limit, cursor ->
+    override fun walks(userId: String): Flow<PagingData<Walk>> = cursorPager { limit, cursor ->
         network.walks(userId, limit, cursor).map { page -> page.mapItems { it.toModel() } }
     }
 
@@ -86,17 +92,20 @@ internal class DefaultPeopleRepository @Inject constructor(private val network: 
 
     override suspend fun walk(walkId: String): Outcome<UserWalk> = network.walk(walkId).map { it.toUserWalk() }
 
-    private fun <T : Any> pager(load: suspend (limit: Int, cursor: String?) -> Outcome<NetworkPage<T>>) = Pager(
-        config = PagingConfig(pageSize = PAGE_SIZE, initialLoadSize = PAGE_SIZE, enablePlaceholders = false),
-        pagingSourceFactory = { CursorPagingSource(load) },
-    ).flow
-
-    private fun <T, R> NetworkPage<T>.mapItems(transform: (T) -> R) = NetworkPage(items.map(transform), nextCursor)
-
     private companion object {
-        const val PAGE_SIZE = 20
+        const val SUGGESTIONS = 5
     }
 }
+
+private const val PAGE_SIZE = 20
+
+/** A list of the API that is not kept on the device. */
+internal fun <T : Any> cursorPager(load: suspend (limit: Int, cursor: String?) -> Outcome<NetworkPage<T>>) = Pager(
+    config = PagingConfig(pageSize = PAGE_SIZE, initialLoadSize = PAGE_SIZE, enablePlaceholders = false),
+    pagingSourceFactory = { CursorPagingSource(load) },
+).flow
+
+internal fun <T, R> NetworkPage<T>.mapItems(transform: (T) -> R) = NetworkPage(items.map(transform), nextCursor)
 
 /** Reads the pages of a list of the API, which go forward with a cursor (docs/api.md, section 3). */
 internal class CursorPagingSource<T : Any>(

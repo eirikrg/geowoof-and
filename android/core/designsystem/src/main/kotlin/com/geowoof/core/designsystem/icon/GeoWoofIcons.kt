@@ -90,5 +90,19 @@ object GeoWoofIcons {
 
     @DrawableRes val Flag: Int = R.drawable.core_designsystem_ic_flag
 
+    @DrawableRes val Favorite: Int = R.drawable.core_designsystem_ic_favorite
+
+    @DrawableRes val FavoriteFilled: Int = R.drawable.core_designsystem_ic_favorite_filled
+
+    @DrawableRes val Bookmark: Int = R.drawable.core_designsystem_ic_bookmark
+
+    @DrawableRes val BookmarkFilled: Int = R.drawable.core_designsystem_ic_bookmark_filled
+
+    @DrawableRes val ChatBubble: Int = R.drawable.core_designsystem_ic_chat_bubble
+
+    @DrawableRes val Repeat: Int = R.drawable.core_designsystem_ic_repeat
+
+    @DrawableRes val Send: Int = R.drawable.core_designsystem_ic_send
+
     @DrawableRes val GroupAdd: Int = R.drawable.core_designsystem_ic_group_add
 }

@@ -11,6 +11,7 @@ enum class MediaPurpose {
     UserAvatar,
     PetAvatar,
     WalkPhoto,
+    PostImage,
 }
 
 /** The public face of an account. It never includes the email. */

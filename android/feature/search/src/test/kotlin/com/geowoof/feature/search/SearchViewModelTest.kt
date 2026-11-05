@@ -3,6 +3,7 @@ package com.geowoof.feature.search
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import com.geowoof.core.testing.FakePeopleRepository
+import com.geowoof.core.testing.FakePostsRepository
 import com.geowoof.core.testing.MainDispatcherRule
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -20,7 +21,7 @@ class SearchViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val people = FakePeopleRepository()
-    private val viewModel by lazy { SearchViewModel(people) }
+    private val viewModel by lazy { SearchViewModel(people, FakePostsRepository()) }
 
     private fun TestScope.subscribe() {
         backgroundScope.launch { viewModel.uiState.collect {} }

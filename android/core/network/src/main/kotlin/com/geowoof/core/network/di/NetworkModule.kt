@@ -9,6 +9,8 @@ import com.geowoof.core.network.PeopleApi
 import com.geowoof.core.network.PeopleNetworkDataSource
 import com.geowoof.core.network.PetsApi
 import com.geowoof.core.network.PetsNetworkDataSource
+import com.geowoof.core.network.PostsApi
+import com.geowoof.core.network.PostsNetworkDataSource
 import com.geowoof.core.network.ProfileApi
 import com.geowoof.core.network.ProfileNetworkDataSource
 import com.geowoof.core.network.RefreshApi
@@ -16,6 +18,7 @@ import com.geowoof.core.network.RetrofitAuthNetworkDataSource
 import com.geowoof.core.network.RetrofitMediaNetworkDataSource
 import com.geowoof.core.network.RetrofitPeopleNetworkDataSource
 import com.geowoof.core.network.RetrofitPetsNetworkDataSource
+import com.geowoof.core.network.RetrofitPostsNetworkDataSource
 import com.geowoof.core.network.RetrofitProfileNetworkDataSource
 import com.geowoof.core.network.RetrofitSocialNetworkDataSource
 import com.geowoof.core.network.RetrofitWalksNetworkDataSource
@@ -106,6 +109,10 @@ internal object NetworkModule {
     @Singleton
     fun providesPeopleApi(@Authenticated retrofit: Retrofit): PeopleApi = retrofit.create()
 
+    @Provides
+    @Singleton
+    fun providesPostsApi(@Authenticated retrofit: Retrofit): PostsApi = retrofit.create()
+
     /** No logging either: a signed link in a log works for anyone who reads it until it expires. */
     @Provides
     @Singleton
@@ -164,4 +171,7 @@ internal interface NetworkBindings {
 
     @Binds
     fun bindsPeopleNetworkDataSource(dataSource: RetrofitPeopleNetworkDataSource): PeopleNetworkDataSource
+
+    @Binds
+    fun bindsPostsNetworkDataSource(dataSource: RetrofitPostsNetworkDataSource): PostsNetworkDataSource
 }

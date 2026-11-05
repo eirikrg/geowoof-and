@@ -88,7 +88,20 @@
     <string name="core_ui_error_user_not_found">Este perfil no está disponible.</string>
     <string name="core_ui_error_email_required">Verifica tu email para hacer esto.</string>
     <string name="core_ui_error_request_gone">Esta solicitud ya tiene respuesta.</string>
+    <string name="core_ui_error_post_not_found">Esta publicación ya no está disponible.</string>
+    <string name="core_ui_error_post_pet_not_owned">Solo tus mascotas pueden aparecer en tus publicaciones.</string>
+    <string name="core_ui_error_cannot_repost">Solo puedes repostear lo que publican tus amigos o los perfiles públicos.</string>
     <string name="core_ui_error_lists_private">Solo esta persona y sus amigos pueden ver esta lista.</string>
     <string name="core_ui_error_profile_private">Este perfil es privado.</string>
     <string name="core_ui_error_cannot_target_self">No puedes hacer esto con tu propia cuenta.</string>
+    <string name="core_ui_open_post">Abrir publicación</string>
+    <string name="core_ui_open_repost">Abrir publicación reposteada</string>
+    <string name="core_ui_report_spam">Spam</string>
+    <string name="core_ui_report_harassment">Acoso</string>
+    <string name="core_ui_report_inappropriate">Contenido inapropiado</string>
+    <string name="core_ui_report_impersonation">Se hace pasar por otra persona</string>
+    <string name="core_ui_report_other">Otro motivo</string>
+    <string name="core_ui_report_details">Detalles (opcional)</string>
+    <string name="core_ui_report_send">Enviar</string>
+    <string name="core_ui_report_dismiss">Cancelar</string>
 </resources>
