@@ -2,10 +2,12 @@ package com.geowoof.core.database.di
 
 import android.content.Context
 import androidx.room.Room
+import com.geowoof.core.database.ActiveWalkDao
 import com.geowoof.core.database.GeoWoofDatabase
 import com.geowoof.core.database.PetDao
 import com.geowoof.core.database.PetWeightDao
 import com.geowoof.core.database.ProfileDao
+import com.geowoof.core.database.WalkDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,4 +31,10 @@ object DatabaseModule {
 
     @Provides
     fun providesPetWeightDao(database: GeoWoofDatabase): PetWeightDao = database.petWeightDao()
+
+    @Provides
+    fun providesActiveWalkDao(database: GeoWoofDatabase): ActiveWalkDao = database.activeWalkDao()
+
+    @Provides
+    fun providesWalkDao(database: GeoWoofDatabase): WalkDao = database.walkDao()
 }

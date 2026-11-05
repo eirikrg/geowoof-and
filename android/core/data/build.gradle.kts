@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.core.database)
     implementation(projects.core.datastore)
     implementation(libs.androidx.exifinterface)
+    api(libs.androidx.paging.common)
 
     testImplementation(projects.core.testing)
     testImplementation(libs.robolectric)

@@ -14,7 +14,10 @@ import com.geowoof.core.network.RetrofitAuthNetworkDataSource
 import com.geowoof.core.network.RetrofitMediaNetworkDataSource
 import com.geowoof.core.network.RetrofitPetsNetworkDataSource
 import com.geowoof.core.network.RetrofitProfileNetworkDataSource
+import com.geowoof.core.network.RetrofitWalksNetworkDataSource
 import com.geowoof.core.network.StorageClient
+import com.geowoof.core.network.WalksApi
+import com.geowoof.core.network.WalksNetworkDataSource
 import com.geowoof.core.network.auth.AuthInterceptor
 import com.geowoof.core.network.auth.SessionTokenProvider
 import com.geowoof.core.network.auth.TokenAuthenticator
@@ -85,6 +88,10 @@ internal object NetworkModule {
     @Singleton
     fun providesMediaApi(@Authenticated retrofit: Retrofit): MediaApi = retrofit.create()
 
+    @Provides
+    @Singleton
+    fun providesWalksApi(@Authenticated retrofit: Retrofit): WalksApi = retrofit.create()
+
     /** No logging either: a signed link in a log works for anyone who reads it until it expires. */
     @Provides
     @Singleton
@@ -134,4 +141,7 @@ internal interface NetworkBindings {
 
     @Binds
     fun bindsMediaNetworkDataSource(dataSource: RetrofitMediaNetworkDataSource): MediaNetworkDataSource
+
+    @Binds
+    fun bindsWalksNetworkDataSource(dataSource: RetrofitWalksNetworkDataSource): WalksNetworkDataSource
 }

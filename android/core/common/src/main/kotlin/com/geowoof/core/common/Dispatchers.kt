@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import java.time.Clock
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -36,6 +37,9 @@ object DispatchersModule {
     @Provides
     @Dispatcher(GeoWoofDispatchers.Default)
     fun providesDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
+
+    @Provides
+    fun providesClock(): Clock = Clock.systemUTC()
 
     @Provides
     @Singleton

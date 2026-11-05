@@ -1,17 +1,25 @@
 package com.geowoof.core.data.di
 
 import com.geowoof.core.data.media.BitmapImageCompressor
+import com.geowoof.core.data.media.FilesWalkPhotoStore
 import com.geowoof.core.data.media.ImageCompressor
+import com.geowoof.core.data.media.WalkPhotoStore
 import com.geowoof.core.data.repository.AccountRepository
+import com.geowoof.core.data.repository.ActiveWalkRepository
 import com.geowoof.core.data.repository.AuthRepository
 import com.geowoof.core.data.repository.DefaultAccountRepository
+import com.geowoof.core.data.repository.DefaultActiveWalkRepository
 import com.geowoof.core.data.repository.DefaultAuthRepository
 import com.geowoof.core.data.repository.DefaultMediaRepository
 import com.geowoof.core.data.repository.DefaultPetsRepository
 import com.geowoof.core.data.repository.DefaultProfileRepository
+import com.geowoof.core.data.repository.DefaultWalkSynchronizer
+import com.geowoof.core.data.repository.DefaultWalksRepository
 import com.geowoof.core.data.repository.MediaRepository
 import com.geowoof.core.data.repository.PetsRepository
 import com.geowoof.core.data.repository.ProfileRepository
+import com.geowoof.core.data.repository.WalkSynchronizer
+import com.geowoof.core.data.repository.WalksRepository
 import com.geowoof.core.data.session.DatabaseUserDataCleaner
 import com.geowoof.core.data.session.SessionManager
 import com.geowoof.core.data.session.UserDataCleaner
@@ -47,4 +55,16 @@ internal interface DataModule {
 
     @Binds
     fun bindsAccountRepository(repository: DefaultAccountRepository): AccountRepository
+
+    @Binds
+    fun bindsActiveWalkRepository(repository: DefaultActiveWalkRepository): ActiveWalkRepository
+
+    @Binds
+    fun bindsWalksRepository(repository: DefaultWalksRepository): WalksRepository
+
+    @Binds
+    fun bindsWalkSynchronizer(synchronizer: DefaultWalkSynchronizer): WalkSynchronizer
+
+    @Binds
+    fun bindsWalkPhotoStore(store: FilesWalkPhotoStore): WalkPhotoStore
 }

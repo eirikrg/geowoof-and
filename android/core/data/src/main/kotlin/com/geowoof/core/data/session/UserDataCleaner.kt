@@ -2,6 +2,8 @@ package com.geowoof.core.data.session
 
 import com.geowoof.core.common.Dispatcher
 import com.geowoof.core.common.GeoWoofDispatchers
+import com.geowoof.core.data.media.WalkPhotoStore
+import com.geowoof.core.data.repository.WalkSyncScheduler
 import com.geowoof.core.database.GeoWoofDatabase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -14,7 +16,13 @@ interface UserDataCleaner {
 
 internal class DatabaseUserDataCleaner @Inject constructor(
     private val database: GeoWoofDatabase,
+    private val walkUploads: WalkSyncScheduler,
+    private val walkPhotos: WalkPhotoStore,
     @Dispatcher(GeoWoofDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
 ) : UserDataCleaner {
-    override suspend fun clear() = withContext(ioDispatcher) { database.clearAllTables() }
+    override suspend fun clear() {
+        walkUploads.cancelAll()
+        withContext(ioDispatcher) { database.clearAllTables() }
+        walkPhotos.deleteAll()
+    }
 }

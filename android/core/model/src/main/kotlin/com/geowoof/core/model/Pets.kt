@@ -10,6 +10,7 @@ data class RemoteImage(val assetId: String, val thumbUrl: String?, val mediumUrl
 enum class MediaPurpose {
     UserAvatar,
     PetAvatar,
+    WalkPhoto,
 }
 
 /** The public face of an account. It never includes the email. */

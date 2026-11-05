@@ -29,6 +29,15 @@ class MediaRepositoryTest {
     }
 
     @Test
+    fun a_stored_image_is_uploaded_without_compressing_it_again() = runTest {
+        val outcome = repository.uploadStoredImage("/files/walk/0.jpg", MediaPurpose.WalkPhoto)
+
+        assertEquals(Outcome.Success("asset"), outcome)
+        assertEquals(emptyList<String>(), compressor.compressed)
+        assertEquals(UploadRequestBody("image/jpeg", 3, "WalkPhoto"), network.requested.single())
+    }
+
+    @Test
     fun it_waits_until_the_server_has_processed_the_image() = runTest {
         network.completed = asset("Processing")
         network.statuses += listOf(asset("Processing"), asset("Ready"))
@@ -109,6 +118,9 @@ private class FakeCompressor : ImageCompressor {
         compressed += contentUri
         return Outcome.Success(CompressedImage(byteArrayOf(1, 2, 3), "image/jpeg"))
     }
+
+    override suspend fun readCompressed(path: String): Outcome<CompressedImage> =
+        Outcome.Success(CompressedImage(byteArrayOf(1, 2, 3), "image/jpeg"))
 }
 
 private class FakeMediaNetwork : MediaNetworkDataSource {

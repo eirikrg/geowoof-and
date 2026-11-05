@@ -271,4 +271,7 @@ class FakeMediaRepository : MediaRepository {
         uploads += contentUri to purpose
         return result
     }
+
+    override suspend fun uploadStoredImage(path: String, purpose: MediaPurpose): Outcome<String> =
+        uploadImage(path, purpose)
 }

@@ -1,5 +1,6 @@
 package com.geowoof.core.database
 
+import androidx.room.AutoMigration
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -131,11 +132,32 @@ abstract class PetWeightDao {
     }
 }
 
-@Database(entities = [ProfileEntity::class, PetEntity::class, PetWeightEntity::class], version = 1, exportSchema = true)
+@Database(
+    entities = [
+        ProfileEntity::class,
+        PetEntity::class,
+        PetWeightEntity::class,
+        ActiveWalkEntity::class,
+        ActiveWalkPointEntity::class,
+        WalkEntity::class,
+        WalkPetEntity::class,
+        WalkPhotoEntity::class,
+        WalkTrackEntity::class,
+        WalkTotalsEntity::class,
+        WalkPageKeyEntity::class,
+    ],
+    version = 2,
+    exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+)
 abstract class GeoWoofDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
 
     abstract fun petDao(): PetDao
 
     abstract fun petWeightDao(): PetWeightDao
+
+    abstract fun activeWalkDao(): ActiveWalkDao
+
+    abstract fun walkDao(): WalkDao
 }

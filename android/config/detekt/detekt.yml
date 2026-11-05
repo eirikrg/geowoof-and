@@ -20,6 +20,10 @@ complexity:
     thresholdInInterfaces: 20
     # A ViewModel has one function per user action, and a form has many of them.
     thresholdInClasses: 15
+    # A Hilt module has one provider per API.
+    thresholdInObjects: 20
+    # A DAO has one function per SQL statement.
+    ignoreAnnotated: ['Dao']
   LongParameterList:
     ignoreAnnotated: ['Composable']
   LongMethod:

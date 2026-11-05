@@ -1,5 +1,6 @@
 package com.geowoof.core.data.repository
 
+import com.geowoof.core.data.media.CompressedImage
 import com.geowoof.core.data.media.ImageCompressor
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.MediaPurpose
@@ -20,6 +21,9 @@ interface MediaRepository {
      * error: it can be attached anyway, and it appears once the server has finished.
      */
     suspend fun uploadImage(contentUri: String, purpose: MediaPurpose): Outcome<String>
+
+    /** The same with a copy that was already compressed and saved on the device. */
+    suspend fun uploadStoredImage(path: String, purpose: MediaPurpose): Outcome<String>
 }
 
 internal class DefaultMediaRepository @Inject constructor(
@@ -27,12 +31,17 @@ internal class DefaultMediaRepository @Inject constructor(
     private val compressor: ImageCompressor,
 ) : MediaRepository {
     override suspend fun uploadImage(contentUri: String, purpose: MediaPurpose): Outcome<String> =
-        compressor.compress(contentUri).flatMap { image ->
-            val body = UploadRequestBody(image.contentType, image.bytes.size.toLong(), purpose.name)
-            network.requestUpload(body).flatMap { upload ->
-                network.upload(upload, image.bytes).flatMap { network.completeUpload(upload.assetId) }
-            }
+        compressor.compress(contentUri).flatMap { upload(it, purpose) }
+
+    override suspend fun uploadStoredImage(path: String, purpose: MediaPurpose): Outcome<String> =
+        compressor.readCompressed(path).flatMap { upload(it, purpose) }
+
+    private suspend fun upload(image: CompressedImage, purpose: MediaPurpose): Outcome<String> {
+        val body = UploadRequestBody(image.contentType, image.bytes.size.toLong(), purpose.name)
+        return network.requestUpload(body).flatMap { upload ->
+            network.upload(upload, image.bytes).flatMap { network.completeUpload(upload.assetId) }
         }.flatMap { awaitProcessing(it) }
+    }
 
     private suspend fun awaitProcessing(completed: NetworkMediaAsset): Outcome<String> {
         var asset = completed

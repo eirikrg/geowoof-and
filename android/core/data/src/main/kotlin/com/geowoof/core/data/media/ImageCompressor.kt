@@ -16,6 +16,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import javax.inject.Inject
@@ -27,6 +28,9 @@ class CompressedImage(val bytes: ByteArray, val contentType: String)
 /** Prepares a picked image for upload: at most 2048 px, JPEG 85 % (docs/decisions/0010). */
 interface ImageCompressor {
     suspend fun compress(contentUri: String): Outcome<CompressedImage>
+
+    /** An image that was already compressed and saved on the device. */
+    suspend fun readCompressed(path: String): Outcome<CompressedImage>
 }
 
 /** The sizes of the compression, separated from the bitmaps so that they can be tested on the JVM. */
@@ -74,6 +78,14 @@ internal class BitmapImageCompressor @Inject constructor(
         } catch (exception: IOException) {
             Outcome.Failure(AppError.Unexpected(exception.message))
         } catch (exception: SecurityException) {
+            Outcome.Failure(AppError.Unexpected(exception.message))
+        }
+    }
+
+    override suspend fun readCompressed(path: String): Outcome<CompressedImage> = withContext(ioDispatcher) {
+        try {
+            Outcome.Success(CompressedImage(File(path).readBytes(), JPEG))
+        } catch (exception: IOException) {
             Outcome.Failure(AppError.Unexpected(exception.message))
         }
     }
