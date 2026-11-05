@@ -39,6 +39,7 @@ import java.io.File
 
 private val ThumbnailSize = 64.dp
 private val ThumbnailShape = RoundedCornerShape(12.dp)
+private const val STATS_PER_ROW = 2
 
 /** A value with its label. TalkBack reads both as one element. */
 @Composable
@@ -59,29 +60,47 @@ fun WalkStat(value: String, label: String, modifier: Modifier = Modifier) {
 
 /** The numbers of a finished walk. */
 @Composable
-fun WalkStatsRow(stats: WalkStats, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-    ) {
-        WalkStat(distanceText(stats.distanceM), stringResource(R.string.core_ui_stat_distance))
-        WalkStat(formatDuration(stats.durationS), stringResource(R.string.core_ui_stat_duration))
-        WalkStat(formatDuration(stats.movingTimeS), stringResource(R.string.core_ui_stat_moving))
-        WalkStat(paceText(stats.paceSecondsPerKm), stringResource(R.string.core_ui_stat_pace))
-    }
+fun WalkStatsGrid(stats: WalkStats, modifier: Modifier = Modifier) {
+    StatGrid(
+        stats = listOf(
+            distanceText(stats.distanceM) to stringResource(R.string.core_ui_stat_distance),
+            formatDuration(stats.durationS) to stringResource(R.string.core_ui_stat_duration),
+            formatDuration(stats.movingTimeS) to stringResource(R.string.core_ui_stat_moving),
+            paceText(stats.paceSecondsPerKm) to stringResource(R.string.core_ui_stat_pace),
+        ),
+        modifier = modifier,
+    )
 }
 
 /** The totals of a person or a pet. */
 @Composable
-fun WalkTotalsRow(totals: WalkTotals, modifier: Modifier = Modifier) {
-    Row(
+fun WalkTotalsGrid(totals: WalkTotals, modifier: Modifier = Modifier) {
+    StatGrid(
+        stats = listOf(
+            totals.walkCount.toString() to stringResource(R.string.core_ui_total_walks),
+            distanceText(totals.distanceM) to stringResource(R.string.core_ui_stat_distance),
+            formatDuration(totals.durationS) to stringResource(R.string.core_ui_total_time),
+            totals.weeklyStreak.toString() to stringResource(R.string.core_ui_total_streak),
+        ),
+        modifier = modifier,
+    )
+}
+
+/**
+ * Pairs of a value and its label, in equal columns. Four in a single row do not fit in the shared
+ * image or on a narrow phone, and the last one would get only what the others leave.
+ */
+@Composable
+private fun StatGrid(stats: List<Pair<String, String>>, modifier: Modifier = Modifier) {
+    Column(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.medium),
     ) {
-        WalkStat(totals.walkCount.toString(), stringResource(R.string.core_ui_total_walks))
-        WalkStat(distanceText(totals.distanceM), stringResource(R.string.core_ui_stat_distance))
-        WalkStat(formatDuration(totals.durationS), stringResource(R.string.core_ui_total_time))
-        WalkStat(totals.weeklyStreak.toString(), stringResource(R.string.core_ui_total_streak))
+        stats.chunked(STATS_PER_ROW).forEach { row ->
+            Row(modifier = Modifier.fillMaxWidth()) {
+                row.forEach { (value, label) -> WalkStat(value, label, Modifier.weight(1f)) }
+            }
+        }
     }
 }
 
@@ -183,6 +202,6 @@ fun PickedPhotoImage(contentUri: String, modifier: Modifier = Modifier) {
 @Composable
 private fun WalkStatsPreview() {
     GeoWoofTheme(dynamicColor = false) {
-        WalkStatsRow(WalkStats(3120, 2530, 2380, 1.31, 763))
+        WalkStatsGrid(WalkStats(3120, 2530, 2380, 1.31, 763))
     }
 }

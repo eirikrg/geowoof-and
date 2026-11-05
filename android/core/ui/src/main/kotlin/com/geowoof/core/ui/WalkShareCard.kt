@@ -77,7 +77,7 @@ fun WalkShareCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            WalkStatsRow(stats)
+            WalkStatsGrid(stats)
             Text(
                 text = stringResource(R.string.core_ui_share_brand),
                 style = MaterialTheme.typography.labelLarge,

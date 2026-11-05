@@ -57,7 +57,7 @@ import com.geowoof.core.model.WeightIssue
 import com.geowoof.core.ui.FormError
 import com.geowoof.core.ui.ImageVariant
 import com.geowoof.core.ui.RemoteAvatar
-import com.geowoof.core.ui.WalkTotalsRow
+import com.geowoof.core.ui.WalkTotalsGrid
 import com.geowoof.core.ui.formatted
 import com.geowoof.core.ui.labelRes
 import com.geowoof.core.ui.messageRes
@@ -288,7 +288,7 @@ private fun LazyListScope.walkSection(totals: WalkTotals?, onOpenWalks: () -> Un
                 )
                 TextButton(onClick = onOpenWalks) { Text(stringResource(R.string.feature_pets_see_walks)) }
             }
-            totals?.let { WalkTotalsRow(it) }
+            totals?.let { WalkTotalsGrid(it) }
         }
     }
 }

@@ -43,7 +43,7 @@ import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Walk
 import com.geowoof.core.model.WalkTotals
 import com.geowoof.core.ui.WalkCard
-import com.geowoof.core.ui.WalkTotalsRow
+import com.geowoof.core.ui.WalkTotalsGrid
 import com.geowoof.core.ui.userMessage
 import kotlinx.coroutines.flow.flowOf
 
@@ -138,7 +138,7 @@ private fun WalkList(
         contentPadding = PaddingValues(bottom = spacing.huge),
     ) {
         uiState.totals?.let { totals ->
-            item { WalkTotalsRow(totals, modifier = Modifier.padding(spacing.large)) }
+            item { WalkTotalsGrid(totals, modifier = Modifier.padding(spacing.large)) }
         }
         items(count = walks.itemCount, key = walks.itemKey { it.id }) { index ->
             walks[index]?.let { walk ->

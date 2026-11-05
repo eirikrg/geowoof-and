@@ -61,7 +61,7 @@ import com.geowoof.core.model.WalkStats
 import com.geowoof.core.model.WalkVisibility
 import com.geowoof.core.ui.PickedPhotoImage
 import com.geowoof.core.ui.RouteCanvas
-import com.geowoof.core.ui.WalkStatsRow
+import com.geowoof.core.ui.WalkStatsGrid
 import com.geowoof.core.ui.labelRes
 import com.geowoof.core.ui.rememberPhotoPicker
 import com.geowoof.core.ui.toLines
@@ -156,7 +156,7 @@ internal fun WalkSummaryContent(
             verticalArrangement = Arrangement.spacedBy(spacing.large),
         ) {
             uiState.walk?.let { walk -> RoutePreview(walk) }
-            uiState.stats?.let { stats -> WalkStatsRow(stats) }
+            uiState.stats?.let { stats -> WalkStatsGrid(stats) }
             if (uiState.petNames.isNotEmpty()) {
                 Text(uiState.petNames.joinToString(), style = MaterialTheme.typography.bodyLarge)
             }

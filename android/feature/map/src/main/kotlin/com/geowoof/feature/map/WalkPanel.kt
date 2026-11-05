@@ -166,10 +166,22 @@ private fun ColumnScope.FinishedContent(actions: MapActions) {
 @Composable
 private fun LiveStats(walk: ActiveWalk, stats: WalkStats?) {
     val elapsed = rememberElapsedSeconds(walk)
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-        WalkStat(distanceText(stats?.distanceM ?: 0), stringResource(R.string.feature_map_distance))
-        WalkStat(formatDuration(elapsed), stringResource(R.string.feature_map_time))
-        WalkStat(paceText(stats?.paceSecondsPerKm), stringResource(R.string.feature_map_pace))
+    Row(modifier = Modifier.fillMaxWidth()) {
+        WalkStat(
+            value = distanceText(stats?.distanceM ?: 0),
+            label = stringResource(R.string.feature_map_distance),
+            modifier = Modifier.weight(1f),
+        )
+        WalkStat(
+            value = formatDuration(elapsed),
+            label = stringResource(R.string.feature_map_time),
+            modifier = Modifier.weight(1f),
+        )
+        WalkStat(
+            value = paceText(stats?.paceSecondsPerKm),
+            label = stringResource(R.string.feature_map_pace),
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 

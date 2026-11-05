@@ -53,7 +53,7 @@ import com.geowoof.core.model.WalkSyncStatus
 import com.geowoof.core.model.WalkVisibility
 import com.geowoof.core.ui.RouteCanvas
 import com.geowoof.core.ui.WalkPhotoImage
-import com.geowoof.core.ui.WalkStatsRow
+import com.geowoof.core.ui.WalkStatsGrid
 import com.geowoof.core.ui.decodeRoute
 import com.geowoof.core.ui.formattedIn
 import com.geowoof.core.ui.labelRes
@@ -244,7 +244,7 @@ private fun WalkDetails(
         if (uiState.petNames.isNotEmpty()) {
             Text(uiState.petNames, style = MaterialTheme.typography.bodyLarge)
         }
-        WalkStatsRow(walk.stats)
+        WalkStatsGrid(walk.stats)
         Text(
             text = stringResource(R.string.feature_walks_visibility, stringResource(walk.visibility.labelRes())),
             style = MaterialTheme.typography.bodyMedium,
