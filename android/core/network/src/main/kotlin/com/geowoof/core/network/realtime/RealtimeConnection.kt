@@ -127,19 +127,22 @@ internal class RealtimeConnection(
         }
     }
 
-    /** @return whether it got to connect. */
+    /**
+     * @return whether it lasted. One that the server closes at once did not really connect, and
+     * trying again right away would only repeat it: the wait has to keep growing.
+     */
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     private suspend fun connectUntilClosed(): Boolean {
         val next = newClient()
         val closed = CompletableDeferred<Unit>()
         next.onClosed { closed.complete(Unit) }
         events.forEach { event -> next.on(event) { json -> mutableMessages.tryEmit(HubMessage(event, json)) } }
-        var hasConnected = false
+        var hasLasted = false
         try {
             next.start()
-            hasConnected = true
             client = next
             mutableState.value = RealtimeState.Connected
+            hasLasted = withTimeoutOrNull(LASTED_AFTER_MS) { closed.await() } == null
             closed.await()
         } catch (exception: CancellationException) {
             throw exception
@@ -149,7 +152,7 @@ internal class RealtimeConnection(
             client = null
             withContext(NonCancellable) { stopQuietly(next) }
         }
-        return hasConnected
+        return hasLasted
     }
 
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
@@ -171,6 +174,7 @@ internal class RealtimeConnection(
         const val MIN_DELAY_MS = 1_000L
         const val MAX_DELAY_MS = 60_000L
         const val MAX_DOUBLINGS = 6
+        const val LASTED_AFTER_MS = 15_000L
         const val STOP_TIMEOUT_MS = 3_000L
     }
 }

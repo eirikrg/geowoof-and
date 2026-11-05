@@ -17,7 +17,7 @@ import java.io.IOException
 import kotlin.random.Random
 
 /** A hub without a network: the test decides when it connects, fails or closes. */
-private class FakeHubClient(private val failsToStart: Boolean) : HubClient {
+private class FakeHubClient(private val failsToStart: Boolean, private val closesAtOnce: Boolean = false) : HubClient {
     private var closedHandler: () -> Unit = {}
     private val handlers = mutableMapOf<String, (String) -> Unit>()
 
@@ -30,6 +30,7 @@ private class FakeHubClient(private val failsToStart: Boolean) : HubClient {
     override suspend fun start() {
         if (failsToStart) throw IOException("No network")
         isStarted = true
+        if (closesAtOnce) closedHandler()
     }
 
     override suspend fun stop() {
@@ -71,9 +72,12 @@ class RealtimeConnectionTest {
     /** How many of the next attempts cannot connect. */
     private var failures = 0
 
+    /** How many of the next ones connect and are thrown out at once. */
+    private var thrownOut = 0
+
     private fun TestScope.connection() = RealtimeConnection(
         newClient = {
-            FakeHubClient(failsToStart = failures-- > 0).also { clients += it }
+            FakeHubClient(failsToStart = failures-- > 0, closesAtOnce = thrownOut-- > 0).also { clients += it }
         },
         events = listOf("WalkerUpdated"),
         scope = backgroundScope,
@@ -85,6 +89,11 @@ class RealtimeConnectionTest {
         val done = CompletableDeferred<Unit>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { connection.whileOpen { done.await() } }
         return done
+    }
+
+    private companion object {
+        /** Longer than a connection takes to count as good. */
+        const val LASTED = 15_001L
     }
 
     @Test
@@ -135,6 +144,7 @@ class RealtimeConnectionTest {
     fun when_it_closes_it_comes_back_with_a_new_connection() = runTest {
         val connection = connection()
         use(connection)
+        advanceTimeBy(LASTED)
         runCurrent()
 
         clients.single().close()
@@ -188,12 +198,69 @@ class RealtimeConnectionTest {
         runCurrent()
         assertEquals(RealtimeState.Connected, connection.state.value)
         val connected = clients.size
+        advanceTimeBy(LASTED)
 
         clients.last().close()
         advanceTimeBy(1_001)
         runCurrent()
 
         assertEquals(connected + 1, clients.size)
+    }
+
+    /** What happens with a token that the server accepts but has already expired for the hub. */
+    @Test
+    fun being_thrown_out_at_once_is_not_connecting_so_the_wait_grows() = runTest {
+        thrownOut = 100
+        val connection = connection()
+        use(connection)
+        runCurrent()
+        assertEquals(1, clients.size)
+
+        advanceTimeBy(1_999)
+        runCurrent()
+        assertEquals(1, clients.size)
+        advanceTimeBy(2)
+        runCurrent()
+        assertEquals(2, clients.size)
+
+        advanceTimeBy(3_990)
+        runCurrent()
+        assertEquals(2, clients.size)
+        advanceTimeBy(20)
+        runCurrent()
+        assertEquals(3, clients.size)
+    }
+
+    @Test
+    fun half_a_minute_of_being_thrown_out_is_a_few_attempts_and_not_a_storm() = runTest {
+        thrownOut = 100
+        val connection = connection()
+        use(connection)
+
+        advanceTimeBy(30_000)
+        runCurrent()
+
+        // At 0, 2, 6, 14 and 30 s. It used to be one every second.
+        assertEquals(5, clients.size)
+    }
+
+    @Test
+    fun a_connection_that_lasts_ends_the_wait_after_being_thrown_out() = runTest {
+        thrownOut = 2
+        val connection = connection()
+        use(connection)
+        advanceTimeBy(6_100)
+        runCurrent()
+        assertEquals(RealtimeState.Connected, connection.state.value)
+        val connected = clients.size
+
+        advanceTimeBy(LASTED)
+        clients.last().close()
+        advanceTimeBy(1_001)
+        runCurrent()
+
+        assertEquals(connected + 1, clients.size)
+        assertEquals(RealtimeState.Connected, connection.state.value)
     }
 
     @Test

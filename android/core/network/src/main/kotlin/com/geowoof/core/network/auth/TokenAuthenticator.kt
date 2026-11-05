@@ -12,11 +12,17 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import okhttp3.Authenticator
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
 import java.io.IOException
+import java.time.Duration
+import java.time.Instant
+import java.util.Base64
 
 /**
  * Refreshes the session when an authenticated request gets a 401 and retries it once.
@@ -30,6 +36,28 @@ internal class TokenAuthenticator(
     private val json: Json,
 ) : Authenticator {
     private val mutex = Mutex()
+
+    /**
+     * For the hubs. One closes a connection the moment its token expires, while the server still
+     * accepts that token for a while (`ClockSkew`): connecting with it would be thrown out at once,
+     * again and again, until it finally got the 401 that renews it. A token that cannot be read is
+     * left to that 401.
+     */
+    suspend fun renewIfExpiring(now: Instant = Instant.now()) {
+        val token = tokens.accessToken() ?: return
+        val expiresAt = expirationOf(token) ?: return
+        if (now.plus(RENEW_MARGIN) >= expiresAt) mutex.withLock { refreshUnlessAlreadyRefreshed(token) }
+    }
+
+    private fun expirationOf(token: String): Instant? {
+        val payload = token.split('.').getOrNull(1) ?: return null
+        return try {
+            val claims = json.parseToJsonElement(String(Base64.getUrlDecoder().decode(payload), Charsets.UTF_8))
+            claims.jsonObject["exp"]?.jsonPrimitive?.longOrNull?.let(Instant::ofEpochSecond)
+        } catch (@Suppress("SwallowedException") exception: IllegalArgumentException) {
+            null
+        }
+    }
 
     override fun authenticate(route: Route?, response: Response): Request? {
         val failedToken = response.request.header(AUTHORIZATION)?.removePrefix(BEARER)
@@ -98,6 +126,7 @@ internal class TokenAuthenticator(
         this is AppError.SessionExpired || (this is AppError.Api && status == HTTP_UNAUTHORIZED)
 
     private companion object {
+        val RENEW_MARGIN: Duration = Duration.ofSeconds(60)
         const val RETRY_DELAY_MS = 300L
         const val HTTP_CONFLICT = 409
         const val HTTP_UNAUTHORIZED = 401

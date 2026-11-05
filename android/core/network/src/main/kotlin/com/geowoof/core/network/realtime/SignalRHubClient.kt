@@ -3,6 +3,7 @@ package com.geowoof.core.network.realtime
 import android.annotation.SuppressLint
 import android.util.Log
 import com.geowoof.core.network.auth.SessionTokenProvider
+import com.geowoof.core.network.auth.TokenAuthenticator
 import com.google.gson.JsonElement
 import com.microsoft.signalr.Action1
 import com.microsoft.signalr.HubConnectionBuilder
@@ -13,23 +14,30 @@ import io.reactivex.rxjava3.exceptions.UndeliverableException
 import io.reactivex.rxjava3.plugins.RxJavaPlugins
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
-import okhttp3.Authenticator
 import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /**
- * The official client. The token comes from the session each time it connects, and the
- * authenticator of the API renews it if it has expired. The arguments go as maps and the answers
- * come back as JSON, so that Gson does not need to reflect on anything of ours.
+ * The official client. The token comes from the session each time it connects, renewed first if
+ * it has little left, and the authenticator of the API deals with any other 401. The arguments go
+ * as maps and the answers come back as JSON, so that Gson does not need to reflect on anything of
+ * ours.
  */
-internal class SignalRHubClient(url: String, tokens: SessionTokenProvider, authenticator: Authenticator) : HubClient {
+internal class SignalRHubClient(
+    url: String,
+    tokens: SessionTokenProvider,
+    private val authenticator: TokenAuthenticator,
+) : HubClient {
     private val hub = HubConnectionBuilder.create(url)
         .withAccessTokenProvider(Single.defer { Single.just(tokens.accessToken().orEmpty()) })
         .setHttpClientBuilderCallback { builder -> builder.authenticator(authenticator) }
         .build()
 
-    override suspend fun start() = guarded { hub.start().awaitCompletion() }
+    override suspend fun start() = guarded {
+        authenticator.renewIfExpiring()
+        hub.start().awaitCompletion()
+    }
 
     override suspend fun stop() = guarded { hub.stop().awaitCompletion() }
 
