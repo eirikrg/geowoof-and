@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -49,6 +50,8 @@ internal fun SettingsScreen(
         onVerifyEmail = onVerifyEmail,
         onChangePassword = onChangePassword,
         onSignOut = viewModel::signOut,
+        onConfirmSignOut = viewModel::confirmSignOut,
+        onDismissSignOut = viewModel::dismissSignOut,
         onDeleteAccount = onDeleteAccount,
         modifier = modifier,
     )
@@ -62,9 +65,24 @@ internal fun SettingsContent(
     onVerifyEmail: () -> Unit,
     onChangePassword: () -> Unit,
     onSignOut: () -> Unit,
+    onConfirmSignOut: () -> Unit,
+    onDismissSignOut: () -> Unit,
     onDeleteAccount: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (uiState.isConfirmingSignOut) {
+        AlertDialog(
+            onDismissRequest = onDismissSignOut,
+            title = { Text(stringResource(R.string.feature_settings_sign_out_title)) },
+            text = { Text(stringResource(R.string.feature_settings_sign_out_message)) },
+            confirmButton = {
+                TextButton(onClick = onConfirmSignOut) { Text(stringResource(R.string.feature_settings_sign_out)) }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissSignOut) { Text(stringResource(R.string.feature_settings_stay)) }
+            },
+        )
+    }
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -195,6 +213,8 @@ private fun SettingsPreview() {
             onVerifyEmail = {},
             onChangePassword = {},
             onSignOut = {},
+            onConfirmSignOut = {},
+            onDismissSignOut = {},
             onDeleteAccount = {},
         )
     }

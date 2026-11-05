@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_walks_my_title">Mis paseos</string>
+    <string name="feature_walks_pet_title">Paseos de %1$s</string>
+    <string name="feature_walks_detail_title">Paseo</string>
+    <string name="feature_walks_back">Volver</string>
+    <string name="feature_walks_empty_title">Todavía no hay paseos</string>
+    <string name="feature_walks_empty_message">Empieza un paseo desde el mapa y aparecerá aquí.</string>
+    <string name="feature_walks_error_title">No se han podido cargar los paseos</string>
+    <string name="feature_walks_retry">Reintentar</string>
+    <string name="feature_walks_share">Compartir</string>
+    <string name="feature_walks_share_title">Compartir este paseo</string>
+    <string name="feature_walks_share_chooser">Comparte tu paseo</string>
+    <string name="feature_walks_share_close">Cerrar</string>
+    <string name="feature_walks_delete">Borrar</string>
+    <string name="feature_walks_delete_title">¿Borrar este paseo?</string>
+    <string name="feature_walks_delete_message">Se borrarán el paseo y sus fotos, y no se puede deshacer.</string>
+    <string name="feature_walks_keep">Conservar</string>
+    <string name="feature_walks_pending">Se subirá en cuanto haya conexión.</string>
+    <string name="feature_walks_failed">No se ha podido subir este paseo.</string>
+    <string name="feature_walks_visibility">Quién puede verlo: %1$s</string>
+    <string name="feature_walks_loading_route">La ruta no está disponible sin conexión.</string>
+    <string name="feature_walks_route">Ruta del paseo</string>
+</resources>

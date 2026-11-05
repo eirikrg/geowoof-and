@@ -63,4 +63,20 @@ object GeoWoofIcons {
     @DrawableRes val ChevronRight: Int = R.drawable.core_designsystem_ic_chevron_right
 
     @DrawableRes val AlternateEmail: Int = R.drawable.core_designsystem_ic_alternate_email
+
+    @DrawableRes val PlayArrow: Int = R.drawable.core_designsystem_ic_play_arrow
+
+    @DrawableRes val Pause: Int = R.drawable.core_designsystem_ic_pause
+
+    @DrawableRes val Stop: Int = R.drawable.core_designsystem_ic_stop
+
+    @DrawableRes val Share: Int = R.drawable.core_designsystem_ic_share
+
+    @DrawableRes val DirectionsWalk: Int = R.drawable.core_designsystem_ic_directions_walk
+
+    @DrawableRes val CloudUpload: Int = R.drawable.core_designsystem_ic_cloud_upload
+
+    @DrawableRes val SyncProblem: Int = R.drawable.core_designsystem_ic_sync_problem
+
+    @DrawableRes val Close: Int = R.drawable.core_designsystem_ic_close
 }

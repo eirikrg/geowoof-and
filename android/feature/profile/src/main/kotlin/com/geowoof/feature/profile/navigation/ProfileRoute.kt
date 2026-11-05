@@ -21,6 +21,7 @@ fun NavController.navigateToProfile(navOptions: NavOptions? = null) = navigate(P
 fun NavGraphBuilder.profileScreen(
     navController: NavController,
     onOpenSettings: () -> Unit,
+    onOpenWalks: () -> Unit,
     onOpenPet: (petId: String) -> Unit,
     onAddPet: () -> Unit,
 ) {
@@ -28,6 +29,7 @@ fun NavGraphBuilder.profileScreen(
         ProfileScreen(
             onOpenSettings = onOpenSettings,
             onEditProfile = { navController.navigate(EditProfileRoute) { launchSingleTop = true } },
+            onOpenWalks = onOpenWalks,
             onOpenPet = onOpenPet,
             onAddPet = onAddPet,
         )

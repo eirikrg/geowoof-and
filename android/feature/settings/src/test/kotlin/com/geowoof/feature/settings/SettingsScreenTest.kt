@@ -29,6 +29,8 @@ class SettingsScreenTest {
                     onVerifyEmail = { actions += "verify" },
                     onChangePassword = { actions += "password" },
                     onSignOut = { actions += "signOut" },
+                    onConfirmSignOut = { actions += "confirmSignOut" },
+                    onDismissSignOut = { actions += "dismissSignOut" },
                     onDeleteAccount = { actions += "delete" },
                 )
             }

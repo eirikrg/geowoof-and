@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_walks_my_title">My walks</string>
+    <string name="feature_walks_pet_title">Walks of %1$s</string>
+    <string name="feature_walks_detail_title">Walk</string>
+    <string name="feature_walks_back">Back</string>
+    <string name="feature_walks_empty_title">No walks yet</string>
+    <string name="feature_walks_empty_message">Start a walk from the map and it will appear here.</string>
+    <string name="feature_walks_error_title">The walks could not be loaded</string>
+    <string name="feature_walks_retry">Try again</string>
+    <string name="feature_walks_share">Share</string>
+    <string name="feature_walks_share_title">Share this walk</string>
+    <string name="feature_walks_share_chooser">Share your walk</string>
+    <string name="feature_walks_share_close">Close</string>
+    <string name="feature_walks_delete">Delete</string>
+    <string name="feature_walks_delete_title">Delete this walk?</string>
+    <string name="feature_walks_delete_message">The walk and its photos will be deleted, and this cannot be undone.</string>
+    <string name="feature_walks_keep">Keep</string>
+    <string name="feature_walks_pending">It will be uploaded as soon as there is a connection.</string>
+    <string name="feature_walks_failed">This walk could not be uploaded.</string>
+    <string name="feature_walks_visibility">Who can see it: %1$s</string>
+    <string name="feature_walks_loading_route">The route is not available without a connection.</string>
+    <string name="feature_walks_route">Route of the walk</string>
+</resources>

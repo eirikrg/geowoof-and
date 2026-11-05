@@ -24,4 +24,7 @@
     <string name="feature_settings_delete_confirm_message">This cannot be undone.</string>
     <string name="feature_settings_delete">Delete</string>
     <string name="feature_settings_cancel">Cancel</string>
+    <string name="feature_settings_sign_out_title">You have walks on this device</string>
+    <string name="feature_settings_sign_out_message">There are walks that have not been uploaded yet. If you sign out, they will be lost.</string>
+    <string name="feature_settings_stay">Stay signed in</string>
 </resources>

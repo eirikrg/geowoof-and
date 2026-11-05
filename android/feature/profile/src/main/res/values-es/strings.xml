@@ -16,4 +16,5 @@
     <string name="feature_profile_bio_label">Sobre ti</string>
     <string name="feature_profile_too_long">Este texto es demasiado largo</string>
     <string name="feature_profile_save">Guardar</string>
+    <string name="feature_profile_my_walks">Mis paseos</string>
 </resources>

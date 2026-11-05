@@ -9,6 +9,7 @@ android {
 dependencies {
     api(projects.core.designsystem)
     api(projects.core.model)
+    implementation(projects.core.common)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.credentials)
     implementation(libs.coil.compose)

@@ -18,5 +18,6 @@ object AppConfigModule {
         apiBaseUrl = BuildConfig.API_BASE_URL,
         googleServerClientId = BuildConfig.GOOGLE_SERVER_CLIENT_ID.ifBlank { null },
         logHttpTraffic = BuildConfig.DEBUG,
+        isMapsConfigured = BuildConfig.MAPS_API_KEY != "DEFAULT_API_KEY",
     )
 }

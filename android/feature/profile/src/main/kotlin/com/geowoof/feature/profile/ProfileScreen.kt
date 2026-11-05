@@ -54,6 +54,7 @@ import com.geowoof.core.ui.userMessage
 fun ProfileScreen(
     onOpenSettings: () -> Unit,
     onEditProfile: () -> Unit,
+    onOpenWalks: () -> Unit,
     onOpenPet: (petId: String) -> Unit,
     onAddPet: () -> Unit,
     modifier: Modifier = Modifier,
@@ -66,6 +67,7 @@ fun ProfileScreen(
         onDismissError = viewModel::onErrorShown,
         onOpenSettings = onOpenSettings,
         onEditProfile = onEditProfile,
+        onOpenWalks = onOpenWalks,
         onOpenPet = onOpenPet,
         onAddPet = onAddPet,
         modifier = modifier,
@@ -80,6 +82,7 @@ internal fun ProfileContent(
     onDismissError: () -> Unit,
     onOpenSettings: () -> Unit,
     onEditProfile: () -> Unit,
+    onOpenWalks: () -> Unit,
     onOpenPet: (petId: String) -> Unit,
     onAddPet: () -> Unit,
     modifier: Modifier = Modifier,
@@ -123,7 +126,7 @@ internal fun ProfileContent(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            ProfileList(uiState = uiState, onOpenPet = onOpenPet, onAddPet = onAddPet)
+            ProfileList(uiState = uiState, onOpenWalks = onOpenWalks, onOpenPet = onOpenPet, onAddPet = onAddPet)
         }
     }
 }
@@ -131,6 +134,7 @@ internal fun ProfileContent(
 @Composable
 private fun ProfileList(
     uiState: ProfileUiState,
+    onOpenWalks: () -> Unit,
     onOpenPet: (petId: String) -> Unit,
     onAddPet: () -> Unit,
     modifier: Modifier = Modifier,
@@ -142,6 +146,14 @@ private fun ProfileList(
     ) {
         uiState.profile?.let { profile ->
             item { ProfileHeader(profile) }
+        }
+        item {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.feature_profile_my_walks)) },
+                leadingContent = { Icon(painterResource(GeoWoofIcons.DirectionsWalk), contentDescription = null) },
+                trailingContent = { Icon(painterResource(GeoWoofIcons.ChevronRight), contentDescription = null) },
+                modifier = Modifier.clickable(onClick = onOpenWalks),
+            )
         }
         item {
             Row(
@@ -245,6 +257,7 @@ private fun ProfilePreview() {
             onDismissError = {},
             onOpenSettings = {},
             onEditProfile = {},
+            onOpenWalks = {},
             onOpenPet = {},
             onAddPet = {},
         )

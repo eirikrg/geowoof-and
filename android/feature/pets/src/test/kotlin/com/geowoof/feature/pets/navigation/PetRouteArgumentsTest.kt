@@ -16,6 +16,7 @@ import com.geowoof.core.domain.ParseWeightUseCase
 import com.geowoof.core.domain.ValidatePetUseCase
 import com.geowoof.core.testing.FakeMediaRepository
 import com.geowoof.core.testing.FakePetsRepository
+import com.geowoof.core.testing.FakeWalksRepository
 import com.geowoof.core.testing.TestPets
 import com.geowoof.feature.pets.detail.PetDetailViewModel
 import com.geowoof.feature.pets.editor.PetEditorViewModel
@@ -50,7 +51,9 @@ class PetRouteArgumentsTest {
                     Text("editing=${viewModel.uiState.collectAsState().value.isEditing}")
                 }
                 composable<PetDetailRoute> {
-                    viewModel { PetDetailViewModel(createSavedStateHandle(), pets, ParseWeightUseCase()) }
+                    viewModel {
+                        PetDetailViewModel(createSavedStateHandle(), pets, FakeWalksRepository(), ParseWeightUseCase())
+                    }
                     Text("detail")
                 }
             }

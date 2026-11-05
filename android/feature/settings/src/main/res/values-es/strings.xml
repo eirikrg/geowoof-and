@@ -24,4 +24,7 @@
     <string name="feature_settings_delete_confirm_message">No se puede deshacer.</string>
     <string name="feature_settings_delete">Eliminar</string>
     <string name="feature_settings_cancel">Cancelar</string>
+    <string name="feature_settings_sign_out_title">Tienes paseos en este móvil</string>
+    <string name="feature_settings_sign_out_message">Hay paseos que aún no se han subido. Si cierras la sesión, se perderán.</string>
+    <string name="feature_settings_stay">Seguir con la sesión</string>
 </resources>

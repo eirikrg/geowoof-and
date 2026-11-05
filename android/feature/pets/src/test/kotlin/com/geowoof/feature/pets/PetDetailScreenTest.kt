@@ -51,6 +51,7 @@ class PetDetailScreenTest {
                     ),
                     onBack = { actions += "back" },
                     onEdit = { actions += "edit:$it" },
+                    onOpenWalks = { actions += "walks" },
                 )
             }
         }

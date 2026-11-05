@@ -313,9 +313,20 @@ class WalkRepositoriesTest {
     }
 
     @Test
-    fun an_upload_of_something_already_synced_does_nothing() = runTest {
+    fun an_upload_of_something_that_no_longer_exists_does_nothing() = runTest {
         assertEquals(WalkSyncResult.Done, synchronizer.sync("does-not-exist"))
         assertEquals(emptyList<WalkBody>(), network.bodies)
+    }
+
+    @Test
+    fun a_walk_that_the_server_already_had_does_not_leave_its_copies_on_the_device() = runTest {
+        walks().savePending(newWalk(photoUris = listOf("content://photo")))
+        database.walkDao().storeFromServer(listOf(networkWalk("walk").toBundle()))
+
+        assertEquals(WalkSyncResult.Done, synchronizer.sync("walk"))
+
+        assertEquals(emptyList<WalkBody>(), network.bodies)
+        assertEquals(listOf("walk"), photos.deleted)
     }
 
     @Test

@@ -84,6 +84,7 @@ dependencies {
     implementation(projects.feature.search)
     implementation(projects.feature.settings)
     implementation(projects.feature.social)
+    implementation(projects.feature.walks)
     implementation(projects.sync.work)
 
     implementation(libs.androidx.activity.compose)

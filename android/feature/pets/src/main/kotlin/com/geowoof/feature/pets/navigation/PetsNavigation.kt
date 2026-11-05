@@ -31,11 +31,12 @@ fun NavController.navigateToPetEditor(petId: String? = null, navOptions: NavOpti
 fun NavController.navigateToFirstPet(navOptions: NavOptions? = null) = navigate(FirstPetRoute, navOptions)
 
 /** The pet detail with its weight history, and the form to create or edit a pet. */
-fun NavGraphBuilder.petScreens(navController: NavController) {
+fun NavGraphBuilder.petScreens(navController: NavController, onOpenWalks: (petId: String) -> Unit) {
     composable<PetDetailRoute> {
         PetDetailScreen(
             onBack = { navController.popBackStack() },
             onEdit = { petId -> navController.navigateToPetEditor(petId) },
+            onOpenWalks = onOpenWalks,
             onDone = { navController.popBackStack() },
         )
     }

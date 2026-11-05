@@ -43,4 +43,6 @@
     <string name="feature_pets_weight_out_of_range">It must be above 0 and up to 200 kg</string>
     <string name="feature_pets_weight_decimals">Use at most 2 decimals</string>
     <string name="feature_pets_chart_description">Weight chart: from %1$s kg to %2$s kg</string>
+    <string name="feature_pets_walks_title">Walks</string>
+    <string name="feature_pets_see_walks">See walks</string>
 </resources>

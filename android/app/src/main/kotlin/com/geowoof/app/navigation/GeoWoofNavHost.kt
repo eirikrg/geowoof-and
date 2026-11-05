@@ -20,7 +20,7 @@ import com.geowoof.feature.auth.navigation.navigateToChooseUsername
 import com.geowoof.feature.auth.navigation.navigateToVerifyEmail
 import com.geowoof.feature.auth.navigation.verifyEmailScreen
 import com.geowoof.feature.map.navigation.MapRoute
-import com.geowoof.feature.map.navigation.mapScreen
+import com.geowoof.feature.map.navigation.mapScreens
 import com.geowoof.feature.pets.navigation.firstPetScreen
 import com.geowoof.feature.pets.navigation.navigateToFirstPet
 import com.geowoof.feature.pets.navigation.navigateToPet
@@ -31,6 +31,8 @@ import com.geowoof.feature.search.navigation.searchScreen
 import com.geowoof.feature.settings.navigation.navigateToSettings
 import com.geowoof.feature.settings.navigation.settingsScreens
 import com.geowoof.feature.social.navigation.communityScreen
+import com.geowoof.feature.walks.navigation.navigateToWalks
+import com.geowoof.feature.walks.navigation.walkScreens
 
 // Wires the feature graphs together; features never reference each other directly.
 
@@ -42,16 +44,18 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
         startDestination = MapRoute,
         modifier = modifier,
     ) {
-        mapScreen()
+        mapScreens(navController, onAddPet = { navController.navigateToPetEditor() })
         communityScreen()
         searchScreen()
         profileScreen(
             navController = navController,
             onOpenSettings = { navController.navigateToSettings() },
+            onOpenWalks = { navController.navigateToWalks() },
             onOpenPet = { petId -> navController.navigateToPet(petId) },
             onAddPet = { navController.navigateToPetEditor() },
         )
-        petScreens(navController)
+        petScreens(navController, onOpenWalks = { petId -> navController.navigateToWalks(petId) })
+        walkScreens(navController)
         settingsScreens(navController, onVerifyEmail = { navController.navigateToVerifyEmail() })
         verifyEmailScreen(
             onDone = { navController.popBackStack() },

@@ -18,6 +18,7 @@ import com.geowoof.core.model.WeightEntry
 import com.geowoof.core.model.WeightIssue
 import com.geowoof.core.testing.FakeMediaRepository
 import com.geowoof.core.testing.FakePetsRepository
+import com.geowoof.core.testing.FakeWalksRepository
 import com.geowoof.core.testing.MainDispatcherRule
 import com.geowoof.core.testing.TestPets
 import com.geowoof.feature.pets.detail.PetDetailViewModel
@@ -51,7 +52,13 @@ class PetViewModelsTest {
         PetEditorViewModel(SavedStateHandle(mapOf("petId" to "luna")), pets, media, ValidatePetUseCase())
 
     private fun TestScope.detail(): PetDetailViewModel {
-        val viewModel = PetDetailViewModel(SavedStateHandle(mapOf("petId" to "luna")), pets, ParseWeightUseCase())
+        val viewModel =
+            PetDetailViewModel(
+                SavedStateHandle(mapOf("petId" to "luna")),
+                pets,
+                FakeWalksRepository(),
+                ParseWeightUseCase(),
+            )
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
         return viewModel
     }

@@ -6,12 +6,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.geowoof.core.data.repository.PetsRepository
+import com.geowoof.core.data.repository.WalksRepository
 import com.geowoof.core.domain.ParseWeightUseCase
 import com.geowoof.core.domain.validatePetDate
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.Pet
 import com.geowoof.core.model.PetDateIssue
+import com.geowoof.core.model.WalkTotals
 import com.geowoof.core.model.WeightEntry
 import com.geowoof.core.model.WeightIssue
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,6 +41,7 @@ data class WeightEditorState(
 data class PetDetailUiState(
     val pet: Pet? = null,
     val weights: List<WeightEntry> = emptyList(),
+    val walkTotals: WalkTotals? = null,
     val isRefreshing: Boolean = false,
     val error: AppError? = null,
     val weightEditor: WeightEditorState? = null,
@@ -61,6 +64,7 @@ private data class DetailActions(
 class PetDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val pets: PetsRepository,
+    private val walks: WalksRepository,
     private val parseWeight: ParseWeightUseCase,
 ) : ViewModel() {
     private val petId: String = checkNotNull(savedStateHandle["petId"])
@@ -69,10 +73,16 @@ class PetDetailViewModel @Inject constructor(
     val weightText = TextFieldState()
 
     val uiState: StateFlow<PetDetailUiState> =
-        combine(pets.observePet(petId), pets.observeWeights(petId), actions) { pet, weights, current ->
+        combine(
+            pets.observePet(petId),
+            pets.observeWeights(petId),
+            walks.observeTotals(petId),
+            actions,
+        ) { pet, weights, totals, current ->
             PetDetailUiState(
                 pet = pet,
                 weights = weights,
+                walkTotals = totals,
                 isRefreshing = current.isRefreshing,
                 error = current.error,
                 weightEditor = current.weightEditor,
@@ -95,7 +105,7 @@ class PetDetailViewModel @Inject constructor(
         if (actions.value.isRefreshing) return
         actions.update { it.copy(isRefreshing = true, error = null) }
         viewModelScope.launch {
-            val results = listOf(pets.refreshPet(petId), pets.refreshWeights(petId))
+            val results = listOf(pets.refreshPet(petId), pets.refreshWeights(petId), walks.refreshTotals(petId))
             val failure = results.filterIsInstance<Outcome.Failure>().firstOrNull()?.error
             actions.update { it.copy(isRefreshing = false, error = failure) }
         }

@@ -32,11 +32,21 @@ class ProfileScreenTest {
                     onDismissError = { actions += "errorShown" },
                     onOpenSettings = { actions += "settings" },
                     onEditProfile = { actions += "edit" },
+                    onOpenWalks = { actions += "walks" },
                     onOpenPet = { actions += "pet:$it" },
                     onAddPet = { actions += "add" },
                 )
             }
         }
+    }
+
+    @Test
+    fun it_opens_the_walks_of_the_person() {
+        show(ProfileUiState(profile = TestPets.profile()))
+
+        composeRule.onNodeWithText("My walks").performClick()
+
+        assertEquals(listOf("walks"), actions)
     }
 
     @Test
@@ -52,6 +62,7 @@ class ProfileScreenTest {
         composeRule.onNodeWithText("@ana").assertIsDisplayed()
         composeRule.onNodeWithText("Madrid").assertIsDisplayed()
         composeRule.onNodeWithText("Paseo a diario").assertIsDisplayed()
+        composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Border collie"))
         composeRule.onNodeWithText("Border collie").assertIsDisplayed()
 
         // Without a breed, the species describes it.

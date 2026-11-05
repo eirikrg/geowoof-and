@@ -51,11 +51,13 @@ import com.geowoof.core.designsystem.component.FormTextField
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Pet
+import com.geowoof.core.model.WalkTotals
 import com.geowoof.core.model.WeightEntry
 import com.geowoof.core.model.WeightIssue
 import com.geowoof.core.ui.FormError
 import com.geowoof.core.ui.ImageVariant
 import com.geowoof.core.ui.RemoteAvatar
+import com.geowoof.core.ui.WalkTotalsRow
 import com.geowoof.core.ui.formatted
 import com.geowoof.core.ui.labelRes
 import com.geowoof.core.ui.messageRes
@@ -69,6 +71,7 @@ import java.time.LocalDate
 internal fun PetDetailScreen(
     onBack: () -> Unit,
     onEdit: (petId: String) -> Unit,
+    onOpenWalks: (petId: String) -> Unit,
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PetDetailViewModel = hiltViewModel(),
@@ -96,6 +99,7 @@ internal fun PetDetailScreen(
         ),
         onBack = onBack,
         onEdit = onEdit,
+        onOpenWalks = onOpenWalks,
         modifier = modifier,
     )
 }
@@ -123,6 +127,7 @@ internal fun PetDetailContent(
     actions: PetDetailActions,
     onBack: () -> Unit,
     onEdit: (petId: String) -> Unit,
+    onOpenWalks: (petId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val snackbars = remember { SnackbarHostState() }
@@ -178,7 +183,10 @@ internal fun PetDetailContent(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = GeoWoofTheme.spacing.huge),
             ) {
-                uiState.pet?.let { pet -> petDetails(pet) }
+                uiState.pet?.let { pet ->
+                    petDetails(pet)
+                    walkSection(uiState.walkTotals, onOpenWalks = { onOpenWalks(pet.id) })
+                }
                 weightSection(uiState.weights, actions)
             }
         }
@@ -257,6 +265,32 @@ private fun Fact(label: Int, value: String, note: String? = null) {
         headlineContent = { Text(value) },
         supportingContent = note?.let { { Text(it) } },
     )
+}
+
+private fun LazyListScope.walkSection(totals: WalkTotals?, onOpenWalks: () -> Unit) {
+    item {
+        val spacing = GeoWoofTheme.spacing
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.large, vertical = spacing.small),
+            verticalArrangement = Arrangement.spacedBy(spacing.small),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.feature_pets_walks_title),
+                    modifier = Modifier.semantics { heading() },
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                TextButton(onClick = onOpenWalks) { Text(stringResource(R.string.feature_pets_see_walks)) }
+            }
+            totals?.let { WalkTotalsRow(it) }
+        }
+    }
 }
 
 private fun LazyListScope.weightSection(weights: List<WeightEntry>, actions: PetDetailActions) {
@@ -390,6 +424,7 @@ private fun PetDetailPreview() {
             actions = PetDetailActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
             onBack = {},
             onEdit = {},
+            onOpenWalks = {},
         )
     }
 }

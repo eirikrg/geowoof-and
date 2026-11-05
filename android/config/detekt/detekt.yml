@@ -34,6 +34,8 @@ style:
     ignorePropertyDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
     excludes: ['**/test/**', '**/androidTest/**', '**/designsystem/theme/ColorSchemes.kt']
+    # Previews show sample data.
+    ignoreAnnotated: ['Preview', 'PreviewLightDark', 'PreviewFontScale', 'PreviewScreenSizes']
   UnusedPrivateMember:
     ignoreAnnotated: ['Preview', 'PreviewLightDark', 'PreviewFontScale', 'PreviewScreenSizes']
   MaxLineLength:

@@ -43,4 +43,6 @@
     <string name="feature_pets_weight_out_of_range">Debe ser mayor que 0 y de hasta 200 kg</string>
     <string name="feature_pets_weight_decimals">Usa como máximo 2 decimales</string>
     <string name="feature_pets_chart_description">Gráfica de peso: de %1$s kg a %2$s kg</string>
+    <string name="feature_pets_walks_title">Paseos</string>
+    <string name="feature_pets_see_walks">Ver paseos</string>
 </resources>

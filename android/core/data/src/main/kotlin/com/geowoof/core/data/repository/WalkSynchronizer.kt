@@ -43,8 +43,16 @@ internal class DefaultWalkSynchronizer @Inject constructor(
     override suspend fun sync(walkId: String): WalkSyncResult {
         val stored = walks.get(walkId)
         return when (stored?.walk?.syncStatus) {
-            null, WalkSyncStatus.Synced.name -> WalkSyncResult.Done
+            null -> WalkSyncResult.Done
+
+            // A list of the server may have found it first, if the answer to the upload was lost.
+            WalkSyncStatus.Synced.name -> {
+                photos.delete(walkId)
+                WalkSyncResult.Done
+            }
+
             WalkSyncStatus.PendingDelete.name -> delete(walkId)
+
             else -> upload(stored)
         }
     }
