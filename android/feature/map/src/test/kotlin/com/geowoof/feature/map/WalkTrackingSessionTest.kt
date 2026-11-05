@@ -3,14 +3,21 @@ package com.geowoof.feature.map
 import app.cash.turbine.test
 import com.geowoof.core.domain.walks.ComputeWalkStatsUseCase
 import com.geowoof.core.domain.walks.FilterLocationUseCase
+import com.geowoof.core.domain.walks.LivePositionPublisher
 import com.geowoof.core.domain.walks.SmoothRouteUseCase
 import com.geowoof.core.domain.walks.TrackWalkUseCase
 import com.geowoof.core.model.ActiveWalk
 import com.geowoof.core.model.ActiveWalkStatus
+import com.geowoof.core.model.AppError
 import com.geowoof.core.model.GeoPoint
+import com.geowoof.core.model.LiveVisibility
 import com.geowoof.core.model.LocationFix
+import com.geowoof.core.model.Outcome
+import com.geowoof.core.model.UserSettings
 import com.geowoof.core.testing.FakeActiveWalkRepository
+import com.geowoof.core.testing.FakeLiveRepository
 import com.geowoof.core.testing.FakeLocationDataSource
+import com.geowoof.core.testing.FakeSettingsRepository
 import com.geowoof.core.testing.TestWalks
 import com.geowoof.feature.map.tracking.WalkNotificationState
 import com.geowoof.feature.map.tracking.WalkTrackingSession
@@ -31,12 +38,15 @@ import java.time.Instant
 class WalkTrackingSessionTest {
     private val location = FakeLocationDataSource()
     private val computeStats = ComputeWalkStatsUseCase()
+    private val settings = FakeSettingsRepository(UserSettings(LiveVisibility.Nobody))
+    private val live = FakeLiveRepository()
 
     private fun session(walks: FakeActiveWalkRepository) = WalkTrackingSession(
         walks,
         location,
         TrackWalkUseCase(location, walks, FilterLocationUseCase(), SmoothRouteUseCase()),
         computeStats,
+        LivePositionPublisher(location, settings, live, walks, FilterLocationUseCase()),
     )
 
     private fun fix(timeEpochMs: Long, metersNorth: Double = 0.0) =
@@ -213,5 +223,70 @@ class WalkTrackingSessionTest {
         val state = session(walks).notificationStates.first()
 
         assertEquals(WalkNotificationState(ActiveWalkStatus.Recording, 111, walk.startedAt.toEpochMilli()), state)
+    }
+
+    @Test
+    fun while_recording_it_also_shares_and_pausing_says_goodbye() = runTest {
+        settings.settings.value = UserSettings(LiveVisibility.Everyone, hideStartDistanceM = 0)
+        val walks = FakeActiveWalkRepository(recording())
+        run(walks)
+        runCurrent()
+
+        location.send(fix(4_000))
+        runCurrent()
+        assertTrue(live.calls.any { it.startsWith("position") })
+        assertEquals(1, live.connectionUsers)
+
+        walks.pause()
+        runCurrent()
+        assertEquals("stop", live.calls.last())
+        assertEquals(0, live.connectionUsers)
+        assertEquals(0, location.listeners)
+    }
+
+    @Test
+    fun finishing_says_goodbye_to_the_map() = runTest {
+        settings.settings.value = UserSettings(LiveVisibility.Everyone, hideStartDistanceM = 0)
+        val walks = FakeActiveWalkRepository(recording())
+        val running = run(walks)
+        runCurrent()
+        location.send(fix(4_000))
+        runCurrent()
+
+        walks.finish()
+        runCurrent()
+
+        assertEquals("stop", live.calls.last())
+        assertFalse(running.isActive)
+    }
+
+    @Test
+    fun the_map_failing_does_not_touch_the_route() = runTest {
+        settings.settings.value = UserSettings(LiveVisibility.Everyone, hideStartDistanceM = 0)
+        live.startResult = Outcome.Failure(AppError.Network)
+        val walks = FakeActiveWalkRepository(recording())
+        run(walks)
+        runCurrent()
+
+        location.send(fix(4_000))
+        location.send(fix(10_000, metersNorth = 10.0))
+        runCurrent()
+
+        assertEquals(2, checkNotNull(walks.value).segments.single().points.size)
+        assertEquals(ActiveWalkStatus.Recording, walks.value?.status)
+    }
+
+    @Test
+    fun nothing_is_shared_without_having_chosen_and_the_walk_is_recorded_all_the_same() = runTest {
+        settings.settings.value = UserSettings(liveVisibility = null, hideStartDistanceM = 0)
+        val walks = FakeActiveWalkRepository(recording())
+        run(walks)
+        runCurrent()
+
+        location.send(fix(4_000))
+        runCurrent()
+
+        assertTrue(live.calls.isEmpty())
+        assertEquals(1, checkNotNull(walks.value).segments.single().points.size)
     }
 }

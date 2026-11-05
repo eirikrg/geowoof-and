@@ -47,6 +47,10 @@ internal fun PetPickerSheet(uiState: MapUiState, actions: MapActions, modifier: 
                 null -> if (uiState.pets.isEmpty()) NoPets(actions) else ManyPets(uiState, actions)
                 else -> OnePet(onlyPet, actions)
             }
+            // The first time it is asked after choosing the pets.
+            if (uiState.liveVisibility != null && uiState.pets.isNotEmpty()) {
+                LiveVisibilityChip(visibility = uiState.liveVisibility, onClick = actions.onChangeVisibility)
+            }
         }
     }
 }

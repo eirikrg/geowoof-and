@@ -18,12 +18,13 @@ data object WalkSummaryRoute
 
 fun NavController.navigateToMap(navOptions: NavOptions? = null) = navigate(MapRoute, navOptions)
 
-/** The pets are another feature: the app provides how to reach them. */
-fun NavGraphBuilder.mapScreens(navController: NavController, onAddPet: () -> Unit) {
+/** The pets and the profiles are other features: the app provides how to reach them. */
+fun NavGraphBuilder.mapScreens(navController: NavController, onAddPet: () -> Unit, onOpenUser: (String) -> Unit) {
     composable<MapRoute> {
         MapScreen(
             onOpenSummary = { navController.navigate(WalkSummaryRoute) { launchSingleTop = true } },
             onAddPet = onAddPet,
+            onOpenUser = onOpenUser,
         )
     }
     composable<WalkSummaryRoute> {

@@ -15,6 +15,8 @@ dependencies {
     api(libs.okhttp)
     implementation(libs.okhttp.loggingInterceptor)
     implementation(libs.retrofit)
+    implementation(libs.signalr)
+    implementation(libs.gson)
     implementation(libs.retrofit.kotlinxSerialization)
 
     testImplementation(libs.okhttp.mockWebServer)

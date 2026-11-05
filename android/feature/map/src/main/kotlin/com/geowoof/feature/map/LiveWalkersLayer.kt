@@ -1,0 +1,127 @@
+package com.geowoof.feature.map
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.geowoof.core.designsystem.icon.GeoWoofIcons
+import com.geowoof.core.model.LiveWalker
+import com.geowoof.core.ui.RemoteAvatar
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.clustering.ClusterItem
+import com.google.maps.android.clustering.view.DefaultClusterRenderer
+import com.google.maps.android.compose.GoogleMapComposable
+import com.google.maps.android.compose.MapsComposeExperimentalApi
+import com.google.maps.android.compose.clustering.Clustering
+import com.google.maps.android.compose.clustering.rememberClusterManager
+import com.google.maps.android.compose.clustering.rememberClusterRenderer
+
+/**
+ * Two items are the same walker wherever they are, so that the renderer moves their marker
+ * instead of drawing a new one each time a position arrives.
+ */
+private class WalkerItem(val walker: LiveWalker) : ClusterItem {
+    override val position get() = LatLng(walker.position.latitude, walker.position.longitude)
+
+    override val title get() = walker.displayName
+
+    override val snippet: String? = null
+
+    override val zIndex: Float? = null
+
+    override fun equals(other: Any?) = other is WalkerItem && other.walker.userId == walker.userId
+
+    override fun hashCode() = walker.userId.hashCode()
+}
+
+/** The walkers on the map, together when they are too close to tell apart. */
+@OptIn(MapsComposeExperimentalApi::class)
+@Composable
+@GoogleMapComposable
+internal fun LiveWalkersLayer(
+    walkers: List<LiveWalker>,
+    onWalkerClick: (String) -> Unit,
+    onClusterClick: (LatLng) -> Unit,
+) {
+    val clusterManager = rememberClusterManager<WalkerItem>() ?: return
+    val renderer = rememberClusterRenderer(
+        clusterContent = { cluster -> WalkersBadge(cluster.size) },
+        clusterItemContent = { item -> WalkerMarker(item.walker) },
+        clusterManager = clusterManager,
+    )
+    val currentOnWalkerClick by rememberUpdatedState(onWalkerClick)
+    val currentOnClusterClick by rememberUpdatedState(onClusterClick)
+    SideEffect {
+        if (renderer != null && clusterManager.renderer != renderer) {
+            // By default only from four on: two on the same spot would hide each other.
+            (renderer as? DefaultClusterRenderer<*>)?.minClusterSize = MIN_CLUSTER_SIZE
+            clusterManager.renderer = renderer
+        }
+        clusterManager.algorithm.maxDistanceBetweenClusteredItems = CLUSTER_DISTANCE_DP
+        clusterManager.setOnClusterItemClickListener { item ->
+            currentOnWalkerClick(item.walker.userId)
+            true
+        }
+        clusterManager.setOnClusterClickListener { cluster ->
+            currentOnClusterClick(cluster.position)
+            true
+        }
+    }
+    Clustering(items = emptyList(), clusterManager = clusterManager)
+    // Not through the items above: they ignore a list that is equal, and a walker who moves is equal.
+    LaunchedEffect(clusterManager, walkers) {
+        clusterManager.clearItems()
+        clusterManager.addItems(walkers.map(::WalkerItem))
+        clusterManager.cluster()
+    }
+}
+
+/** It is drawn on a bitmap for the map, and that cannot hold a hardware image. */
+@Composable
+private fun WalkerMarker(walker: LiveWalker) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(MarkerBorder, MaterialTheme.colorScheme.primary),
+        modifier = Modifier.size(MarkerSize),
+    ) {
+        RemoteAvatar(
+            image = walker.pets.firstOrNull()?.avatar,
+            fallbackIcon = GeoWoofIcons.Pets,
+            contentDescription = null,
+            size = MarkerSize,
+            allowHardware = false,
+        )
+    }
+}
+
+@Composable
+private fun WalkersBadge(count: Int) {
+    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(MarkerSize)) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = count.toString(),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
+        }
+    }
+}
+
+private const val MIN_CLUSTER_SIZE = 2
+
+/** Closer than this, on screen, their markers touch. */
+private const val CLUSTER_DISTANCE_DP = 44
+private val MarkerSize = CLUSTER_DISTANCE_DP.dp
+private val MarkerBorder = 2.dp

@@ -9,24 +9,43 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.geowoof.core.designsystem.icon.GeoWoofIcons
+import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ActiveWalk
+import com.geowoof.core.model.LiveWalker
+import com.geowoof.core.model.MapViewport
+import com.geowoof.core.ui.userMessage
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -36,6 +55,9 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
 
 /**
  * Full-screen map, drawn edge to edge behind the system bars, with the walk on top. Without a Maps
@@ -45,10 +67,13 @@ import com.google.maps.android.compose.rememberCameraPositionState
 fun MapScreen(
     onOpenSummary: () -> Unit,
     onAddPet: () -> Unit,
+    onOpenUser: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MapViewModel = hiltViewModel(),
+    liveViewModel: LiveWalkersViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val live by liveViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         viewModel.onPermissionsResult()
@@ -87,10 +112,36 @@ fun MapScreen(
                 context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
             },
             onDismissPrompt = viewModel::onDismissPrompt,
+            onChangeVisibility = viewModel::onChangeVisibilityClick,
+            onChooseVisibility = viewModel::onChooseVisibility,
+            onDismissVisibility = viewModel::onDismissVisibility,
+            onDismissError = viewModel::onErrorShown,
+        ),
+        live = live,
+        liveActions = LiveWalkersActions(
+            onOpenList = liveViewModel::onOpenList,
+            onDismissList = liveViewModel::onDismissList,
+            onWalkerClick = liveViewModel::onWalkerClick,
+            onDismissWalker = liveViewModel::onDismissWalker,
+            onOpenProfile = { userId ->
+                liveViewModel.onDismissWalker()
+                onOpenUser(userId)
+            },
+            onFollow = liveViewModel::onFollowClick,
+            onConfirmFollowBack = liveViewModel::onConfirmFollowBack,
+            onDismissFollowBack = liveViewModel::onDismissFollowBack,
+            onDismissError = liveViewModel::onErrorShown,
         ),
         modifier = modifier,
     ) { mapModifier ->
-        WalkMap(walk = uiState.walk, hasLocationPermission = uiState.hasLocationPermission, modifier = mapModifier)
+        WalkMap(
+            walk = uiState.walk,
+            hasLocationPermission = uiState.hasLocationPermission,
+            walkers = live.walkers,
+            onViewportChange = liveViewModel::onViewportChange,
+            onWalkerClick = liveViewModel::onWalkerClick,
+            modifier = mapModifier,
+        )
     }
 }
 
@@ -110,30 +161,128 @@ private fun Context.openAppSettings() {
 internal fun MapContent(
     uiState: MapUiState,
     actions: MapActions,
+    live: LiveWalkersUiState,
+    liveActions: LiveWalkersActions,
     modifier: Modifier = Modifier,
     map: @Composable (Modifier) -> Unit,
 ) {
+    val snackbars = remember { SnackbarHostState() }
+    MapErrors(uiState, actions, live, liveActions, snackbars)
     Box(modifier = modifier.fillMaxSize()) {
         map(Modifier.fillMaxSize())
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .safeDrawingPadding(),
-            contentAlignment = Alignment.BottomCenter,
         ) {
-            WalkPanel(uiState = uiState, actions = actions)
+            LiveStatus(live = live, actions = liveActions, modifier = Modifier.align(Alignment.TopCenter))
+            Column(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                SnackbarHost(snackbars)
+                WalkPanel(uiState = uiState, actions = actions)
+            }
         }
     }
     if (uiState.isPickingPets) {
         PetPickerSheet(uiState = uiState, actions = actions)
     }
+    if (uiState.isChoosingVisibility) {
+        LiveVisibilitySheet(uiState = uiState, actions = actions)
+    }
+    if (live.isListOpen) {
+        LiveWalkersListSheet(walkers = live.walkers, actions = liveActions)
+    }
+    live.selected?.let { walker -> LiveWalkerSheet(uiState = live, walker = walker, actions = liveActions) }
     uiState.prompt?.let { prompt -> WalkPromptDialog(prompt = prompt, actions = actions) }
 }
 
 @Composable
-private fun WalkMap(walk: ActiveWalk?, hasLocationPermission: Boolean, modifier: Modifier = Modifier) {
+private fun MapErrors(
+    uiState: MapUiState,
+    actions: MapActions,
+    live: LiveWalkersUiState,
+    liveActions: LiveWalkersActions,
+    snackbars: SnackbarHostState,
+) {
+    val walkError = uiState.error?.userMessage()
+    val liveError = live.error?.userMessage()
+    val currentActions by rememberUpdatedState(actions)
+    val currentLiveActions by rememberUpdatedState(liveActions)
+    LaunchedEffect(walkError) {
+        if (walkError != null) {
+            snackbars.showSnackbar(walkError)
+            currentActions.onDismissError()
+        }
+    }
+    LaunchedEffect(liveError) {
+        if (liveError != null) {
+            snackbars.showSnackbar(liveError)
+            currentLiveActions.onDismissError()
+        }
+    }
+}
+
+/** What there is to say about the people on the map: also the way to reach them without the markers. */
+@Composable
+private fun LiveStatus(live: LiveWalkersUiState, actions: LiveWalkersActions, modifier: Modifier = Modifier) {
+    when {
+        live.isTooWide -> Surface(
+            modifier = modifier.padding(GeoWoofTheme.spacing.small),
+            shape = MaterialTheme.shapes.small,
+            tonalElevation = StatusElevation,
+            shadowElevation = StatusElevation,
+        ) {
+            Text(
+                text = stringResource(R.string.feature_map_live_too_wide),
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(
+                    horizontal = GeoWoofTheme.spacing.medium,
+                    vertical = GeoWoofTheme.spacing.small,
+                ),
+            )
+        }
+
+        live.walkers.isNotEmpty() -> ElevatedAssistChip(
+            onClick = actions.onOpenList,
+            modifier = modifier,
+            leadingIcon = { Icon(painterResource(GeoWoofIcons.Pets), contentDescription = null) },
+            label = {
+                Text(pluralStringResource(R.plurals.feature_map_live_walkers, live.walkers.size, live.walkers.size))
+            },
+        )
+    }
+}
+
+@Composable
+private fun WalkMap(
+    walk: ActiveWalk?,
+    hasLocationPermission: Boolean,
+    walkers: List<LiveWalker>,
+    onViewportChange: (MapViewport) -> Unit,
+    onWalkerClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(DefaultCenter, DEFAULT_ZOOM)
+    }
+    val scope = rememberCoroutineScope()
+    val currentOnViewportChange by rememberUpdatedState(onViewportChange)
+    LaunchedEffect(cameraPositionState) {
+        snapshotFlow { cameraPositionState.takeUnless { it.isMoving }?.projection?.visibleRegion?.latLngBounds }
+            .filterNotNull()
+            .distinctUntilChanged()
+            .collect { bounds ->
+                currentOnViewportChange(
+                    MapViewport(
+                        north = bounds.northeast.latitude,
+                        south = bounds.southwest.latitude,
+                        east = bounds.northeast.longitude,
+                        west = bounds.southwest.longitude,
+                    ),
+                )
+            }
     }
     val lastPoint = walk?.lastPoint
     LaunchedEffect(lastPoint) {
@@ -158,11 +307,25 @@ private fun WalkMap(walk: ActiveWalk?, hasLocationPermission: Boolean, modifier:
                 width = ROUTE_WIDTH,
             )
         }
+        LiveWalkersLayer(
+            walkers = walkers,
+            onWalkerClick = onWalkerClick,
+            onClusterClick = { target ->
+                scope.launch {
+                    val closer = cameraPositionState.position.zoom + CLUSTER_ZOOM_STEP
+                    cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(target, closer))
+                }
+            },
+        )
     }
 }
 
 /** Initial camera until the user's location is available (Madrid). */
 private val DefaultCenter = LatLng(40.4168, -3.7038)
-private const val DEFAULT_ZOOM = 12f
+
+/** A tall phone at 12 would already need more cells than the live map takes (docs/realtime.md). */
+private const val DEFAULT_ZOOM = 13f
 private const val WALK_ZOOM = 17f
 private const val ROUTE_WIDTH = 14f
+private const val CLUSTER_ZOOM_STEP = 2f
+private val StatusElevation = 3.dp

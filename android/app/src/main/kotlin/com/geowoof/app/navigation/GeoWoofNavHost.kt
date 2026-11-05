@@ -49,7 +49,11 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
         startDestination = MapRoute,
         modifier = modifier,
     ) {
-        mapScreens(navController, onAddPet = { navController.navigateToPetEditor() })
+        mapScreens(
+            navController = navController,
+            onAddPet = { navController.navigateToPetEditor() },
+            onOpenUser = { userId -> navController.navigateToUserProfile(userId) },
+        )
         socialScreens(navController, onOpenUser = { userId -> navController.navigateToUserProfile(userId) })
         searchScreen(
             onOpenUser = { userId -> navController.navigateToUserProfile(userId) },

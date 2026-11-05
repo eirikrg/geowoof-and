@@ -104,4 +104,10 @@
     <string name="core_ui_report_details">Details (optional)</string>
     <string name="core_ui_report_send">Send</string>
     <string name="core_ui_report_dismiss">Cancel</string>
+    <string name="core_ui_live_everyone">Everyone nearby</string>
+    <string name="core_ui_live_everyone_description">Anyone looking at the map near you. If your profile is private, only your followers.</string>
+    <string name="core_ui_live_friends">Only friends</string>
+    <string name="core_ui_live_friends_description">Only the people you follow who also follow you.</string>
+    <string name="core_ui_live_nobody">Nobody</string>
+    <string name="core_ui_live_nobody_description">Your position is not shared. Your walk is saved all the same.</string>
 </resources>

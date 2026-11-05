@@ -3,15 +3,27 @@ package com.geowoof.feature.map
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ActiveWalkStatus
+import com.geowoof.core.model.AppError
+import com.geowoof.core.model.LiveVisibility
+import com.geowoof.core.model.Relationship
+import com.geowoof.core.model.RelationshipStatus
 import com.geowoof.core.testing.TestPets
+import com.geowoof.core.testing.TestWalkers
 import com.geowoof.core.testing.TestWalks
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,7 +35,7 @@ class MapScreenTest {
 
     private val actions = mutableListOf<String>()
 
-    private fun show(uiState: MapUiState) {
+    private fun show(uiState: MapUiState, live: LiveWalkersUiState = LiveWalkersUiState()) {
         composeRule.setContent {
             GeoWoofTheme(dynamicColor = false) {
                 MapContent(
@@ -43,6 +55,22 @@ class MapScreenTest {
                         onOpenAppSettings = { actions += "appSettings" },
                         onOpenLocationSettings = { actions += "locationSettings" },
                         onDismissPrompt = { actions += "dismissPrompt" },
+                        onChangeVisibility = { actions += "changeVisibility" },
+                        onChooseVisibility = { actions += "choose:$it" },
+                        onDismissVisibility = { actions += "dismissVisibility" },
+                        onDismissError = { actions += "dismissError" },
+                    ),
+                    live = live,
+                    liveActions = LiveWalkersActions(
+                        onOpenList = { actions += "openList" },
+                        onDismissList = { actions += "dismissList" },
+                        onWalkerClick = { actions += "walker:$it" },
+                        onDismissWalker = { actions += "dismissWalker" },
+                        onOpenProfile = { actions += "profile:$it" },
+                        onFollow = { actions += "follow" },
+                        onConfirmFollowBack = { actions += "confirmFollowBack" },
+                        onDismissFollowBack = { actions += "dismissFollowBack" },
+                        onDismissError = { actions += "dismissLiveError" },
                     ),
                     map = {},
                 )
@@ -179,5 +207,218 @@ class MapScreenTest {
         click("Open settings")
 
         assertEquals(listOf("locationSettings"), actions)
+    }
+
+    @Test
+    fun it_asks_to_get_closer_when_the_map_is_too_far_away() {
+        show(MapUiState(), LiveWalkersUiState(isTooWide = true))
+
+        composeRule.onNodeWithText("Zoom in to see who is walking").assertIsDisplayed()
+    }
+
+    @Test
+    fun with_nobody_around_it_says_nothing() {
+        show(MapUiState(), LiveWalkersUiState())
+
+        composeRule.onNodeWithText("Zoom in to see who is walking").assertDoesNotExist()
+        composeRule.onNodeWithText("Start walk").assertIsDisplayed()
+    }
+
+    @Test
+    fun who_is_around_can_be_reached_without_the_markers() {
+        val walkers = listOf(TestWalkers.walker(), TestWalkers.walker("ana-id", "ana", "Ana"))
+        show(MapUiState(), LiveWalkersUiState(walkers = walkers))
+
+        click("2 people walking here")
+
+        assertEquals(listOf("openList"), actions)
+    }
+
+    @Test
+    fun one_person_around_is_said_in_singular() {
+        show(MapUiState(), LiveWalkersUiState(walkers = listOf(TestWalkers.walker())))
+
+        composeRule.onNodeWithText("1 person walking here").assertIsDisplayed()
+    }
+
+    @Test
+    fun the_list_shows_each_walker_with_their_pets_and_opens_them() {
+        show(MapUiState(), LiveWalkersUiState(walkers = listOf(TestWalkers.walker()), isListOpen = true))
+
+        composeRule.onNodeWithText("Walking here").assertIsDisplayed()
+        composeRule.onNodeWithText("Mishi").assertIsDisplayed()
+        click("Bea")
+
+        assertEquals(listOf("walker:bea-id"), actions)
+    }
+
+    @Test
+    fun the_sheet_of_a_walker_shows_them_and_leads_to_their_profile() {
+        val bea = TestWalkers.walker()
+        show(MapUiState(), LiveWalkersUiState(walkers = listOf(bea), selected = bea))
+
+        composeRule.onNodeWithText("Bea").assertIsDisplayed()
+        composeRule.onNodeWithText("@bea").assertIsDisplayed()
+        composeRule.onNodeWithText("Mishi").assertIsDisplayed()
+        click("View profile")
+
+        assertEquals(listOf("profile:bea-id"), actions)
+    }
+
+    @Test
+    fun without_knowing_the_relationship_it_does_not_offer_to_follow() {
+        val bea = TestWalkers.walker()
+        show(MapUiState(), LiveWalkersUiState(selected = bea))
+
+        composeRule.onNodeWithText("Follow").assertDoesNotExist()
+    }
+
+    @Test
+    fun it_offers_to_follow_someone_it_does_not_follow() {
+        val bea = TestWalkers.walker()
+        show(MapUiState(), LiveWalkersUiState(selected = bea, relationship = Relationship(RelationshipStatus.None)))
+
+        click("Follow")
+
+        assertEquals(listOf("follow"), actions)
+    }
+
+    @Test
+    fun it_says_follow_back_to_someone_who_follows_them() {
+        val bea = TestWalkers.walker()
+        val relationship = Relationship(RelationshipStatus.None, followsYou = true)
+        show(MapUiState(), LiveWalkersUiState(selected = bea, relationship = relationship))
+
+        composeRule.onNodeWithText("Follow back").assertIsDisplayed()
+    }
+
+    @Test
+    fun what_is_already_settled_is_not_a_button_to_press() {
+        val bea = TestWalkers.walker()
+        show(MapUiState(), LiveWalkersUiState(selected = bea, relationship = Relationship(RelationshipStatus.Friends)))
+
+        composeRule.onNodeWithText("Friends").assertIsNotEnabled()
+    }
+
+    @Test
+    fun following_back_explains_what_it_means_first() {
+        val bea = TestWalkers.walker()
+        show(
+            MapUiState(),
+            LiveWalkersUiState(
+                selected = bea,
+                relationship = Relationship(RelationshipStatus.None, followsYou = true),
+                isConfirmingFollowBack = true,
+            ),
+        )
+
+        composeRule.onNodeWithText("Follow Bea back?").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Follow back").onLast().performClick()
+
+        assertEquals(listOf("confirmFollowBack"), actions)
+    }
+
+    @Test
+    fun the_first_time_nothing_is_marked_and_it_cannot_continue_without_choosing() {
+        show(MapUiState(isChoosingVisibility = true))
+
+        composeRule.onNodeWithText("Who can see you while you walk?").assertIsDisplayed()
+        composeRule.onNodeWithText("Everyone nearby").assertIsNotSelected()
+        composeRule.onNodeWithText("Only friends").assertIsNotSelected()
+        composeRule.onNodeWithText("Nobody").assertIsNotSelected()
+        composeRule.onNodeWithText("Continue").performScrollTo().assertIsNotEnabled()
+        assertTrue(actions.isEmpty())
+    }
+
+    @Test
+    fun choosing_takes_a_second_step() {
+        show(MapUiState(isChoosingVisibility = true))
+
+        composeRule.onNodeWithText("Only friends").performClick()
+        assertTrue(actions.isEmpty())
+
+        composeRule.onNodeWithText("Continue").performScrollTo().performClick()
+        assertEquals(listOf("choose:FriendsOnly"), actions)
+    }
+
+    @Test
+    fun changing_it_shows_what_is_chosen_now() {
+        show(MapUiState(isChoosingVisibility = true, liveVisibility = LiveVisibility.Nobody))
+
+        composeRule.onNodeWithText("Nobody").assertIsSelected()
+        composeRule.onNodeWithText("Continue").performScrollTo().assertIsEnabled()
+    }
+
+    @Test
+    fun it_says_what_is_being_told_and_how_far_the_start_is_hidden() {
+        show(MapUiState(isChoosingVisibility = true, hideStartDistanceM = 500))
+
+        composeRule.onNode(hasText("sends your position every few seconds", substring = true)).assertExists()
+        composeRule.onNode(hasText("500 m from where you started", substring = true))
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun it_says_so_if_the_start_is_not_hidden() {
+        show(MapUiState(isChoosingVisibility = true, hideStartDistanceM = 0))
+
+        composeRule.onNode(hasText("shared from the start of the walk", substring = true))
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun before_a_walk_it_shows_who_will_see_them_and_can_be_changed() {
+        show(
+            MapUiState(
+                isPickingPets = true,
+                pets = listOf(TestPets.pet()),
+                liveVisibility = LiveVisibility.FriendsOnly,
+            ),
+        )
+
+        click("Who sees you: Only friends")
+
+        assertEquals(listOf("changeVisibility"), actions)
+    }
+
+    @Test
+    fun without_having_chosen_it_is_asked_later_and_not_in_the_pets() {
+        show(MapUiState(isPickingPets = true, pets = listOf(TestPets.pet()), liveVisibility = null))
+
+        composeRule.onNode(hasText("Who sees you", substring = true)).assertDoesNotExist()
+        composeRule.onNodeWithText("Your position is not shared").assertDoesNotExist()
+    }
+
+    @Test
+    fun during_a_walk_it_shows_who_sees_them_and_can_be_changed() {
+        show(MapUiState(walk = TestWalks.activeWalk(), liveVisibility = LiveVisibility.Everyone))
+
+        click("Who sees you: Everyone nearby")
+
+        assertEquals(listOf("changeVisibility"), actions)
+    }
+
+    @Test
+    fun during_a_walk_it_says_so_if_the_position_is_not_shared() {
+        show(MapUiState(walk = TestWalks.activeWalk(), liveVisibility = LiveVisibility.Nobody))
+
+        composeRule.onNodeWithText("Your position is not shared").assertIsDisplayed()
+    }
+
+    @Test
+    fun a_paused_walk_shares_nothing_so_it_does_not_say_it_does() {
+        val paused = TestWalks.activeWalk(status = ActiveWalkStatus.Paused)
+        show(MapUiState(walk = paused, liveVisibility = LiveVisibility.Everyone))
+
+        composeRule.onNode(hasText("Who sees you", substring = true)).assertDoesNotExist()
+    }
+
+    @Test
+    fun an_error_is_said_once() {
+        show(MapUiState(error = AppError.Network))
+
+        composeRule.onNodeWithText("No connection. Check your internet and try again.").assertIsDisplayed()
     }
 }

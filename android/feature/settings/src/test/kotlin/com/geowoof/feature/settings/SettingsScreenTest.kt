@@ -1,14 +1,19 @@
 package com.geowoof.feature.settings
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isSelectable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
+import com.geowoof.core.model.LiveVisibility
 import com.geowoof.core.model.User
+import com.geowoof.core.model.UserSettings
 import com.geowoof.core.testing.TestUsers
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -22,16 +27,18 @@ class SettingsScreenTest {
 
     private val actions = mutableListOf<String>()
 
-    private fun showSettings(user: User) {
+    private fun showSettings(user: User, liveSettings: UserSettings = UserSettings()) {
         composeRule.setContent {
             GeoWoofTheme(dynamicColor = false) {
                 SettingsContent(
-                    uiState = SettingsUiState(user = user),
+                    uiState = SettingsUiState(user = user, settings = liveSettings),
                     onBack = { actions += "back" },
                     onVerifyEmail = { actions += "verify" },
                     onChangePassword = { actions += "password" },
                     onOpenBlockedUsers = { actions += "blocked" },
                     onPrivateChange = { actions += "private:$it" },
+                    onLiveVisibilityChange = { actions += "live:$it" },
+                    onHideStartChange = { actions += "hide:$it" },
                     onDismissError = {},
                     onSignOut = { actions += "signOut" },
                     onConfirmSignOut = { actions += "confirmSignOut" },
@@ -91,5 +98,49 @@ class SettingsScreenTest {
         composeRule.onNode(hasText("Private profile")).performScrollTo().performClick()
 
         assertEquals(listOf("private:false"), actions)
+    }
+
+    @Test
+    fun without_having_chosen_it_says_nothing_is_shared() {
+        showSettings(TestUsers.user())
+
+        composeRule.onNodeWithText(
+            "You have not chosen yet: your position is not shared",
+        ).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun the_visibility_shows_what_is_chosen_and_changes_at_once() {
+        showSettings(TestUsers.user(), UserSettings(LiveVisibility.FriendsOnly))
+
+        composeRule.onNodeWithText("Who can see you while you walk").performScrollTo().performClick()
+        composeRule.onNode(hasText("Only friends") and isSelectable()).assertIsSelected()
+        composeRule.onNode(hasText("Nobody") and isSelectable()).assertIsNotSelected()
+        composeRule.onNode(hasText("Nobody") and isSelectable()).performClick()
+
+        assertEquals(listOf("live:Nobody"), actions)
+        composeRule.onNode(hasText("Nobody") and isSelectable()).assertDoesNotExist()
+    }
+
+    @Test
+    fun the_hidden_start_offers_the_three_distances() {
+        showSettings(TestUsers.user())
+
+        composeRule.onNodeWithText("Hide the start of your walks").performScrollTo().performClick()
+        composeRule.onNode(hasText("200 m") and isSelectable()).assertIsSelected()
+        composeRule.onNode(hasText("Do not hide it") and isSelectable()).performClick()
+
+        assertEquals(listOf("hide:0"), actions)
+    }
+
+    @Test
+    fun a_choice_can_be_left_as_it_was() {
+        showSettings(TestUsers.user(), UserSettings(LiveVisibility.Everyone, hideStartDistanceM = 500))
+
+        composeRule.onNodeWithText("500 m").performScrollTo().performClick()
+        composeRule.onNodeWithText("Cancel").performClick()
+
+        assertEquals(emptyList<String>(), actions)
+        composeRule.onNodeWithText("Cancel").assertDoesNotExist()
     }
 }

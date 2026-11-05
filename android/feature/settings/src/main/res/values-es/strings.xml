@@ -35,4 +35,10 @@
     <string name="feature_settings_no_blocked_title">Nadie bloqueado</string>
     <string name="feature_settings_no_blocked_message">Puedes bloquear a alguien desde el menú de su perfil.</string>
     <string name="feature_settings_unblock">Desbloquear</string>
+    <string name="feature_settings_live_visibility">Quién puede verte mientras paseas</string>
+    <string name="feature_settings_live_visibility_not_chosen">Aún no has elegido: tu posición no se comparte</string>
+    <string name="feature_settings_hide_start">Ocultar el inicio de tus paseos</string>
+    <string name="feature_settings_hide_start_message">Tu posición se queda en el móvil hasta que estés a esta distancia de donde empezaste, para que nadie vea tu portal.</string>
+    <string name="feature_settings_hide_start_meters">%1$d m</string>
+    <string name="feature_settings_hide_start_never">No ocultarlo</string>
 </resources>

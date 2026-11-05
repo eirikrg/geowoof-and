@@ -104,4 +104,10 @@
     <string name="core_ui_report_details">Detalles (opcional)</string>
     <string name="core_ui_report_send">Enviar</string>
     <string name="core_ui_report_dismiss">Cancelar</string>
+    <string name="core_ui_live_everyone">Cualquiera cerca</string>
+    <string name="core_ui_live_everyone_description">Cualquiera que mire el mapa cerca de ti. Si tu perfil es privado, solo tus seguidores.</string>
+    <string name="core_ui_live_friends">Solo amigos</string>
+    <string name="core_ui_live_friends_description">Solo las personas a las que sigues y que también te siguen.</string>
+    <string name="core_ui_live_nobody">Nadie</string>
+    <string name="core_ui_live_nobody_description">Tu posición no se comparte. El paseo se guarda igual.</string>
 </resources>

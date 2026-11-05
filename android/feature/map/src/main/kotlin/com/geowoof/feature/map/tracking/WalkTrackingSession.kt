@@ -2,11 +2,13 @@ package com.geowoof.feature.map.tracking
 
 import com.geowoof.core.data.repository.ActiveWalkRepository
 import com.geowoof.core.domain.walks.ComputeWalkStatsUseCase
+import com.geowoof.core.domain.walks.LivePositionPublisher
 import com.geowoof.core.domain.walks.TrackWalkUseCase
 import com.geowoof.core.location.LocationDataSource
 import com.geowoof.core.location.LocationPermissionException
 import com.geowoof.core.model.ActiveWalk
 import com.geowoof.core.model.ActiveWalkStatus
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transformWhile
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
@@ -31,6 +34,7 @@ class WalkTrackingSession @Inject constructor(
     private val location: LocationDataSource,
     private val trackWalk: TrackWalkUseCase,
     private val computeStats: ComputeWalkStatsUseCase,
+    private val livePositions: LivePositionPublisher,
 ) {
     /** Only while the service is needed: a late update must not bring back the notification after it stops. */
     val notificationStates: Flow<WalkNotificationState> = activeWalks.activeWalk
@@ -66,10 +70,14 @@ class WalkTrackingSession @Inject constructor(
 
     private suspend fun record() {
         val walk = activeWalks.current() ?: return
-        try {
-            trackWalk(walk)
-        } catch (@Suppress("SwallowedException") exception: LocationPermissionException) {
-            activeWalks.interrupt()
+        coroutineScope {
+            // It only shares while recording: pausing cancels it, and that says goodbye to the map.
+            launch { livePositions.publish(walk) }
+            try {
+                trackWalk(walk)
+            } catch (@Suppress("SwallowedException") exception: LocationPermissionException) {
+                activeWalks.interrupt()
+            }
         }
     }
 

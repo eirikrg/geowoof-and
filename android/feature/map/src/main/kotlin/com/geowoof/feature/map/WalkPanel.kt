@@ -72,6 +72,12 @@ internal fun WalkPanel(uiState: MapUiState, actions: MapActions, modifier: Modif
             modifier = Modifier.padding(spacing.large),
             verticalArrangement = Arrangement.spacedBy(spacing.medium),
         ) {
+            if (walk.isTracking) {
+                LiveVisibilityChip(
+                    visibility = uiState.liveVisibility,
+                    onClick = actions.onChangeVisibility,
+                )
+            }
             when (walk.status) {
                 ActiveWalkStatus.Preparing -> PreparingContent(actions)
                 ActiveWalkStatus.Recording -> RecordingContent(walk, uiState.stats, actions)
@@ -221,7 +227,7 @@ private fun WalkPanelPreview() {
                 ),
                 stats = WalkStats(1234, 900, 800, 1.5, 648),
             ),
-            actions = MapActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
+            actions = MapActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
         )
     }
 }

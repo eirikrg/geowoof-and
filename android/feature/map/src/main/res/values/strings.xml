@@ -51,4 +51,26 @@
     <string name="feature_map_discard_title">Discard this walk?</string>
     <string name="feature_map_discard_message">The route will be lost, and this cannot be undone.</string>
     <string name="feature_map_keep">Keep</string>
+    <string name="feature_map_live_too_wide">Zoom in to see who is walking</string>
+    <plurals name="feature_map_live_walkers">
+        <item quantity="one">%1$d person walking here</item>
+        <item quantity="other">%1$d people walking here</item>
+    </plurals>
+    <string name="feature_map_live_list_title">Walking here</string>
+    <string name="feature_map_live_username">\@%1$s</string>
+    <string name="feature_map_live_view_profile">View profile</string>
+    <string name="feature_map_live_follow">Follow</string>
+    <string name="feature_map_live_follow_back">Follow back</string>
+    <string name="feature_map_live_following">Following</string>
+    <string name="feature_map_live_requested">Requested</string>
+    <string name="feature_map_live_friends">Friends</string>
+    <string name="feature_map_live_follow_back_title">Follow %1$s back?</string>
+    <string name="feature_map_live_follow_back_message">%1$s follows you. If you follow them too you will be friends, and they will see what you share only with friends, like your position while you walk.</string>
+    <string name="feature_map_live_visibility_title">Who can see you while you walk?</string>
+    <string name="feature_map_live_visibility_message">While you walk, GeoWoof sends your position every few seconds, even with the screen off or the app closed, to show you on the map to the people you choose. It is not kept: it disappears when you stop.</string>
+    <string name="feature_map_live_visibility_hide_start">Your position is not shared until you are %1$d m from where you started. You can change this in Settings.</string>
+    <string name="feature_map_live_visibility_no_hide">Your position is shared from the start of the walk. You can change this in Settings.</string>
+    <string name="feature_map_live_visibility_confirm">Continue</string>
+    <string name="feature_map_live_shown_to">Who sees you: %1$s</string>
+    <string name="feature_map_live_not_shared">Your position is not shared</string>
 </resources>

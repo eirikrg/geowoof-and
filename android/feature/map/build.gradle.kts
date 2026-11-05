@@ -10,4 +10,5 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.maps.compose)
+    implementation(libs.maps.compose.utils)
 }

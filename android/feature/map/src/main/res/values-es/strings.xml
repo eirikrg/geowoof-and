@@ -51,4 +51,27 @@
     <string name="feature_map_discard_title">¿Descartar este paseo?</string>
     <string name="feature_map_discard_message">La ruta se perderá y no se puede deshacer.</string>
     <string name="feature_map_keep">Conservar</string>
+    <string name="feature_map_live_too_wide">Acerca el mapa para ver quién pasea</string>
+    <plurals name="feature_map_live_walkers">
+        <item quantity="one">%1$d persona paseando aquí</item>
+        <item quantity="many">%1$d personas paseando aquí</item>
+        <item quantity="other">%1$d personas paseando aquí</item>
+    </plurals>
+    <string name="feature_map_live_list_title">Paseando por aquí</string>
+    <string name="feature_map_live_username">\@%1$s</string>
+    <string name="feature_map_live_view_profile">Ver perfil</string>
+    <string name="feature_map_live_follow">Seguir</string>
+    <string name="feature_map_live_follow_back">Seguir también</string>
+    <string name="feature_map_live_following">Siguiendo</string>
+    <string name="feature_map_live_requested">Solicitado</string>
+    <string name="feature_map_live_friends">Amigos</string>
+    <string name="feature_map_live_follow_back_title">¿Seguir también a %1$s?</string>
+    <string name="feature_map_live_follow_back_message">%1$s te sigue. Si tú también le sigues seréis amigos, y verá lo que compartes solo con amigos, como tu posición mientras paseas.</string>
+    <string name="feature_map_live_visibility_title">¿Quién puede verte mientras paseas?</string>
+    <string name="feature_map_live_visibility_message">Mientras paseas, GeoWoof envía tu posición cada pocos segundos, también con la pantalla apagada o la app cerrada, para mostrarte en el mapa a quien elijas. No se guarda: desaparece cuando paras.</string>
+    <string name="feature_map_live_visibility_hide_start">Tu posición no se comparte hasta que estés a %1$d m de donde empezaste. Puedes cambiarlo en Ajustes.</string>
+    <string name="feature_map_live_visibility_no_hide">Tu posición se comparte desde el inicio del paseo. Puedes cambiarlo en Ajustes.</string>
+    <string name="feature_map_live_visibility_confirm">Continuar</string>
+    <string name="feature_map_live_shown_to">Quién te ve: %1$s</string>
+    <string name="feature_map_live_not_shared">No compartes tu posición</string>
 </resources>

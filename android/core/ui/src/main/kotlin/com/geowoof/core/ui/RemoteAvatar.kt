@@ -19,12 +19,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
+import coil3.request.allowHardware
 import com.geowoof.core.model.RemoteImage
 
 /**
  * Round avatar. The cache key uses the asset id and not the URL, because the signature of a URL
  * changes every time the server sends it, and the image would be downloaded again for nothing
  * (docs/decisions/0010). [localUri] shows a picture just picked, before it has been uploaded.
+ * Without [allowHardware] it can be drawn on a bitmap, which is what a marker of the map is.
  */
 @Composable
 fun RemoteAvatar(
@@ -35,6 +37,7 @@ fun RemoteAvatar(
     size: Dp = 56.dp,
     variant: ImageVariant = ImageVariant.Thumb,
     localUri: String? = null,
+    allowHardware: Boolean = true,
 ) {
     val context = LocalContext.current
     val url = if (variant == ImageVariant.Thumb) image?.thumbUrl else image?.mediumUrl
@@ -46,13 +49,13 @@ fun RemoteAvatar(
             .background(MaterialTheme.colorScheme.secondaryContainer),
         contentAlignment = Alignment.Center,
     ) {
-        val model = remember(context, localUri, url, cacheKey) {
+        val model = remember(context, localUri, url, cacheKey, allowHardware) {
             when {
                 localUri != null -> localUri
 
                 url != null -> ImageRequest.Builder(
                     context,
-                ).data(url).memoryCacheKey(cacheKey).diskCacheKey(cacheKey).build()
+                ).data(url).memoryCacheKey(cacheKey).diskCacheKey(cacheKey).allowHardware(allowHardware).build()
 
                 else -> null
             }

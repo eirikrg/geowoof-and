@@ -39,6 +39,8 @@ kotlinxCoroutines = "1.11.0"
 kotlinxSerializationJson = "1.12.0"
 mapsCompose = "9.0.1"
 okhttp = "5.5.1"
+signalr = "10.0.14"
+gson = "2.8.9"
 playServicesLocation = "21.4.0"
 retrofit = "3.0.0"
 tink = "1.24.0"
@@ -94,7 +96,10 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
+maps-compose-utils = { group = "com.google.maps.android", name = "maps-compose-utils", version.ref = "mapsCompose" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+signalr = { group = "com.microsoft.signalr", name = "signalr", version.ref = "signalr" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 okhttp-loggingInterceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 okhttp-mockWebServer = { group = "com.squareup.okhttp3", name = "mockwebserver3", version.ref = "okhttp" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }

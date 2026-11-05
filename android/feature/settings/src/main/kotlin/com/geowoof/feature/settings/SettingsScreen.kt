@@ -38,6 +38,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
+import com.geowoof.core.model.LiveVisibility
 import com.geowoof.core.model.SignInMethod
 import com.geowoof.core.model.User
 import com.geowoof.core.ui.userMessage
@@ -61,6 +62,8 @@ internal fun SettingsScreen(
         onChangePassword = onChangePassword,
         onOpenBlockedUsers = onOpenBlockedUsers,
         onPrivateChange = viewModel::onPrivateChange,
+        onLiveVisibilityChange = viewModel::onLiveVisibilityChange,
+        onHideStartChange = viewModel::onHideStartChange,
         onDismissError = viewModel::onErrorShown,
         onSignOut = viewModel::signOut,
         onConfirmSignOut = viewModel::confirmSignOut,
@@ -79,6 +82,8 @@ internal fun SettingsContent(
     onChangePassword: () -> Unit,
     onOpenBlockedUsers: () -> Unit,
     onPrivateChange: (Boolean) -> Unit,
+    onLiveVisibilityChange: (LiveVisibility) -> Unit,
+    onHideStartChange: (Int) -> Unit,
     onDismissError: () -> Unit,
     onSignOut: () -> Unit,
     onConfirmSignOut: () -> Unit,
@@ -213,6 +218,11 @@ internal fun SettingsContent(
                     ),
                 )
             }
+            LiveSettings(
+                settings = uiState.settings,
+                onVisibilityChange = onLiveVisibilityChange,
+                onHideStartChange = onHideStartChange,
+            )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.feature_settings_blocked_users)) },
                 leadingContent = { Icon(painterResource(GeoWoofIcons.Block), contentDescription = null) },
@@ -273,6 +283,8 @@ private fun SettingsPreview() {
             onChangePassword = {},
             onOpenBlockedUsers = {},
             onPrivateChange = {},
+            onLiveVisibilityChange = {},
+            onHideStartChange = {},
             onDismissError = {},
             onSignOut = {},
             onConfirmSignOut = {},

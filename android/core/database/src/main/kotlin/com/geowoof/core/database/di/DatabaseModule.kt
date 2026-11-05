@@ -26,6 +26,9 @@ object DatabaseModule {
         Room.databaseBuilder(context, GeoWoofDatabase::class.java, "geowoof.db").build()
 
     @Provides
+    fun providesUserSettingsDao(database: GeoWoofDatabase) = database.userSettingsDao()
+
+    @Provides
     fun providesProfileDao(database: GeoWoofDatabase): ProfileDao = database.profileDao()
 
     @Provides

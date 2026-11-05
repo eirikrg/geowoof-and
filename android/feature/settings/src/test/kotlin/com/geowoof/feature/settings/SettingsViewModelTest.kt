@@ -1,11 +1,14 @@
 package com.geowoof.feature.settings
 
 import com.geowoof.core.model.AppError
+import com.geowoof.core.model.LiveVisibility
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.SessionState
+import com.geowoof.core.model.UserSettings
 import com.geowoof.core.testing.FakeAccountRepository
 import com.geowoof.core.testing.FakeActiveWalkRepository
 import com.geowoof.core.testing.FakeAuthRepository
+import com.geowoof.core.testing.FakeSettingsRepository
 import com.geowoof.core.testing.FakeWalksRepository
 import com.geowoof.core.testing.MainDispatcherRule
 import com.geowoof.core.testing.TestUsers
@@ -28,7 +31,8 @@ class SettingsViewModelTest {
     private val walks = FakeWalksRepository()
     private val activeWalks = FakeActiveWalkRepository()
     private val accounts = FakeAccountRepository()
-    private val viewModel by lazy { SettingsViewModel(auth, walks, activeWalks, accounts) }
+    private val settings = FakeSettingsRepository()
+    private val viewModel by lazy { SettingsViewModel(auth, walks, activeWalks, accounts, settings) }
 
     @Test
     fun shows_the_signed_in_account() = runTest {
@@ -97,5 +101,34 @@ class SettingsViewModelTest {
         assertEquals(AppError.Network, viewModel.uiState.value.error)
         viewModel.onErrorShown()
         assertNull(viewModel.uiState.value.error)
+    }
+
+    @Test
+    fun it_finds_out_what_is_chosen_when_it_opens() = runTest {
+        settings.refreshed = UserSettings(LiveVisibility.FriendsOnly, hideStartDistanceM = 500)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+        assertEquals(UserSettings(LiveVisibility.FriendsOnly, 500), viewModel.uiState.value.settings)
+    }
+
+    @Test
+    fun what_is_chosen_is_kept() = runTest {
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+        viewModel.onLiveVisibilityChange(LiveVisibility.Nobody)
+        viewModel.onHideStartChange(0)
+
+        assertEquals(UserSettings(LiveVisibility.Nobody, 0), viewModel.uiState.value.settings)
+    }
+
+    @Test
+    fun if_it_cannot_be_saved_it_says_so_and_nothing_changes() = runTest {
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+        settings.failure = AppError.Network
+
+        viewModel.onLiveVisibilityChange(LiveVisibility.Everyone)
+
+        assertEquals(AppError.Network, viewModel.uiState.value.error)
+        assertNull(viewModel.uiState.value.settings.liveVisibility)
     }
 }

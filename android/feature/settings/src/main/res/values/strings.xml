@@ -35,4 +35,10 @@
     <string name="feature_settings_no_blocked_title">Nobody blocked</string>
     <string name="feature_settings_no_blocked_message">You can block someone from the menu in their profile.</string>
     <string name="feature_settings_unblock">Unblock</string>
+    <string name="feature_settings_live_visibility">Who can see you while you walk</string>
+    <string name="feature_settings_live_visibility_not_chosen">You have not chosen yet: your position is not shared</string>
+    <string name="feature_settings_hide_start">Hide the start of your walks</string>
+    <string name="feature_settings_hide_start_message">Your position stays on your phone until you are this far from where you started, so nobody sees your door.</string>
+    <string name="feature_settings_hide_start_meters">%1$d m</string>
+    <string name="feature_settings_hide_start_never">Do not hide it</string>
 </resources>

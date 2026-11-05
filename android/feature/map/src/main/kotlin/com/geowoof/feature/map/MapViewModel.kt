@@ -4,11 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.geowoof.core.data.repository.ActiveWalkRepository
 import com.geowoof.core.data.repository.PetsRepository
+import com.geowoof.core.data.repository.SettingsRepository
 import com.geowoof.core.domain.walks.ComputeWalkStatsUseCase
 import com.geowoof.core.location.LocationAccess
 import com.geowoof.core.location.LocationPermissionLevel
 import com.geowoof.core.model.ActiveWalk
+import com.geowoof.core.model.AppError
+import com.geowoof.core.model.LiveVisibility
+import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.Pet
+import com.geowoof.core.model.UserSettings
 import com.geowoof.core.model.WalkLimits
 import com.geowoof.core.model.WalkStats
 import com.geowoof.feature.map.tracking.WalkTrackingController
@@ -43,6 +48,11 @@ data class MapUiState(
     val hasLocationPermission: Boolean = false,
     /** Go to the summary of the walk that has just finished. */
     val openSummary: Boolean = false,
+    /** `null` until the person chooses. */
+    val liveVisibility: LiveVisibility? = null,
+    val hideStartDistanceM: Int = UserSettings.DEFAULT_HIDE_START_M,
+    val isChoosingVisibility: Boolean = false,
+    val error: AppError? = null,
 )
 
 private data class MapChoices(
@@ -51,6 +61,10 @@ private data class MapChoices(
     val prompt: WalkPrompt? = null,
     val hasLocationPermission: Boolean = false,
     val openSummary: Boolean = false,
+    val isChoosingVisibility: Boolean = false,
+    /** The first walk waits for the person to say who can see them. */
+    val startsAfterChoice: Boolean = false,
+    val error: AppError? = null,
 )
 
 /** Each function is one thing the user can do with a walk. */
@@ -62,6 +76,7 @@ class MapViewModel @Inject constructor(
     private val locationAccess: LocationAccess,
     private val tracking: WalkTrackingController,
     private val computeStats: ComputeWalkStatsUseCase,
+    private val settings: SettingsRepository,
 ) : ViewModel() {
     private val choices = MutableStateFlow(MapChoices())
 
@@ -72,7 +87,7 @@ class MapViewModel @Inject constructor(
     private var isStarting = false
 
     val uiState: StateFlow<MapUiState> =
-        combine(activeWalks.activeWalk, pets.myPets, choices) { walk, myPets, current ->
+        combine(activeWalks.activeWalk, pets.myPets, choices, settings.settings) { walk, myPets, current, chosen ->
             MapUiState(
                 walk = walk,
                 stats = walk?.let { computeStats(it.segments, it.lastPoint?.offsetMs ?: 0) },
@@ -82,6 +97,10 @@ class MapViewModel @Inject constructor(
                 prompt = current.prompt,
                 hasLocationPermission = current.hasLocationPermission,
                 openSummary = current.openSummary,
+                liveVisibility = chosen.liveVisibility,
+                hideStartDistanceM = chosen.hideStartDistanceM,
+                isChoosingVisibility = current.isChoosingVisibility,
+                error = current.error,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), MapUiState())
 
@@ -99,6 +118,7 @@ class MapViewModel @Inject constructor(
 
     fun onStartClick() {
         viewModelScope.launch { pets.refreshMyPets() }
+        viewModelScope.launch { settings.refresh() }
         choices.update { it.copy(isPickingPets = true) }
     }
 
@@ -118,8 +138,35 @@ class MapViewModel @Inject constructor(
         val selected = onlyPetId?.let(::setOf) ?: choices.value.selectedPetIds
         if (selected.isEmpty()) return
         choices.update { it.copy(isPickingPets = false, selectedPetIds = selected) }
-        proceed(PendingStart.NewWalk)
+        viewModelScope.launch {
+            if (settings.current().liveVisibility == null) {
+                choices.update { it.copy(isChoosingVisibility = true, startsAfterChoice = true) }
+            } else {
+                proceed(PendingStart.NewWalk)
+            }
+        }
     }
+
+    fun onChangeVisibilityClick() = choices.update { it.copy(isChoosingVisibility = true, startsAfterChoice = false) }
+
+    fun onDismissVisibility() = choices.update { it.copy(isChoosingVisibility = false, startsAfterChoice = false) }
+
+    /**
+     * The walk does not wait for the server, because it has to work without a connection. Nothing
+     * is shared until the choice is saved: if that fails, this walk stays private and the next
+     * one asks again.
+     */
+    fun onChooseVisibility(visibility: LiveVisibility) {
+        val startsWalk = choices.value.startsAfterChoice
+        choices.update { it.copy(isChoosingVisibility = false, startsAfterChoice = false) }
+        viewModelScope.launch {
+            val saved = settings.setLiveVisibility(visibility)
+            if (saved is Outcome.Failure) choices.update { it.copy(error = saved.error) }
+        }
+        if (startsWalk) proceed(PendingStart.NewWalk)
+    }
+
+    fun onErrorShown() = choices.update { it.copy(error = null) }
 
     fun onResumeClick() = proceed(PendingStart.Resume)
 

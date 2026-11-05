@@ -3,9 +3,13 @@ package com.geowoof.feature.map
 import com.geowoof.core.domain.walks.ComputeWalkStatsUseCase
 import com.geowoof.core.location.LocationPermissionLevel
 import com.geowoof.core.model.ActiveWalkStatus
+import com.geowoof.core.model.AppError
+import com.geowoof.core.model.LiveVisibility
+import com.geowoof.core.model.UserSettings
 import com.geowoof.core.testing.FakeActiveWalkRepository
 import com.geowoof.core.testing.FakeLocationAccess
 import com.geowoof.core.testing.FakePetsRepository
+import com.geowoof.core.testing.FakeSettingsRepository
 import com.geowoof.core.testing.MainDispatcherRule
 import com.geowoof.core.testing.TestPets
 import com.geowoof.core.testing.TestWalks
@@ -28,7 +32,8 @@ class MapViewModelTest {
     private val pets = FakePetsRepository(listOf(TestPets.pet(id = "luna"), TestPets.pet(id = "toby", name = "Toby")))
     private val access = FakeLocationAccess()
     private val tracking = FakeController()
-    private val viewModel by lazy { MapViewModel(walks, pets, access, tracking, ComputeWalkStatsUseCase()) }
+    private val settings = FakeSettingsRepository(UserSettings(LiveVisibility.FriendsOnly))
+    private val viewModel by lazy { MapViewModel(walks, pets, access, tracking, ComputeWalkStatsUseCase(), settings) }
 
     private fun kotlinx.coroutines.test.TestScope.subscribe() {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
@@ -223,5 +228,112 @@ class MapViewModelTest {
             if (canStart) isRunning = true
             return canStart
         }
+    }
+
+    @Test
+    fun before_the_first_walk_it_asks_who_can_see_them_with_nothing_marked() = runTest {
+        settings.settings.value = UserSettings(liveVisibility = null)
+        subscribe()
+
+        viewModel.onConfirmPets("luna")
+
+        assertTrue(state.isChoosingVisibility)
+        assertNull(state.liveVisibility)
+        assertNull(walks.value)
+        assertEquals(0, tracking.starts)
+    }
+
+    @Test
+    fun choosing_starts_the_first_walk_and_keeps_the_choice() = runTest {
+        settings.settings.value = UserSettings(liveVisibility = null)
+        subscribe()
+        viewModel.onConfirmPets("luna")
+
+        viewModel.onChooseVisibility(LiveVisibility.Nobody)
+
+        assertFalse(state.isChoosingVisibility)
+        assertEquals(LiveVisibility.Nobody, state.liveVisibility)
+        assertEquals(listOf("luna"), walks.value?.petIds)
+        assertEquals(1, tracking.starts)
+    }
+
+    @Test
+    fun without_choosing_the_first_walk_does_not_start() = runTest {
+        settings.settings.value = UserSettings(liveVisibility = null)
+        subscribe()
+        viewModel.onConfirmPets("luna")
+
+        viewModel.onDismissVisibility()
+
+        assertFalse(state.isChoosingVisibility)
+        assertNull(walks.value)
+    }
+
+    @Test
+    fun if_the_choice_cannot_be_saved_the_walk_starts_anyway_and_says_so() = runTest {
+        settings.settings.value = UserSettings(liveVisibility = null)
+        settings.failure = AppError.Network
+        subscribe()
+        viewModel.onConfirmPets("luna")
+
+        viewModel.onChooseVisibility(LiveVisibility.Everyone)
+
+        assertEquals(AppError.Network, state.error)
+        assertNull(state.liveVisibility)
+        assertEquals(1, tracking.starts)
+
+        viewModel.onErrorShown()
+        assertNull(state.error)
+    }
+
+    @Test
+    fun once_chosen_it_does_not_ask_again() = runTest {
+        subscribe()
+
+        viewModel.onConfirmPets("luna")
+
+        assertFalse(state.isChoosingVisibility)
+        assertEquals(1, tracking.starts)
+    }
+
+    @Test
+    fun it_can_be_changed_before_or_during_a_walk_without_starting_anything() = runTest {
+        subscribe()
+
+        viewModel.onChangeVisibilityClick()
+        assertTrue(state.isChoosingVisibility)
+
+        viewModel.onChooseVisibility(LiveVisibility.Everyone)
+
+        assertFalse(state.isChoosingVisibility)
+        assertEquals(LiveVisibility.Everyone, state.liveVisibility)
+        assertNull(walks.value)
+        assertEquals(0, tracking.starts)
+    }
+
+    @Test
+    fun cancelling_a_change_does_not_leave_a_walk_waiting() = runTest {
+        settings.settings.value = UserSettings(liveVisibility = null)
+        subscribe()
+        viewModel.onConfirmPets("luna")
+        viewModel.onDismissVisibility()
+
+        viewModel.onChangeVisibilityClick()
+        viewModel.onChooseVisibility(LiveVisibility.Nobody)
+
+        assertNull(walks.value)
+        assertEquals(0, tracking.starts)
+    }
+
+    @Test
+    fun opening_the_start_of_a_walk_finds_out_what_was_chosen_on_another_device() = runTest {
+        settings.settings.value = UserSettings(liveVisibility = null)
+        settings.refreshed = UserSettings(LiveVisibility.FriendsOnly, hideStartDistanceM = 500)
+        subscribe()
+
+        viewModel.onStartClick()
+
+        assertEquals(LiveVisibility.FriendsOnly, state.liveVisibility)
+        assertEquals(500, state.hideStartDistanceM)
     }
 }

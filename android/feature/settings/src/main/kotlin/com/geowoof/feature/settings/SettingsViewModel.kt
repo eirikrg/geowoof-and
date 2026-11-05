@@ -5,11 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.geowoof.core.data.repository.AccountRepository
 import com.geowoof.core.data.repository.ActiveWalkRepository
 import com.geowoof.core.data.repository.AuthRepository
+import com.geowoof.core.data.repository.SettingsRepository
 import com.geowoof.core.data.repository.WalksRepository
 import com.geowoof.core.model.AppError
+import com.geowoof.core.model.LiveVisibility
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.model.User
+import com.geowoof.core.model.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,6 +29,8 @@ data class SettingsUiState(
     val isConfirmingSignOut: Boolean = false,
     /** Waiting for the server to change who can see the profile. */
     val isChangingPrivacy: Boolean = false,
+    /** Room keeps the answer of the server, so a choice only shows once it has been made. */
+    val settings: UserSettings = UserSettings(),
     val error: AppError? = null,
 )
 
@@ -35,6 +40,7 @@ class SettingsViewModel @Inject constructor(
     private val walks: WalksRepository,
     private val activeWalks: ActiveWalkRepository,
     private val accounts: AccountRepository,
+    private val settings: SettingsRepository,
 ) : ViewModel() {
     private val isSigningOut = MutableStateFlow(false)
     private val isConfirmingSignOut = MutableStateFlow(false)
@@ -56,11 +62,15 @@ class SettingsViewModel @Inject constructor(
                 isChangingPrivacy = changingPrivacy,
                 error = failure,
             )
-        }.stateIn(
+        }.combine(settings.settings) { state, current -> state.copy(settings = current) }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             initialValue = SettingsUiState(user = auth.sessionState.value.userOrNull()),
         )
+
+    init {
+        viewModelScope.launch { settings.refresh() }
+    }
 
     /** The session keeps the answer of the server, so the switch only moves if the change was made. */
     fun onPrivateChange(isPrivate: Boolean) {
@@ -70,6 +80,14 @@ class SettingsViewModel @Inject constructor(
             error.value = (accounts.setPrivate(isPrivate) as? Outcome.Failure)?.error
             isChangingPrivacy.value = false
         }
+    }
+
+    fun onLiveVisibilityChange(visibility: LiveVisibility) {
+        viewModelScope.launch { error.value = (settings.setLiveVisibility(visibility) as? Outcome.Failure)?.error }
+    }
+
+    fun onHideStartChange(meters: Int) {
+        viewModelScope.launch { error.value = (settings.setHideStartDistance(meters) as? Outcome.Failure)?.error }
     }
 
     fun onErrorShown() {

@@ -73,6 +73,27 @@ data class PetWeightEntity(
     val weightKg: Double,
 )
 
+/** A single row. A walk needs it without a connection, before knowing whether to share anything. */
+@Entity(tableName = "user_settings")
+data class UserSettingsEntity(
+    @PrimaryKey val id: Int = ROW_ID,
+    val liveVisibility: String?,
+    val hideStartDistanceM: Int,
+) {
+    companion object {
+        const val ROW_ID = 0
+    }
+}
+
+@Dao
+interface UserSettingsDao {
+    @Query("SELECT * FROM user_settings WHERE id = ${UserSettingsEntity.ROW_ID}")
+    fun observe(): Flow<UserSettingsEntity?>
+
+    @Upsert
+    suspend fun upsert(settings: UserSettingsEntity)
+}
+
 @Dao
 interface ProfileDao {
     @Query("SELECT * FROM profiles WHERE id = :id")
@@ -158,18 +179,22 @@ class ReplaceFriendsWithFollows : AutoMigrationSpec
         BlockedUserEntity::class,
         FeedItemEntity::class,
         FeedPageKeyEntity::class,
+        UserSettingsEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
         AutoMigration(from = 3, to = 4, spec = ReplaceFriendsWithFollows::class),
         AutoMigration(from = 4, to = 5),
+        AutoMigration(from = 5, to = 6),
     ],
 )
 abstract class GeoWoofDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
+
+    abstract fun userSettingsDao(): UserSettingsDao
 
     abstract fun socialDao(): SocialDao
 

@@ -1,5 +1,7 @@
 package com.geowoof.feature.map
 
+import com.geowoof.core.model.LiveVisibility
+
 @Suppress("LongParameterList")
 internal class MapActions(
     val onStart: () -> Unit,
@@ -16,4 +18,8 @@ internal class MapActions(
     val onOpenAppSettings: () -> Unit,
     val onOpenLocationSettings: () -> Unit,
     val onDismissPrompt: () -> Unit,
+    val onChangeVisibility: () -> Unit,
+    val onChooseVisibility: (LiveVisibility) -> Unit,
+    val onDismissVisibility: () -> Unit,
+    val onDismissError: () -> Unit,
 )

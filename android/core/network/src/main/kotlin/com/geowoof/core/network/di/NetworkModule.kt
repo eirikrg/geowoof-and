@@ -1,8 +1,10 @@
 package com.geowoof.core.network.di
 
 import com.geowoof.core.common.AppConfig
+import com.geowoof.core.common.ApplicationScope
 import com.geowoof.core.network.AuthApi
 import com.geowoof.core.network.AuthNetworkDataSource
+import com.geowoof.core.network.LiveNetworkDataSource
 import com.geowoof.core.network.MediaApi
 import com.geowoof.core.network.MediaNetworkDataSource
 import com.geowoof.core.network.PeopleApi
@@ -20,8 +22,12 @@ import com.geowoof.core.network.RetrofitPeopleNetworkDataSource
 import com.geowoof.core.network.RetrofitPetsNetworkDataSource
 import com.geowoof.core.network.RetrofitPostsNetworkDataSource
 import com.geowoof.core.network.RetrofitProfileNetworkDataSource
+import com.geowoof.core.network.RetrofitSettingsNetworkDataSource
 import com.geowoof.core.network.RetrofitSocialNetworkDataSource
 import com.geowoof.core.network.RetrofitWalksNetworkDataSource
+import com.geowoof.core.network.SettingsApi
+import com.geowoof.core.network.SettingsNetworkDataSource
+import com.geowoof.core.network.SignalRLiveNetworkDataSource
 import com.geowoof.core.network.SocialApi
 import com.geowoof.core.network.SocialNetworkDataSource
 import com.geowoof.core.network.StorageClient
@@ -30,11 +36,14 @@ import com.geowoof.core.network.WalksNetworkDataSource
 import com.geowoof.core.network.auth.AuthInterceptor
 import com.geowoof.core.network.auth.SessionTokenProvider
 import com.geowoof.core.network.auth.TokenAuthenticator
+import com.geowoof.core.network.realtime.RealtimeConnection
+import com.geowoof.core.network.realtime.SignalRHubClient
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -65,6 +74,12 @@ internal object NetworkModule {
     fun providesRefreshApi(config: AppConfig, json: Json): RefreshApi =
         retrofit(config, baseClient(config).build(), json).create(RefreshApi::class.java)
 
+    /** One for the API and the hubs: they share the refresh of the session. */
+    @Provides
+    @Singleton
+    fun providesTokenAuthenticator(tokens: SessionTokenProvider, refreshApi: RefreshApi, json: Json) =
+        TokenAuthenticator(tokens, refreshApi, json)
+
     @Provides
     @Singleton
     @Authenticated
@@ -72,11 +87,11 @@ internal object NetworkModule {
         config: AppConfig,
         json: Json,
         tokens: SessionTokenProvider,
-        refreshApi: RefreshApi,
+        authenticator: TokenAuthenticator,
     ): Retrofit {
         val client = baseClient(config)
             .addInterceptor(AuthInterceptor(tokens))
-            .authenticator(TokenAuthenticator(tokens, refreshApi, json))
+            .authenticator(authenticator)
             .build()
         return retrofit(config, client, json)
     }
@@ -113,6 +128,28 @@ internal object NetworkModule {
     @Singleton
     fun providesPostsApi(@Authenticated retrofit: Retrofit): PostsApi = retrofit.create()
 
+    @Provides
+    @Singleton
+    fun providesSettingsApi(@Authenticated retrofit: Retrofit): SettingsApi = retrofit.create()
+
+    @Provides
+    @Singleton
+    fun providesLiveNetworkDataSource(
+        config: AppConfig,
+        json: Json,
+        tokens: SessionTokenProvider,
+        authenticator: TokenAuthenticator,
+        @ApplicationScope scope: CoroutineScope,
+    ): LiveNetworkDataSource {
+        val url = config.apiBaseUrl.trimEnd('/') + LIVE_HUB_PATH
+        val connection = RealtimeConnection(
+            newClient = { SignalRHubClient(url, tokens, authenticator) },
+            events = listOf(SignalRLiveNetworkDataSource.WALKER_UPDATED, SignalRLiveNetworkDataSource.WALKER_LEFT),
+            scope = scope,
+        )
+        return SignalRLiveNetworkDataSource(connection, json)
+    }
+
     /** No logging either: a signed link in a log works for anyone who reads it until it expires. */
     @Provides
     @Singleton
@@ -143,6 +180,7 @@ internal object NetworkModule {
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
 
+    private const val LIVE_HUB_PATH = "/hubs/live"
     private const val CONNECT_TIMEOUT_SECONDS = 15L
     private const val READ_TIMEOUT_SECONDS = 30L
     private const val UPLOAD_TIMEOUT_SECONDS = 120L
@@ -171,6 +209,9 @@ internal interface NetworkBindings {
 
     @Binds
     fun bindsPeopleNetworkDataSource(dataSource: RetrofitPeopleNetworkDataSource): PeopleNetworkDataSource
+
+    @Binds
+    fun bindsSettingsNetworkDataSource(dataSource: RetrofitSettingsNetworkDataSource): SettingsNetworkDataSource
 
     @Binds
     fun bindsPostsNetworkDataSource(dataSource: RetrofitPostsNetworkDataSource): PostsNetworkDataSource
