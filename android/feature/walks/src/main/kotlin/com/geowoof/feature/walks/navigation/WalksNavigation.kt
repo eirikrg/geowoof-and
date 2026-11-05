@@ -6,6 +6,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import androidx.navigation.navOptions
 import com.geowoof.feature.walks.WalksScreen
+import com.geowoof.feature.walks.detail.UserWalkScreen
 import com.geowoof.feature.walks.detail.WalkDetailScreen
 import kotlinx.serialization.Serializable
 
@@ -18,10 +19,20 @@ data class WalksRoute(val petId: String? = null)
 @Serializable
 data class WalkDetailRoute(val walkId: String)
 
+/** A walk of someone else, which is not on the device. */
+@Serializable
+data class UserWalkRoute(val walkId: String)
+
 fun NavController.navigateToWalks(petId: String? = null, navOptions: NavOptions? = null) =
     navigate(WalksRoute(petId), navOptions ?: navOptions { launchSingleTop = true })
 
+fun NavController.navigateToUserWalk(walkId: String, navOptions: NavOptions? = null) =
+    navigate(UserWalkRoute(walkId), navOptions ?: navOptions { launchSingleTop = true })
+
 fun NavGraphBuilder.walkScreens(navController: NavController) {
+    composable<UserWalkRoute> {
+        UserWalkScreen(onBack = { navController.popBackStack() })
+    }
     composable<WalksRoute> {
         WalksScreen(
             onBack = { navController.popBackStack() },

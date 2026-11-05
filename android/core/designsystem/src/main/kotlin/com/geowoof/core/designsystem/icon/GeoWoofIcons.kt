@@ -79,4 +79,16 @@ object GeoWoofIcons {
     @DrawableRes val SyncProblem: Int = R.drawable.core_designsystem_ic_sync_problem
 
     @DrawableRes val Close: Int = R.drawable.core_designsystem_ic_close
+
+    @DrawableRes val PersonAdd: Int = R.drawable.core_designsystem_ic_person_add
+
+    @DrawableRes val MoreVert: Int = R.drawable.core_designsystem_ic_more_vert
+
+    @DrawableRes val Check: Int = R.drawable.core_designsystem_ic_check
+
+    @DrawableRes val Block: Int = R.drawable.core_designsystem_ic_block
+
+    @DrawableRes val Flag: Int = R.drawable.core_designsystem_ic_flag
+
+    @DrawableRes val GroupAdd: Int = R.drawable.core_designsystem_ic_group_add
 }

@@ -11,13 +11,17 @@ import com.geowoof.core.data.repository.DefaultAccountRepository
 import com.geowoof.core.data.repository.DefaultActiveWalkRepository
 import com.geowoof.core.data.repository.DefaultAuthRepository
 import com.geowoof.core.data.repository.DefaultMediaRepository
+import com.geowoof.core.data.repository.DefaultPeopleRepository
 import com.geowoof.core.data.repository.DefaultPetsRepository
 import com.geowoof.core.data.repository.DefaultProfileRepository
+import com.geowoof.core.data.repository.DefaultSocialRepository
 import com.geowoof.core.data.repository.DefaultWalkSynchronizer
 import com.geowoof.core.data.repository.DefaultWalksRepository
 import com.geowoof.core.data.repository.MediaRepository
+import com.geowoof.core.data.repository.PeopleRepository
 import com.geowoof.core.data.repository.PetsRepository
 import com.geowoof.core.data.repository.ProfileRepository
+import com.geowoof.core.data.repository.SocialRepository
 import com.geowoof.core.data.repository.WalkSynchronizer
 import com.geowoof.core.data.repository.WalksRepository
 import com.geowoof.core.data.session.DatabaseUserDataCleaner
@@ -67,4 +71,10 @@ internal interface DataModule {
 
     @Binds
     fun bindsWalkPhotoStore(store: FilesWalkPhotoStore): WalkPhotoStore
+
+    @Binds
+    fun bindsSocialRepository(repository: DefaultSocialRepository): SocialRepository
+
+    @Binds
+    fun bindsPeopleRepository(repository: DefaultPeopleRepository): PeopleRepository
 }

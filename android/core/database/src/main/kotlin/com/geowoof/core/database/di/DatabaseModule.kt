@@ -7,6 +7,7 @@ import com.geowoof.core.database.GeoWoofDatabase
 import com.geowoof.core.database.PetDao
 import com.geowoof.core.database.PetWeightDao
 import com.geowoof.core.database.ProfileDao
+import com.geowoof.core.database.SocialDao
 import com.geowoof.core.database.WalkDao
 import dagger.Module
 import dagger.Provides
@@ -37,4 +38,7 @@ object DatabaseModule {
 
     @Provides
     fun providesWalkDao(database: GeoWoofDatabase): WalkDao = database.walkDao()
+
+    @Provides
+    fun providesSocialDao(database: GeoWoofDatabase): SocialDao = database.socialDao()
 }

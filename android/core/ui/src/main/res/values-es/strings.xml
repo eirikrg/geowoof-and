@@ -85,4 +85,10 @@
     <string name="core_ui_total_walks">Paseos</string>
     <string name="core_ui_total_time">Tiempo</string>
     <string name="core_ui_total_streak">Semanas seguidas</string>
+    <string name="core_ui_error_user_not_found">Este perfil no está disponible.</string>
+    <string name="core_ui_error_email_required">Verifica tu email para hacer esto.</string>
+    <string name="core_ui_error_already_friends">Ya sois amigos.</string>
+    <string name="core_ui_error_request_gone">Esta solicitud ya tiene respuesta.</string>
+    <string name="core_ui_error_not_friends">Ya no sois amigos.</string>
+    <string name="core_ui_error_cannot_target_self">No puedes hacer esto con tu propia cuenta.</string>
 </resources>

@@ -28,6 +28,7 @@ class SettingsScreenTest {
                     onBack = { actions += "back" },
                     onVerifyEmail = { actions += "verify" },
                     onChangePassword = { actions += "password" },
+                    onOpenBlockedUsers = { actions += "blocked" },
                     onSignOut = { actions += "signOut" },
                     onConfirmSignOut = { actions += "confirmSignOut" },
                     onDismissSignOut = { actions += "dismissSignOut" },

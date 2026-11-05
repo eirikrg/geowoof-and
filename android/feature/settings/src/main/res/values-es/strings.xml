@@ -27,4 +27,8 @@
     <string name="feature_settings_sign_out_title">Tienes paseos en este móvil</string>
     <string name="feature_settings_sign_out_message">Hay paseos que aún no se han subido. Si cierras la sesión, se perderán.</string>
     <string name="feature_settings_stay">Seguir con la sesión</string>
+    <string name="feature_settings_blocked_users">Personas bloqueadas</string>
+    <string name="feature_settings_no_blocked_title">Nadie bloqueado</string>
+    <string name="feature_settings_no_blocked_message">Puedes bloquear a alguien desde el menú de su perfil.</string>
+    <string name="feature_settings_unblock">Desbloquear</string>
 </resources>

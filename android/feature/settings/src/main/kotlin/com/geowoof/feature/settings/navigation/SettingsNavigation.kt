@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import com.geowoof.feature.settings.SettingsScreen
 import com.geowoof.feature.settings.account.ChangePasswordScreen
 import com.geowoof.feature.settings.account.DeleteAccountScreen
+import com.geowoof.feature.settings.blocks.BlockedUsersScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -17,6 +18,9 @@ data object ChangePasswordRoute
 
 @Serializable
 data object DeleteAccountRoute
+
+@Serializable
+data object BlockedUsersRoute
 
 fun NavController.navigateToSettings(navOptions: NavOptions? = null) = navigate(SettingsRoute, navOptions)
 
@@ -31,6 +35,7 @@ fun NavGraphBuilder.settingsScreens(navController: NavController, onVerifyEmail:
             onBack = { navController.popBackStack() },
             onVerifyEmail = onVerifyEmail,
             onChangePassword = { navController.navigate(ChangePasswordRoute) { launchSingleTop = true } },
+            onOpenBlockedUsers = { navController.navigate(BlockedUsersRoute) { launchSingleTop = true } },
             onDeleteAccount = { navController.navigate(DeleteAccountRoute) { launchSingleTop = true } },
         )
     }
@@ -42,5 +47,8 @@ fun NavGraphBuilder.settingsScreens(navController: NavController, onVerifyEmail:
     }
     composable<DeleteAccountRoute> {
         DeleteAccountScreen(onBack = { navController.popBackStack() })
+    }
+    composable<BlockedUsersRoute> {
+        BlockedUsersScreen(onBack = { navController.popBackStack() })
     }
 }

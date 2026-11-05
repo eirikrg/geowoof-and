@@ -28,6 +28,7 @@ data class WalkBody(
 @Serializable
 data class NetworkWalk(
     val id: String,
+    val ownerId: String = "",
     val startedAt: String,
     val endedAt: String,
     val timeZone: String,

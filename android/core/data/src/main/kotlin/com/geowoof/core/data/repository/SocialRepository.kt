@@ -1,0 +1,171 @@
+package com.geowoof.core.data.repository
+
+import com.geowoof.core.data.mapper.toEntity
+import com.geowoof.core.data.mapper.toModel
+import com.geowoof.core.database.SocialDao
+import com.geowoof.core.model.AppError
+import com.geowoof.core.model.BlockedUser
+import com.geowoof.core.model.Friend
+import com.geowoof.core.model.FriendRequest
+import com.geowoof.core.model.Outcome
+import com.geowoof.core.model.Relationship
+import com.geowoof.core.model.RelationshipStatus
+import com.geowoof.core.model.ReportReason
+import com.geowoof.core.model.RequestDirection
+import com.geowoof.core.model.map
+import com.geowoof.core.model.onFailure
+import com.geowoof.core.model.onSuccess
+import com.geowoof.core.network.PeopleNetworkDataSource
+import com.geowoof.core.network.SocialNetworkDataSource
+import com.geowoof.core.network.model.NetworkPage
+import com.geowoof.core.network.model.ReportBody
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+
+/**
+ * The friends, requests and blocks of the signed-in person: read from Room, written online
+ * (docs/decisions/0009). If a person has changed something meanwhile, the next refresh brings it.
+ */
+interface SocialRepository {
+    val friends: Flow<List<Friend>>
+    val receivedRequests: Flow<List<FriendRequest>>
+    val sentRequests: Flow<List<FriendRequest>>
+    val blockedUsers: Flow<List<BlockedUser>>
+
+    suspend fun refreshFriends(): Outcome<Unit>
+
+    suspend fun refreshRequests(): Outcome<Unit>
+
+    suspend fun refreshBlockedUsers(): Outcome<Unit>
+
+    suspend fun relationship(userId: String): Outcome<Relationship>
+
+    /** The answer can be [RelationshipStatus.Friends], if that person had already asked. */
+    suspend fun sendRequest(userId: String): Outcome<Relationship>
+
+    suspend fun acceptRequest(requestId: String): Outcome<Unit>
+
+    suspend fun rejectRequest(requestId: String): Outcome<Unit>
+
+    suspend fun cancelRequest(requestId: String): Outcome<Unit>
+
+    suspend fun removeFriend(userId: String): Outcome<Unit>
+
+    suspend fun block(userId: String): Outcome<Unit>
+
+    suspend fun unblock(userId: String): Outcome<Unit>
+
+    suspend fun report(userId: String, reason: ReportReason, details: String?): Outcome<Unit>
+}
+
+internal class DefaultSocialRepository @Inject constructor(
+    private val network: SocialNetworkDataSource,
+    private val people: PeopleNetworkDataSource,
+    private val dao: SocialDao,
+) : SocialRepository {
+    override val friends: Flow<List<Friend>> = dao.observeFriends().map { rows -> rows.map { it.toModel() } }
+
+    override val receivedRequests: Flow<List<FriendRequest>> = requests(RequestDirection.Received)
+
+    override val sentRequests: Flow<List<FriendRequest>> = requests(RequestDirection.Sent)
+
+    override val blockedUsers: Flow<List<BlockedUser>> = dao.observeBlocked().map { rows -> rows.map { it.toModel() } }
+
+    private fun requests(direction: RequestDirection) =
+        dao.observeRequests(direction.name).map { rows -> rows.map { it.toModel() } }
+
+    override suspend fun refreshFriends(): Outcome<Unit> =
+        allPages { cursor -> network.friends(PAGE_SIZE, cursor) }.map { items ->
+            dao.replaceFriends(items.map { it.toEntity() })
+        }
+
+    override suspend fun refreshRequests(): Outcome<Unit> {
+        val received = allPages { cursor -> network.receivedRequests(PAGE_SIZE, cursor) }.map { items ->
+            dao.replaceRequests(RequestDirection.Received.name, items.map { it.toEntity() })
+        }
+        val sent = allPages { cursor -> network.sentRequests(PAGE_SIZE, cursor) }.map { items ->
+            dao.replaceRequests(RequestDirection.Sent.name, items.map { it.toEntity() })
+        }
+        return if (received is Outcome.Failure) received else sent
+    }
+
+    override suspend fun refreshBlockedUsers(): Outcome<Unit> =
+        allPages { cursor -> network.blocks(PAGE_SIZE, cursor) }.map { items ->
+            dao.replaceBlocked(items.map { it.toEntity() })
+        }
+
+    override suspend fun relationship(userId: String): Outcome<Relationship> =
+        people.relationship(userId).map { it.toModel() }
+
+    override suspend fun sendRequest(userId: String): Outcome<Relationship> =
+        network.sendRequest(userId).map { request ->
+            if (request.status == STATUS_ACCEPTED) {
+                dao.deleteRequest(request.id)
+                refreshFriends()
+                Relationship(RelationshipStatus.Friends)
+            } else {
+                dao.upsertRequest(request.toEntity())
+                Relationship(RelationshipStatus.RequestSent, request.id)
+            }
+        }
+
+    override suspend fun acceptRequest(requestId: String): Outcome<Unit> = answer(requestId) {
+        network.acceptRequest(requestId).map { }.onSuccess { refreshFriends() }
+    }
+
+    override suspend fun rejectRequest(requestId: String): Outcome<Unit> =
+        answer(requestId) { network.rejectRequest(requestId) }
+
+    override suspend fun cancelRequest(requestId: String): Outcome<Unit> =
+        answer(requestId) { network.cancelRequest(requestId) }
+
+    /** If the server rejects the answer, the request has changed: the list must show how it is now. */
+    private suspend fun answer(requestId: String, call: suspend () -> Outcome<Unit>): Outcome<Unit> = call()
+        .onSuccess { dao.deleteRequest(requestId) }
+        .onFailure { error -> if (error is AppError.Api) refreshRequests() }
+
+    override suspend fun removeFriend(userId: String): Outcome<Unit> = network.removeFriend(userId).onSuccess {
+        dao.deleteFriend(userId)
+    }
+
+    override suspend fun block(userId: String): Outcome<Unit> = network.block(userId).onSuccess {
+        dao.deleteFriend(userId)
+        dao.deleteRequestsWith(userId)
+        refreshBlockedUsers()
+    }
+
+    override suspend fun unblock(userId: String): Outcome<Unit> = network.unblock(userId).onSuccess {
+        dao.deleteBlocked(userId)
+    }
+
+    override suspend fun report(userId: String, reason: ReportReason, details: String?): Outcome<Unit> =
+        network.report(ReportBody(TARGET_USER, userId, reason.name, details?.trim()?.ifEmpty { null })).map { }
+
+    /** These lists are short, and Room holds them whole. The limit only stops a server that never ends. */
+    private suspend fun <T> allPages(load: suspend (cursor: String?) -> Outcome<NetworkPage<T>>): Outcome<List<T>> {
+        val items = mutableListOf<T>()
+        var cursor: String? = null
+        var failure: Outcome.Failure? = null
+        var pages = 0
+        do {
+            when (val page = load(cursor)) {
+                is Outcome.Failure -> failure = page
+
+                is Outcome.Success -> {
+                    items += page.value.items
+                    cursor = page.value.nextCursor
+                }
+            }
+            pages++
+        } while (failure == null && cursor != null && pages < MAX_PAGES)
+        return failure ?: Outcome.Success(items)
+    }
+
+    private companion object {
+        const val PAGE_SIZE = 50
+        const val MAX_PAGES = 100
+        const val STATUS_ACCEPTED = "Accepted"
+        const val TARGET_USER = "User"
+    }
+}

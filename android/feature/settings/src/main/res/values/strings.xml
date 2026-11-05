@@ -27,4 +27,8 @@
     <string name="feature_settings_sign_out_title">You have walks on this device</string>
     <string name="feature_settings_sign_out_message">There are walks that have not been uploaded yet. If you sign out, they will be lost.</string>
     <string name="feature_settings_stay">Stay signed in</string>
+    <string name="feature_settings_blocked_users">Blocked people</string>
+    <string name="feature_settings_no_blocked_title">Nobody blocked</string>
+    <string name="feature_settings_no_blocked_message">You can block someone from the menu in their profile.</string>
+    <string name="feature_settings_unblock">Unblock</string>
 </resources>

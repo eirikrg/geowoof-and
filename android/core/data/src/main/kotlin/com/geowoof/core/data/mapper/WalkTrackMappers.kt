@@ -14,7 +14,10 @@ internal fun List<NetworkWalkSegment>.toTrackJson(): String = Json.encodeToStrin
 internal fun String.toNetworkSegments(): List<NetworkWalkSegment> = Json.decodeFromString(SegmentsSerializer, this)
 
 /** The route of a saved walk. A segment that cannot be decoded is left out: the rest can still be shown. */
-internal fun String.toRouteSegments(): List<RouteSegment> = toNetworkSegments().mapNotNull { segment ->
+internal fun String.toRouteSegments(): List<RouteSegment> = toNetworkSegments().toRouteSegments()
+
+@JvmName("networkSegmentsToRoute")
+internal fun List<NetworkWalkSegment>.toRouteSegments(): List<RouteSegment> = mapNotNull { segment ->
     val positions = PolylineCodec.decode(segment.polyline)
     positions?.takeIf { it.size == segment.timeOffsetsMs.size }?.let {
         RouteSegment(it.zip(segment.timeOffsetsMs) { position, offset -> RoutePoint(position, offset) })

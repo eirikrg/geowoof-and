@@ -145,13 +145,18 @@ abstract class PetWeightDao {
         WalkTrackEntity::class,
         WalkTotalsEntity::class,
         WalkPageKeyEntity::class,
+        FriendEntity::class,
+        FriendRequestEntity::class,
+        BlockedUserEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
 )
 abstract class GeoWoofDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
+
+    abstract fun socialDao(): SocialDao
 
     abstract fun petDao(): PetDao
 

@@ -5,6 +5,8 @@ import com.geowoof.core.network.AuthApi
 import com.geowoof.core.network.AuthNetworkDataSource
 import com.geowoof.core.network.MediaApi
 import com.geowoof.core.network.MediaNetworkDataSource
+import com.geowoof.core.network.PeopleApi
+import com.geowoof.core.network.PeopleNetworkDataSource
 import com.geowoof.core.network.PetsApi
 import com.geowoof.core.network.PetsNetworkDataSource
 import com.geowoof.core.network.ProfileApi
@@ -12,9 +14,13 @@ import com.geowoof.core.network.ProfileNetworkDataSource
 import com.geowoof.core.network.RefreshApi
 import com.geowoof.core.network.RetrofitAuthNetworkDataSource
 import com.geowoof.core.network.RetrofitMediaNetworkDataSource
+import com.geowoof.core.network.RetrofitPeopleNetworkDataSource
 import com.geowoof.core.network.RetrofitPetsNetworkDataSource
 import com.geowoof.core.network.RetrofitProfileNetworkDataSource
+import com.geowoof.core.network.RetrofitSocialNetworkDataSource
 import com.geowoof.core.network.RetrofitWalksNetworkDataSource
+import com.geowoof.core.network.SocialApi
+import com.geowoof.core.network.SocialNetworkDataSource
 import com.geowoof.core.network.StorageClient
 import com.geowoof.core.network.WalksApi
 import com.geowoof.core.network.WalksNetworkDataSource
@@ -92,6 +98,14 @@ internal object NetworkModule {
     @Singleton
     fun providesWalksApi(@Authenticated retrofit: Retrofit): WalksApi = retrofit.create()
 
+    @Provides
+    @Singleton
+    fun providesSocialApi(@Authenticated retrofit: Retrofit): SocialApi = retrofit.create()
+
+    @Provides
+    @Singleton
+    fun providesPeopleApi(@Authenticated retrofit: Retrofit): PeopleApi = retrofit.create()
+
     /** No logging either: a signed link in a log works for anyone who reads it until it expires. */
     @Provides
     @Singleton
@@ -144,4 +158,10 @@ internal interface NetworkBindings {
 
     @Binds
     fun bindsWalksNetworkDataSource(dataSource: RetrofitWalksNetworkDataSource): WalksNetworkDataSource
+
+    @Binds
+    fun bindsSocialNetworkDataSource(dataSource: RetrofitSocialNetworkDataSource): SocialNetworkDataSource
+
+    @Binds
+    fun bindsPeopleNetworkDataSource(dataSource: RetrofitPeopleNetworkDataSource): PeopleNetworkDataSource
 }

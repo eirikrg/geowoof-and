@@ -30,7 +30,9 @@ import com.geowoof.feature.profile.navigation.profileScreen
 import com.geowoof.feature.search.navigation.searchScreen
 import com.geowoof.feature.settings.navigation.navigateToSettings
 import com.geowoof.feature.settings.navigation.settingsScreens
-import com.geowoof.feature.social.navigation.communityScreen
+import com.geowoof.feature.social.navigation.navigateToUserProfile
+import com.geowoof.feature.social.navigation.socialScreens
+import com.geowoof.feature.walks.navigation.navigateToUserWalk
 import com.geowoof.feature.walks.navigation.navigateToWalks
 import com.geowoof.feature.walks.navigation.walkScreens
 
@@ -45,8 +47,12 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
         modifier = modifier,
     ) {
         mapScreens(navController, onAddPet = { navController.navigateToPetEditor() })
-        communityScreen()
-        searchScreen()
+        socialScreens(
+            navController,
+            onOpenWalk = { walkId -> navController.navigateToUserWalk(walkId) },
+            onVerifyEmail = { navController.navigateToVerifyEmail() },
+        )
+        searchScreen(onOpenUser = { userId -> navController.navigateToUserProfile(userId) })
         profileScreen(
             navController = navController,
             onOpenSettings = { navController.navigateToSettings() },

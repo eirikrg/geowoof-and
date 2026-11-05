@@ -41,4 +41,25 @@ class MigrationTest {
             }
         }
     }
+
+    @Test
+    fun an_existing_account_keeps_its_walks_when_the_friends_arrive() {
+        helper.createDatabase(2).use { connection ->
+            connection.execSQL(
+                "INSERT INTO pets (id, ownerId, name, species, sex, neutered, createdAtEpochMs, updatedAtEpochMs) " +
+                    "VALUES ('pet-1', 'ana', 'Luna', 'Dog', 'Female', 1, 1, 1)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(3).use { connection ->
+            connection.prepare("SELECT name FROM pets").use { statement ->
+                statement.step()
+                assertEquals("Luna", statement.getText(0))
+            }
+            connection.prepare("SELECT COUNT(*) FROM friends").use { statement ->
+                statement.step()
+                assertEquals(0L, statement.getLong(0))
+            }
+        }
+    }
 }

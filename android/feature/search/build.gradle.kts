@@ -5,3 +5,7 @@ plugins {
 android {
     namespace = "com.geowoof.feature.search"
 }
+
+dependencies {
+    implementation(libs.androidx.paging.compose)
+}

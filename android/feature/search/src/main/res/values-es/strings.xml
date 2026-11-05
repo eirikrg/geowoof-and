@@ -2,5 +2,13 @@
 <resources>
     <string name="feature_search_search_title">Buscar</string>
     <string name="feature_search_search_empty_title">Personas y mascotas</string>
-    <string name="feature_search_search_empty_message">Aquí podrás encontrar a otros dueños y a sus mascotas, y explorar fotos.</string>
+    <string name="feature_search_search_empty_message">Escribe al menos dos letras para encontrar a otros dueños y a sus mascotas.</string>
+    <string name="feature_search_field">Nombre, @usuario o mascota</string>
+    <string name="feature_search_tab_people">Personas</string>
+    <string name="feature_search_tab_pets">Mascotas</string>
+    <string name="feature_search_nothing_found">Sin resultados</string>
+    <string name="feature_search_no_people">Nadie coincide con lo que has escrito.</string>
+    <string name="feature_search_no_pets">Ninguna mascota coincide con lo que has escrito.</string>
+    <string name="feature_search_retry">Reintentar</string>
+    <string name="feature_search_pet_owner">%1$s · de @%2$s</string>
 </resources>

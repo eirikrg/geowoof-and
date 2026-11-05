@@ -2,5 +2,13 @@
 <resources>
     <string name="feature_search_search_title">Search</string>
     <string name="feature_search_search_empty_title">People and pets</string>
-    <string name="feature_search_search_empty_message">Here you will be able to find other owners and their pets, and explore photos.</string>
+    <string name="feature_search_search_empty_message">Write at least two letters to find other owners and their pets.</string>
+    <string name="feature_search_field">Name, @username or pet</string>
+    <string name="feature_search_tab_people">People</string>
+    <string name="feature_search_tab_pets">Pets</string>
+    <string name="feature_search_nothing_found">Nothing found</string>
+    <string name="feature_search_no_people">No one matches what you wrote.</string>
+    <string name="feature_search_no_pets">No pet matches what you wrote.</string>
+    <string name="feature_search_retry">Try again</string>
+    <string name="feature_search_pet_owner">%1$s · from @%2$s</string>
 </resources>

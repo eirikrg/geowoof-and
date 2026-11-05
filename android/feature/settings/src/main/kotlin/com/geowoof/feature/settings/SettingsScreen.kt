@@ -39,6 +39,7 @@ internal fun SettingsScreen(
     onBack: () -> Unit,
     onVerifyEmail: () -> Unit,
     onChangePassword: () -> Unit,
+    onOpenBlockedUsers: () -> Unit,
     onDeleteAccount: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
@@ -49,6 +50,7 @@ internal fun SettingsScreen(
         onBack = onBack,
         onVerifyEmail = onVerifyEmail,
         onChangePassword = onChangePassword,
+        onOpenBlockedUsers = onOpenBlockedUsers,
         onSignOut = viewModel::signOut,
         onConfirmSignOut = viewModel::confirmSignOut,
         onDismissSignOut = viewModel::dismissSignOut,
@@ -64,6 +66,7 @@ internal fun SettingsContent(
     onBack: () -> Unit,
     onVerifyEmail: () -> Unit,
     onChangePassword: () -> Unit,
+    onOpenBlockedUsers: () -> Unit,
     onSignOut: () -> Unit,
     onConfirmSignOut: () -> Unit,
     onDismissSignOut: () -> Unit,
@@ -160,6 +163,12 @@ internal fun SettingsContent(
                     modifier = Modifier.clickable(onClick = onChangePassword),
                 )
             }
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.feature_settings_blocked_users)) },
+                leadingContent = { Icon(painterResource(GeoWoofIcons.Block), contentDescription = null) },
+                trailingContent = { Icon(painterResource(GeoWoofIcons.ChevronRight), contentDescription = null) },
+                modifier = Modifier.clickable(onClick = onOpenBlockedUsers),
+            )
             HorizontalDivider()
             ListItem(
                 headlineContent = { Text(stringResource(R.string.feature_settings_sign_out)) },
@@ -212,6 +221,7 @@ private fun SettingsPreview() {
             onBack = {},
             onVerifyEmail = {},
             onChangePassword = {},
+            onOpenBlockedUsers = {},
             onSignOut = {},
             onConfirmSignOut = {},
             onDismissSignOut = {},
