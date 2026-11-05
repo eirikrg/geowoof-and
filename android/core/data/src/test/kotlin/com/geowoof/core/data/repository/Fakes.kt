@@ -96,7 +96,11 @@ internal class FakeAuthNetworkDataSource : AuthNetworkDataSource {
     override suspend fun updateProfile(displayName: String?, language: String?) =
         userResult.also { calls += "updateProfile:$displayName:$language" }
 
-    override suspend fun changeUsername(username: String) = userResult.also { calls += "username:$username" }
+    override suspend fun changePrivacy(isPrivate: Boolean) = userResult.also { calls += "privacy:$isPrivate" }
+
+    override suspend fun changeUsername(username: String, isPrivate: Boolean?) = userResult.also {
+        calls += "username:$username:$isPrivate"
+    }
 
     override suspend fun usernameAvailability(username: String) = availabilityResult.also {
         calls +=

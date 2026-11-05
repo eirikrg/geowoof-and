@@ -1,27 +1,18 @@
 package com.geowoof.feature.profile
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,46 +21,115 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.LoadStates
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
-import com.geowoof.core.model.AppError
-import com.geowoof.core.model.Pet
+import com.geowoof.core.model.PeopleListKind
 import com.geowoof.core.model.Profile
-import com.geowoof.core.ui.ImageVariant
-import com.geowoof.core.ui.RemoteAvatar
-import com.geowoof.core.ui.shortDescription
+import com.geowoof.core.model.ProfileCounts
+import com.geowoof.core.model.Relationship
+import com.geowoof.core.model.RelationshipStatus
+import com.geowoof.core.model.Walk
 import com.geowoof.core.ui.userMessage
+import kotlinx.coroutines.flow.flowOf
+import java.time.Instant
 
+/** Your own profile, one of the destinations of the app. */
 @Composable
 fun ProfileScreen(
     onOpenSettings: () -> Unit,
     onEditProfile: () -> Unit,
-    onOpenWalks: () -> Unit,
+    onOpenWalk: (walkId: String) -> Unit,
     onOpenPet: (petId: String) -> Unit,
     onAddPet: () -> Unit,
+    onOpenPeople: (userId: String, kind: PeopleListKind) -> Unit,
+    onOpenRequests: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose {}
+    }
     ProfileContent(
         uiState = uiState,
-        onRefresh = viewModel::refresh,
-        onDismissError = viewModel::onErrorShown,
-        onOpenSettings = onOpenSettings,
-        onEditProfile = onEditProfile,
-        onOpenWalks = onOpenWalks,
-        onOpenPet = onOpenPet,
-        onAddPet = onAddPet,
+        walks = viewModel.walks.collectAsLazyPagingItems(),
+        reportDetails = remember { TextFieldState() },
+        actions = ProfileActions(
+            onRefresh = viewModel::refresh,
+            onOpenSettings = onOpenSettings,
+            onEditProfile = onEditProfile,
+            onOpenPeople = { kind -> uiState.profile?.let { onOpenPeople(it.id, kind) } },
+            onOpenRequests = onOpenRequests,
+            onOpenWalk = onOpenWalk,
+            onOpenPet = onOpenPet,
+            onAddPet = onAddPet,
+            onMessageShown = viewModel::onErrorShown,
+        ),
+        modifier = modifier,
+    )
+}
+
+/** The profile of someone else. It can also be yours, if you reach it from the list of a friend. */
+@Composable
+internal fun UserProfileScreen(
+    onBack: () -> Unit,
+    onEditProfile: () -> Unit,
+    onOpenWalk: (walkId: String) -> Unit,
+    onOpenPeople: (userId: String, kind: PeopleListKind) -> Unit,
+    onVerifyEmail: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: UserProfileViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val currentOnBack by rememberUpdatedState(onBack)
+    LaunchedEffect(uiState.isFinished) {
+        if (uiState.isFinished) currentOnBack()
+    }
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose {}
+    }
+    ProfileContent(
+        uiState = uiState,
+        walks = viewModel.walks.collectAsLazyPagingItems(),
+        reportDetails = viewModel.reportDetails,
+        actions = ProfileActions(
+            onBack = onBack,
+            onRefresh = viewModel::refresh,
+            onEditProfile = onEditProfile,
+            onOpenPeople = { kind -> uiState.profile?.let { onOpenPeople(it.id, kind) } },
+            onOpenWalk = onOpenWalk,
+            onFollow = viewModel::onFollow,
+            onUnfollow = viewModel::onUnfollow,
+            onAcceptRequest = viewModel::onAcceptRequest,
+            onRejectRequest = viewModel::onRejectRequest,
+            onShowDialog = viewModel::onShowDialog,
+            onDismissDialog = viewModel::onDismissDialog,
+            onConfirmFollowBack = viewModel::onConfirmFollowBack,
+            onConfirmUnfollow = viewModel::onConfirmUnfollow,
+            onConfirmRemoveFollower = viewModel::onConfirmRemoveFollower,
+            onConfirmBlock = viewModel::onConfirmBlock,
+            onSelectReportReason = viewModel::onSelectReportReason,
+            onConfirmReport = viewModel::onConfirmReport,
+            onVerifyEmail = {
+                viewModel.onDismissDialog()
+                onVerifyEmail()
+            },
+            onMessageShown = viewModel::onMessageShown,
+        ),
         modifier = modifier,
     )
 }
@@ -78,188 +138,120 @@ fun ProfileScreen(
 @Composable
 internal fun ProfileContent(
     uiState: ProfileUiState,
-    onRefresh: () -> Unit,
-    onDismissError: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onEditProfile: () -> Unit,
-    onOpenWalks: () -> Unit,
-    onOpenPet: (petId: String) -> Unit,
-    onAddPet: () -> Unit,
+    walks: LazyPagingItems<Walk>,
+    reportDetails: TextFieldState,
+    actions: ProfileActions,
     modifier: Modifier = Modifier,
 ) {
-    val snackbars = remember { SnackbarHostState() }
-    val errorMessage = uiState.error?.userMessage()
-    val currentOnDismissError by rememberUpdatedState(onDismissError)
-    LaunchedEffect(errorMessage) {
-        if (errorMessage != null) {
-            snackbars.showSnackbar(errorMessage)
-            currentOnDismissError()
-        }
-    }
+    val snackbars = rememberProfileMessages(uiState, actions.onMessageShown)
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbars) },
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.feature_profile_profile_title)) },
-                actions = {
-                    IconButton(onClick = onEditProfile) {
-                        Icon(
-                            painter = painterResource(GeoWoofIcons.Edit),
-                            contentDescription = stringResource(R.string.feature_profile_edit),
-                        )
-                    }
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(
-                            painter = painterResource(GeoWoofIcons.Settings),
-                            contentDescription = stringResource(R.string.feature_profile_settings),
-                        )
-                    }
-                },
-            )
-        },
+        topBar = { ProfileTopBar(uiState, actions) },
     ) { innerPadding ->
-        PullToRefreshBox(
-            isRefreshing = uiState.isRefreshing,
-            onRefresh = onRefresh,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-        ) {
-            ProfileList(uiState = uiState, onOpenWalks = onOpenWalks, onOpenPet = onOpenPet, onAddPet = onAddPet)
-        }
-    }
-}
-
-@Composable
-private fun ProfileList(
-    uiState: ProfileUiState,
-    onOpenWalks: () -> Unit,
-    onOpenPet: (petId: String) -> Unit,
-    onAddPet: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val spacing = GeoWoofTheme.spacing
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = spacing.huge),
-    ) {
-        uiState.profile?.let { profile ->
-            item { ProfileHeader(profile) }
-        }
-        item {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.feature_profile_my_walks)) },
-                leadingContent = { Icon(painterResource(GeoWoofIcons.DirectionsWalk), contentDescription = null) },
-                trailingContent = { Icon(painterResource(GeoWoofIcons.ChevronRight), contentDescription = null) },
-                modifier = Modifier.clickable(onClick = onOpenWalks),
+        val contentModifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+        val profile = uiState.profile
+        when {
+            uiState.isUnavailable -> EmptyState(
+                icon = GeoWoofIcons.Person,
+                title = stringResource(R.string.feature_profile_unavailable_title),
+                message = stringResource(R.string.feature_profile_unavailable_message),
+                modifier = contentModifier,
             )
-        }
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spacing.large, vertical = spacing.small),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+
+            profile == null && uiState.loadError != null -> Column(
+                modifier = contentModifier.padding(GeoWoofTheme.spacing.large),
+                verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.medium, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(
-                    text = stringResource(R.string.feature_profile_my_pets),
-                    modifier = Modifier.semantics { heading() },
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                FilledTonalButton(onClick = onAddPet) {
-                    Text(stringResource(R.string.feature_profile_add_pet))
-                }
+                Text(uiState.loadError.userMessage())
+                OutlinedButton(onClick = actions.onRefresh) { Text(stringResource(R.string.feature_profile_retry)) }
+            }
+
+            profile == null -> Box(contentModifier, contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+
+            else -> PullToRefreshBox(
+                isRefreshing = uiState.isLoading,
+                onRefresh = actions.onRefresh,
+                modifier = contentModifier,
+            ) {
+                ProfileList(uiState, profile, walks, actions)
             }
         }
-        if (uiState.pets.isEmpty() && !uiState.isRefreshing) {
-            item {
-                EmptyState(
-                    icon = GeoWoofIcons.Pets,
-                    title = stringResource(R.string.feature_profile_no_pets_title),
-                    message = stringResource(R.string.feature_profile_no_pets_message),
-                )
-            }
-        }
-        items(uiState.pets, key = Pet::id) { pet -> PetRow(pet = pet, onClick = { onOpenPet(pet.id) }) }
     }
+    ProfileDialogs(uiState, reportDetails, actions)
 }
 
 @Composable
-private fun ProfileHeader(profile: Profile, modifier: Modifier = Modifier) {
-    val spacing = GeoWoofTheme.spacing
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(spacing.large),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(spacing.extraSmall),
-    ) {
-        RemoteAvatar(
-            image = profile.avatar,
-            fallbackIcon = GeoWoofIcons.Person,
-            contentDescription = stringResource(R.string.feature_profile_photo),
-            size = AvatarSize,
-            variant = ImageVariant.Medium,
-        )
-        Text(profile.displayName, style = MaterialTheme.typography.headlineSmall)
-        profile.username?.let {
-            Text(
-                text = stringResource(R.string.feature_profile_username, it),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        profile.city?.let { city ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(GeoWoofIcons.LocationOn),
-                    contentDescription = null,
-                    modifier = Modifier.size(CityIconSize),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = city,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        profile.bio?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+private fun rememberProfileMessages(uiState: ProfileUiState, onDismiss: () -> Unit): SnackbarHostState {
+    val snackbars = remember { SnackbarHostState() }
+    val reported = stringResource(R.string.feature_profile_report_sent)
+    // With something on screen, a failed refresh is only a message. Without it, it fills the screen with a retry.
+    val loadMessage = uiState.loadError?.takeIf { uiState.profile != null }?.userMessage()
+    val message = when {
+        uiState.wasReported -> reported
+        uiState.actionError != null -> uiState.actionError.userMessage()
+        else -> loadMessage
     }
+    val currentOnDismiss by rememberUpdatedState(onDismiss)
+    LaunchedEffect(message) {
+        if (message != null) {
+            snackbars.showSnackbar(message)
+            currentOnDismiss()
+        }
+    }
+    return snackbars
 }
 
-@Composable
-private fun PetRow(pet: Pet, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    ListItem(
-        headlineContent = { Text(pet.name) },
-        supportingContent = { Text(pet.shortDescription()) },
-        leadingContent = {
-            RemoteAvatar(image = pet.avatar, fallbackIcon = GeoWoofIcons.Pets, contentDescription = null)
-        },
-        trailingContent = { Icon(painterResource(GeoWoofIcons.ChevronRight), contentDescription = null) },
-        modifier = modifier.clickable(onClick = onClick),
-    )
-}
-
-private val AvatarSize = 96.dp
-private val CityIconSize = 16.dp
+private val PREVIEW_PROFILE = Profile(
+    id = "1",
+    username = "bea",
+    displayName = "Bea",
+    bio = "Paseo por el Retiro",
+    city = "Madrid",
+    avatar = null,
+    createdAt = Instant.parse("2026-11-05T10:00:00Z"),
+)
 
 @PreviewLightDark
 @PreviewFontScale
 @Composable
 private fun ProfilePreview() {
+    val finished = LoadStates(LoadState.NotLoading(true), LoadState.NotLoading(true), LoadState.NotLoading(true))
     GeoWoofTheme(dynamicColor = false) {
         ProfileContent(
-            uiState = ProfileUiState(error = null as AppError?),
-            onRefresh = {},
-            onDismissError = {},
-            onOpenSettings = {},
-            onEditProfile = {},
-            onOpenWalks = {},
-            onOpenPet = {},
-            onAddPet = {},
+            uiState = ProfileUiState(
+                isLoading = false,
+                profile = PREVIEW_PROFILE,
+                relationship = Relationship(RelationshipStatus.None, followsYou = true),
+                counts = ProfileCounts(followers = 12, following = 8, friends = 5),
+            ),
+            walks = flowOf(PagingData.empty<Walk>(finished)).collectAsLazyPagingItems(),
+            reportDetails = TextFieldState(),
+            actions = ProfileActions(),
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RestrictedProfilePreview() {
+    val finished = LoadStates(LoadState.NotLoading(true), LoadState.NotLoading(true), LoadState.NotLoading(true))
+    GeoWoofTheme(dynamicColor = false) {
+        ProfileContent(
+            uiState = ProfileUiState(
+                isLoading = false,
+                profile = PREVIEW_PROFILE.copy(displayName = "bea", city = null, isPrivate = true),
+                relationship = Relationship(RelationshipStatus.Requested),
+                counts = ProfileCounts(followers = 12, following = 8, friends = 5),
+            ),
+            walks = flowOf(PagingData.empty<Walk>(finished)).collectAsLazyPagingItems(),
+            reportDetails = TextFieldState(),
+            actions = ProfileActions(),
         )
     }
 }

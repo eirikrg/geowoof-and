@@ -2,7 +2,7 @@ package com.geowoof.core.network.model
 
 import kotlinx.serialization.Serializable
 
-// Wire format of friends, blocks, reports and search (docs/api.md, phase 4).
+// Wire format of followers, blocks, reports and search (docs/api.md, phases 4 and 5).
 
 @Serializable
 data class NetworkUserSummary(
@@ -14,19 +14,26 @@ data class NetworkUserSummary(
 )
 
 @Serializable
-data class NetworkRelationship(val status: String, val requestId: String? = null)
+data class NetworkRelationship(
+    val status: String,
+    val followsYou: Boolean = false,
+    val requestId: String? = null,
+    val incomingRequestId: String? = null,
+)
 
 @Serializable
-data class NetworkFriendRequest(
+data class NetworkFollowRequest(
     val id: String,
     val user: NetworkUserSummary,
     val direction: String,
-    val status: String,
     val createdAt: String,
 )
 
 @Serializable
-data class NetworkFriend(val user: NetworkUserSummary, val since: String)
+data class NetworkCounts(val followers: Int, val following: Int, val friends: Int)
+
+@Serializable
+data class NetworkPerson(val user: NetworkUserSummary, val since: String)
 
 @Serializable
 data class NetworkBlock(val user: NetworkUserSummary, val since: String)
@@ -41,9 +48,6 @@ data class NetworkPetSearchResult(
     val avatar: NetworkImage? = null,
     val owner: NetworkUserSummary,
 )
-
-@Serializable
-data class FriendRequestBody(val userId: String)
 
 @Serializable
 data class ReportBody(val targetType: String, val targetId: String, val reason: String, val details: String?)

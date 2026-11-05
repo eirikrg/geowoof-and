@@ -2,9 +2,12 @@ package com.geowoof.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.geowoof.core.data.repository.AccountRepository
 import com.geowoof.core.data.repository.ActiveWalkRepository
 import com.geowoof.core.data.repository.AuthRepository
 import com.geowoof.core.data.repository.WalksRepository
+import com.geowoof.core.model.AppError
+import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,6 +24,9 @@ data class SettingsUiState(
     val isSigningOut: Boolean = false,
     /** Signing out would lose walks that are only on this device. */
     val isConfirmingSignOut: Boolean = false,
+    /** Waiting for the server to change who can see the profile. */
+    val isChangingPrivacy: Boolean = false,
+    val error: AppError? = null,
 )
 
 @HiltViewModel
@@ -28,22 +34,47 @@ class SettingsViewModel @Inject constructor(
     private val auth: AuthRepository,
     private val walks: WalksRepository,
     private val activeWalks: ActiveWalkRepository,
+    private val accounts: AccountRepository,
 ) : ViewModel() {
     private val isSigningOut = MutableStateFlow(false)
     private val isConfirmingSignOut = MutableStateFlow(false)
+    private val isChangingPrivacy = MutableStateFlow(false)
+    private val error = MutableStateFlow<AppError?>(null)
 
     val uiState: StateFlow<SettingsUiState> =
-        combine(auth.sessionState, isSigningOut, isConfirmingSignOut) { session, signingOut, confirming ->
+        combine(
+            auth.sessionState,
+            isSigningOut,
+            isConfirmingSignOut,
+            isChangingPrivacy,
+            error,
+        ) { session, signingOut, confirming, changingPrivacy, failure ->
             SettingsUiState(
                 user = session.userOrNull(),
                 isSigningOut = signingOut,
                 isConfirmingSignOut = confirming,
+                isChangingPrivacy = changingPrivacy,
+                error = failure,
             )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             initialValue = SettingsUiState(user = auth.sessionState.value.userOrNull()),
         )
+
+    /** The session keeps the answer of the server, so the switch only moves if the change was made. */
+    fun onPrivateChange(isPrivate: Boolean) {
+        if (isChangingPrivacy.value) return
+        isChangingPrivacy.value = true
+        viewModelScope.launch {
+            error.value = (accounts.setPrivate(isPrivate) as? Outcome.Failure)?.error
+            isChangingPrivacy.value = false
+        }
+    }
+
+    fun onErrorShown() {
+        error.value = null
+    }
 
     /** Always signs out locally, and the app then shows the welcome screen. First it warns if that would lose walks. */
     fun signOut() {

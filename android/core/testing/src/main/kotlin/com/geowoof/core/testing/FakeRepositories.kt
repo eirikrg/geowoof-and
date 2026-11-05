@@ -109,6 +109,8 @@ class FakeAccountRepository : AccountRepository {
     )
     var chooseResult: Outcome<User> = Outcome.Success(TestUsers.user())
     var updateResult: Outcome<User> = Outcome.Success(TestUsers.user())
+    var setPrivateResult: Outcome<User> = Outcome.Success(TestUsers.user())
+    val chosenPrivacy = mutableListOf<Boolean>()
     var availabilityChecks = 0
         private set
     val chosenUsernames = mutableListOf<String>()
@@ -119,9 +121,15 @@ class FakeAccountRepository : AccountRepository {
         return availability
     }
 
-    override suspend fun chooseUsername(username: String): Outcome<User> {
+    override suspend fun chooseUsername(username: String, isPrivate: Boolean): Outcome<User> {
         chosenUsernames += username
+        chosenPrivacy += isPrivate
         return chooseResult
+    }
+
+    override suspend fun setPrivate(isPrivate: Boolean): Outcome<User> {
+        chosenPrivacy += isPrivate
+        return setPrivateResult
     }
 
     override suspend fun updateDisplayName(displayName: String): Outcome<User> {

@@ -15,7 +15,11 @@ import javax.inject.Inject
 interface AccountRepository {
     suspend fun usernameAvailability(username: String): Outcome<UsernameAvailability>
 
-    suspend fun chooseUsername(username: String): Outcome<User>
+    /** The last step of creating an account, where the person also chooses who can see their profile. */
+    suspend fun chooseUsername(username: String, isPrivate: Boolean = false): Outcome<User>
+
+    /** Becoming public accepts the people waiting to follow, on the server. */
+    suspend fun setPrivate(isPrivate: Boolean): Outcome<User>
 
     suspend fun updateDisplayName(displayName: String): Outcome<User>
 }
@@ -27,7 +31,10 @@ internal class DefaultAccountRepository @Inject constructor(
     override suspend fun usernameAvailability(username: String) =
         network.usernameAvailability(username).map { it.toModel() }
 
-    override suspend fun chooseUsername(username: String) = cache(network.changeUsername(username))
+    override suspend fun chooseUsername(username: String, isPrivate: Boolean) =
+        cache(network.changeUsername(username, isPrivate))
+
+    override suspend fun setPrivate(isPrivate: Boolean) = cache(network.changePrivacy(isPrivate))
 
     override suspend fun updateDisplayName(displayName: String) =
         cache(network.updateProfile(displayName.trim(), language = null))

@@ -22,6 +22,7 @@ data class Profile(
     val city: String?,
     val avatar: RemoteImage?,
     val createdAt: Instant,
+    val isPrivate: Boolean = false,
 )
 
 /** The editable fields of the profile. Saving replaces all of them: `null` clears a field. */

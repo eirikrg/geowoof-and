@@ -31,6 +31,9 @@
     <string name="feature_auth_username_title">Elige tu nombre de usuario</string>
     <string name="feature_auth_username_message">Tus amigos te encontrarán por tu @usuario. Tu nombre es lo que verán en tus paseos y publicaciones.</string>
     <string name="feature_auth_username_label">Nombre de usuario</string>
+    <string name="feature_auth_private_profile">Perfil privado</string>
+    <string name="feature_auth_private_on">Tú decides quién te sigue. El resto solo ve tu @usuario, foto, bio y contadores.</string>
+    <string name="feature_auth_private_off">Cualquiera puede seguirte y ver lo que compartes con todos. Puedes cambiarlo en Ajustes.</string>
     <string name="feature_auth_username_hint">3–30 caracteres: letras, números, _ y .</string>
     <string name="feature_auth_username_checking">Comprobando disponibilidad…</string>
     <string name="feature_auth_username_available">\@%1$s está libre</string>

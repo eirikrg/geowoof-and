@@ -1,18 +1,15 @@
 package com.geowoof.core.data.mapper
 
 import com.geowoof.core.database.BlockedUserEntity
-import com.geowoof.core.database.FriendEntity
-import com.geowoof.core.database.FriendRequestEntity
+import com.geowoof.core.database.FollowRequestEntity
 import com.geowoof.core.database.UserColumns
 import com.geowoof.core.model.BlockedUser
-import com.geowoof.core.model.Friend
-import com.geowoof.core.model.FriendRequest
+import com.geowoof.core.model.FollowRequest
 import com.geowoof.core.model.RemoteImage
 import com.geowoof.core.model.RequestDirection
 import com.geowoof.core.model.UserSummary
 import com.geowoof.core.network.model.NetworkBlock
-import com.geowoof.core.network.model.NetworkFriend
-import com.geowoof.core.network.model.NetworkFriendRequest
+import com.geowoof.core.network.model.NetworkFollowRequest
 import com.geowoof.core.network.model.NetworkImage
 import com.geowoof.core.network.model.NetworkUserSummary
 import java.time.Instant
@@ -39,18 +36,14 @@ private fun UserColumns.toModel() = UserSummary(
     avatar = avatarAssetId?.let { RemoteImage(it, avatarThumbUrl, avatarMediumUrl) },
 )
 
-internal fun NetworkFriend.toEntity() = FriendEntity(user.toColumns(), Instant.parse(since).toEpochMilli())
-
-internal fun FriendEntity.toModel() = Friend(user.toModel(), Instant.ofEpochMilli(sinceEpochMs))
-
-internal fun NetworkFriendRequest.toEntity() = FriendRequestEntity(
+internal fun NetworkFollowRequest.toEntity() = FollowRequestEntity(
     id = id,
     user = user.toColumns(),
     direction = direction,
     createdAtEpochMs = Instant.parse(createdAt).toEpochMilli(),
 )
 
-internal fun FriendRequestEntity.toModel() = FriendRequest(
+internal fun FollowRequestEntity.toModel() = FollowRequest(
     id = id,
     user = user.toModel(),
     direction = RequestDirection.valueOf(direction),

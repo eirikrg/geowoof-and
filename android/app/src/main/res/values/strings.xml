@@ -5,4 +5,8 @@
     <string name="destination_community">Community</string>
     <string name="destination_search">Search</string>
     <string name="destination_profile">Profile</string>
+    <plurals name="pending_follow_requests">
+        <item quantity="one">%1$d follow request</item>
+        <item quantity="other">%1$d follow requests</item>
+    </plurals>
 </resources>

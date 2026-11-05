@@ -1,10 +1,13 @@
 package com.geowoof.feature.auth.username
 
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -13,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -37,6 +41,7 @@ internal fun ChooseUsernameScreen(modifier: Modifier = Modifier, viewModel: Choo
         uiState = uiState,
         username = viewModel.username,
         displayName = viewModel.displayName,
+        onPrivateChange = viewModel::onPrivateChange,
         onSubmit = viewModel::submit,
         onSignOut = viewModel::signOut,
         modifier = modifier,
@@ -48,6 +53,7 @@ internal fun ChooseUsernameContent(
     uiState: ChooseUsernameUiState,
     username: TextFieldState,
     displayName: TextFieldState,
+    onPrivateChange: (Boolean) -> Unit,
     onSubmit: () -> Unit,
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
@@ -98,6 +104,27 @@ internal fun ChooseUsernameContent(
             contentType = ContentType.PersonFullName,
             onKeyboardAction = { onSubmit() },
         )
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.feature_auth_private_profile)) },
+            supportingContent = {
+                Text(
+                    stringResource(
+                        if (uiState.isPrivate) {
+                            R.string.feature_auth_private_on
+                        } else {
+                            R.string.feature_auth_private_off
+                        },
+                    ),
+                )
+            },
+            // The whole row is the switch, for TalkBack too.
+            trailingContent = { Switch(checked = uiState.isPrivate, onCheckedChange = null) },
+            modifier = Modifier.toggleable(
+                value = uiState.isPrivate,
+                role = Role.Switch,
+                onValueChange = onPrivateChange,
+            ),
+        )
         FormError(uiState.error)
         ProgressButton(
             text = stringResource(R.string.feature_auth_continue),
@@ -137,6 +164,7 @@ private fun ChooseUsernamePreview() {
             uiState = ChooseUsernameUiState(usernameStatus = UsernameStatus.Available("ana.paws")),
             username = rememberTextFieldState("ana.paws"),
             displayName = rememberTextFieldState("Ana"),
+            onPrivateChange = {},
             onSubmit = {},
             onSignOut = {},
         )

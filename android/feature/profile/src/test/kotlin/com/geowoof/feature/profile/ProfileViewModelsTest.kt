@@ -7,13 +7,24 @@ import com.geowoof.core.model.AppError
 import com.geowoof.core.model.DisplayNameIssue
 import com.geowoof.core.model.MediaPurpose
 import com.geowoof.core.model.Outcome
+import com.geowoof.core.model.ProfileCounts
+import com.geowoof.core.model.RelationshipStatus
 import com.geowoof.core.model.RemoteImage
+import com.geowoof.core.model.RequestDirection
+import com.geowoof.core.model.SessionState
 import com.geowoof.core.model.TextIssue
+import com.geowoof.core.testing.FakeAuthRepository
 import com.geowoof.core.testing.FakeMediaRepository
+import com.geowoof.core.testing.FakePeopleRepository
 import com.geowoof.core.testing.FakePetsRepository
 import com.geowoof.core.testing.FakeProfileRepository
+import com.geowoof.core.testing.FakeSocialRepository
+import com.geowoof.core.testing.FakeWalksRepository
 import com.geowoof.core.testing.MainDispatcherRule
 import com.geowoof.core.testing.TestPets
+import com.geowoof.core.testing.TestSocial
+import com.geowoof.core.testing.TestUsers
+import com.geowoof.core.testing.TestWalks
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -29,37 +40,98 @@ class ProfileViewModelsTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val photo = RemoteImage("old-photo", "thumb", "medium")
+    private val auth = FakeAuthRepository(SessionState.SignedIn(TestUsers.user()))
     private val profiles =
         FakeProfileRepository(TestPets.profile(displayName = "Ana", bio = "Hola", city = "Madrid", avatar = photo))
     private val pets = FakePetsRepository(listOf(TestPets.pet()))
+    private val walks = FakeWalksRepository()
+    private val people = FakePeopleRepository()
+    private val social = FakeSocialRepository()
     private val media = FakeMediaRepository()
+
+    private fun profile() = ProfileViewModel(auth, profiles, pets, walks, people, social)
 
     private fun editor() = EditProfileViewModel(profiles, media, ValidateProfileUseCase(ValidateDisplayNameUseCase()))
 
     @Test
     fun the_profile_screen_refreshes_and_shows_what_room_has() = runTest {
-        val viewModel = ProfileViewModel(profiles, pets)
+        val viewModel = profile()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
 
-        assertEquals("Ana", viewModel.uiState.value.profile?.displayName)
-        assertEquals(listOf("Luna"), viewModel.uiState.value.pets.map { it.name })
+        val state = viewModel.uiState.value
+        assertEquals("Ana", state.profile?.displayName)
+        assertEquals(listOf("Luna"), state.pets.map { it.name })
+        assertEquals(RelationshipStatus.Self, state.relationship?.status)
+        assertTrue(state.isOwn)
+        assertTrue(state.canOpenLists)
         assertEquals(1, profiles.refreshes)
         assertEquals(listOf("refreshMyPets"), pets.calls)
-        assertFalse(viewModel.uiState.value.isRefreshing)
+        assertEquals(listOf("refreshRequests"), social.calls)
+        assertFalse(state.isLoading)
+    }
+
+    @Test
+    fun the_numbers_and_the_totals_reach_the_screen() = runTest {
+        people.countsResult = Outcome.Success(ProfileCounts(followers = 3, following = 2, friends = 1))
+        walks.setTotals(null, TestWalks.totals())
+
+        val viewModel = profile()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+        assertEquals(ProfileCounts(followers = 3, following = 2, friends = 1), viewModel.uiState.value.counts)
+        assertEquals(TestWalks.totals(), viewModel.uiState.value.totals)
+    }
+
+    @Test
+    fun the_requests_of_each_direction_are_counted() = runTest {
+        social.receivedRequests.value = listOf(TestSocial.request("1"), TestSocial.request("2"))
+        social.sentRequests.value = listOf(TestSocial.request("3", direction = RequestDirection.Sent))
+
+        val viewModel = profile()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+        assertEquals(2, viewModel.uiState.value.receivedRequests)
+        assertEquals(1, viewModel.uiState.value.sentRequests)
     }
 
     @Test
     fun a_failed_refresh_keeps_the_saved_data_and_explains_the_problem() = runTest {
         pets.refreshResult = Outcome.Failure(AppError.Network)
 
-        val viewModel = ProfileViewModel(profiles, pets)
+        val viewModel = profile()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
 
-        assertEquals(AppError.Network, viewModel.uiState.value.error)
+        assertEquals(AppError.Network, viewModel.uiState.value.loadError)
         assertEquals("Luna", viewModel.uiState.value.pets.single().name)
 
         viewModel.onErrorShown()
-        assertNull(viewModel.uiState.value.error)
+        assertNull(viewModel.uiState.value.loadError)
+    }
+
+    @Test
+    fun coming_back_refreshes_without_showing_an_indicator_or_an_error() = runTest {
+        val viewModel = profile()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+        pets.refreshResult = Outcome.Failure(AppError.Network)
+        people.countsResult = Outcome.Success(ProfileCounts(followers = 99, following = 2, friends = 1))
+
+        viewModel.onResume()
+
+        assertEquals(99, viewModel.uiState.value.counts?.followers)
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertNull(viewModel.uiState.value.loadError)
+    }
+
+    @Test
+    fun the_numbers_that_could_not_be_refreshed_stay_as_they_were() = runTest {
+        val viewModel = profile()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+        people.countsResult = Outcome.Failure(AppError.Network)
+
+        viewModel.refresh()
+
+        assertEquals(12, viewModel.uiState.value.counts?.followers)
+        assertEquals(AppError.Network, viewModel.uiState.value.loadError)
     }
 
     @Test

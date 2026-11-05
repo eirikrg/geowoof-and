@@ -1,9 +1,11 @@
 package com.geowoof.feature.settings
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.User
@@ -29,6 +31,8 @@ class SettingsScreenTest {
                     onVerifyEmail = { actions += "verify" },
                     onChangePassword = { actions += "password" },
                     onOpenBlockedUsers = { actions += "blocked" },
+                    onPrivateChange = { actions += "private:$it" },
+                    onDismissError = {},
                     onSignOut = { actions += "signOut" },
                     onConfirmSignOut = { actions += "confirmSignOut" },
                     onDismissSignOut = { actions += "dismissSignOut" },
@@ -64,10 +68,28 @@ class SettingsScreenTest {
     fun every_account_action_is_reachable() {
         showSettings(TestUsers.user())
 
-        composeRule.onNodeWithText("Change password").performClick()
-        composeRule.onNodeWithText("Sign out").performClick()
-        composeRule.onNodeWithText("Delete account").performClick()
+        composeRule.onNodeWithText("Change password").performScrollTo().performClick()
+        composeRule.onNodeWithText("Sign out").performScrollTo().performClick()
+        composeRule.onNodeWithText("Delete account").performScrollTo().performClick()
 
         assertEquals(listOf("password", "signOut", "delete"), actions)
+    }
+
+    @Test
+    fun the_profile_can_become_private_from_its_row() {
+        showSettings(TestUsers.user())
+
+        composeRule.onNode(hasText("Private profile")).performScrollTo().performClick()
+
+        assertEquals(listOf("private:true"), actions)
+    }
+
+    @Test
+    fun a_private_profile_can_become_public() {
+        showSettings(TestUsers.user(isPrivate = true))
+
+        composeRule.onNode(hasText("Private profile")).performScrollTo().performClick()
+
+        assertEquals(listOf("private:false"), actions)
     }
 }

@@ -52,6 +52,42 @@ class AccountRepositoryTest {
     }
 
     @Test
+    fun the_privacy_chosen_with_the_username_reaches_the_server_and_the_session() = runTest {
+        val (accounts, sessions) = signedIn()
+        network.userResult = Outcome.Success(networkUser(username = "ana.paws").copy(isPrivate = true))
+
+        accounts.chooseUsername("ana.paws", isPrivate = true)
+        runCurrent()
+
+        assertEquals(true, network.calls.contains("username:ana.paws:true"))
+        assertEquals(true, sessions.user().isPrivate)
+    }
+
+    @Test
+    fun the_profile_can_change_who_sees_it_and_the_session_keeps_the_answer() = runTest {
+        val (accounts, sessions) = signedIn()
+        network.userResult = Outcome.Success(networkUser().copy(isPrivate = true))
+
+        accounts.setPrivate(true)
+        runCurrent()
+
+        assertEquals(true, network.calls.contains("privacy:true"))
+        assertEquals(true, sessions.user().isPrivate)
+        assertEquals(true, storage.session.value?.user?.isPrivate)
+    }
+
+    @Test
+    fun a_change_of_privacy_that_fails_keeps_what_there_was() = runTest {
+        val (accounts, sessions) = signedIn()
+        network.userResult = Outcome.Failure(AppError.Network)
+
+        assertEquals(Outcome.Failure(AppError.Network), accounts.setPrivate(true))
+        runCurrent()
+
+        assertEquals(false, sessions.user().isPrivate)
+    }
+
+    @Test
     fun a_taken_username_keeps_the_onboarding() = runTest {
         val (accounts, sessions) = signedIn()
         val error = AppError.Api(status = 409, code = "identity.username_taken")

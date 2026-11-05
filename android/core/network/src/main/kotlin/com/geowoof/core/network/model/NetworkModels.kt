@@ -15,6 +15,7 @@ data class NetworkUser(
     val signInMethods: List<String> = emptyList(),
     val language: String,
     val createdAt: String,
+    val isPrivate: Boolean = false,
 )
 
 @Serializable
@@ -77,7 +78,10 @@ data class ChangePasswordBody(val currentPassword: String? = null, val newPasswo
 data class UpdateMeBody(val displayName: String? = null, val language: String? = null)
 
 @Serializable
-data class UsernameBody(val username: String)
+data class UsernameBody(val username: String, val isPrivate: Boolean? = null)
+
+@Serializable
+data class PrivacyBody(val isPrivate: Boolean)
 
 @Serializable
 data class DeleteAccountBody(val password: String? = null, val googleIdToken: String? = null)

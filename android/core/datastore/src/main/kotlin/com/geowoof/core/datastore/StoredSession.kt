@@ -23,6 +23,7 @@ data class StoredUser(
     val signInMethods: List<String> = emptyList(),
     val language: String,
     val createdAtEpochMs: Long,
+    val isPrivate: Boolean = false,
 )
 
 /** File content: a single optional session. */

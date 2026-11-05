@@ -6,13 +6,15 @@ import androidx.paging.PagingData
 import com.geowoof.core.data.repository.PeopleRepository
 import com.geowoof.core.data.repository.SocialRepository
 import com.geowoof.core.model.BlockedUser
-import com.geowoof.core.model.Friend
-import com.geowoof.core.model.FriendRequest
+import com.geowoof.core.model.FollowRequest
 import com.geowoof.core.model.Outcome
+import com.geowoof.core.model.PeopleListKind
+import com.geowoof.core.model.Person
 import com.geowoof.core.model.Pet
 import com.geowoof.core.model.PetSearchResult
 import com.geowoof.core.model.PetSpecies
 import com.geowoof.core.model.Profile
+import com.geowoof.core.model.ProfileCounts
 import com.geowoof.core.model.Relationship
 import com.geowoof.core.model.RelationshipStatus
 import com.geowoof.core.model.RemoteImage
@@ -21,6 +23,7 @@ import com.geowoof.core.model.RequestDirection
 import com.geowoof.core.model.UserSummary
 import com.geowoof.core.model.UserWalk
 import com.geowoof.core.model.Walk
+import com.geowoof.core.model.WalkTotals
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -49,9 +52,9 @@ object TestSocial {
         id: String = "request-1",
         user: UserSummary = user(),
         direction: RequestDirection = RequestDirection.Received,
-    ) = FriendRequest(id, user, direction, SINCE)
+    ) = FollowRequest(id, user, direction, SINCE)
 
-    fun friend(user: UserSummary = user()) = Friend(user, SINCE)
+    fun person(user: UserSummary = user()) = Person(user, SINCE)
 
     fun blocked(user: UserSummary = user()) = BlockedUser(user, SINCE)
 
@@ -65,18 +68,20 @@ object TestSocial {
     fun <T : Any> pages(items: List<T>): PagingData<T> = PagingData.from(items, FINISHED)
 }
 
+@Suppress("TooManyFunctions")
 class FakeSocialRepository : SocialRepository {
-    override val friends = MutableStateFlow<List<Friend>>(emptyList())
-    override val receivedRequests = MutableStateFlow<List<FriendRequest>>(emptyList())
-    override val sentRequests = MutableStateFlow<List<FriendRequest>>(emptyList())
+    override val receivedRequests = MutableStateFlow<List<FollowRequest>>(emptyList())
+    override val sentRequests = MutableStateFlow<List<FollowRequest>>(emptyList())
     override val blockedUsers = MutableStateFlow<List<BlockedUser>>(emptyList())
 
     var refreshResult: Outcome<Unit> = Outcome.Success(Unit)
     var relationshipResult: Outcome<Relationship> = Outcome.Success(Relationship(RelationshipStatus.None))
-    var sendResult: Outcome<Relationship> = Outcome.Success(Relationship(RelationshipStatus.RequestSent, "request-1"))
+
+    /** What a change answers with, when the relationship it leaves matters to the test. */
+    var followResult: Outcome<Relationship> = Outcome.Success(Relationship(RelationshipStatus.Following))
     var actionResult: Outcome<Unit> = Outcome.Success(Unit)
 
-    /** What was asked of the repository, in order: "accept:request-1", "block:bea-id"... */
+    /** What was asked of the repository, in order: "follow:bea-id", "block:bea-id"... */
     val calls = mutableListOf<String>()
 
     private fun record(call: String): Outcome<Unit> {
@@ -84,9 +89,12 @@ class FakeSocialRepository : SocialRepository {
         return actionResult
     }
 
-    override suspend fun refreshFriends(): Outcome<Unit> {
-        calls += "refreshFriends"
-        return refreshResult
+    private fun answerWithRelationship(call: String): Outcome<Relationship> {
+        calls += call
+        return when (val result = actionResult) {
+            is Outcome.Failure -> result
+            is Outcome.Success -> relationshipResult
+        }
     }
 
     override suspend fun refreshRequests(): Outcome<Unit> {
@@ -101,12 +109,16 @@ class FakeSocialRepository : SocialRepository {
 
     override suspend fun relationship(userId: String) = relationshipResult
 
-    override suspend fun sendRequest(userId: String): Outcome<Relationship> {
-        calls += "send:$userId"
-        return sendResult
+    override suspend fun follow(userId: String): Outcome<Relationship> {
+        calls += "follow:$userId"
+        return followResult.also { if (it is Outcome.Success) relationshipResult = it }
     }
 
-    override suspend fun acceptRequest(requestId: String) = record("accept:$requestId").also {
+    override suspend fun unfollow(userId: String) = answerWithRelationship("unfollow:$userId")
+
+    override suspend fun removeFollower(userId: String) = answerWithRelationship("removeFollower:$userId")
+
+    override suspend fun acceptRequest(requestId: String) = answerWithRelationship("accept:$requestId").also {
         if (it is Outcome.Success) receivedRequests.update { list -> list.filterNot { r -> r.id == requestId } }
     }
 
@@ -116,10 +128,6 @@ class FakeSocialRepository : SocialRepository {
 
     override suspend fun cancelRequest(requestId: String) = record("cancel:$requestId").also {
         if (it is Outcome.Success) sentRequests.update { list -> list.filterNot { r -> r.id == requestId } }
-    }
-
-    override suspend fun removeFriend(userId: String) = record("remove:$userId").also {
-        if (it is Outcome.Success) friends.update { list -> list.filterNot { f -> f.user.id == userId } }
     }
 
     override suspend fun block(userId: String) = record("block:$userId")
@@ -132,16 +140,25 @@ class FakeSocialRepository : SocialRepository {
         record("report:$userId:$reason:$details")
 }
 
+@Suppress("TooManyFunctions")
 class FakePeopleRepository : PeopleRepository {
     var profileResult: Outcome<Profile> = Outcome.Success(TestPets.profile(displayName = "Bea", username = "bea"))
+    var countsResult: Outcome<ProfileCounts> = Outcome.Success(
+        ProfileCounts(followers = 12, following = 8, friends = 5),
+    )
     var petsResult: Outcome<List<Pet>> = Outcome.Success(emptyList())
+    var totalsResult: Outcome<WalkTotals> = Outcome.Success(TestWalks.totals())
     var walkResult: Outcome<UserWalk>? = null
     var users: List<UserSummary> = emptyList()
     var pets: List<PetSearchResult> = emptyList()
     var walks: List<Walk> = emptyList()
+    var people: List<Person> = emptyList()
 
     /** What was searched, in order. */
     val searches = mutableListOf<String>()
+
+    /** Which lists were asked for: "walks:bea-id", "pets:bea-id", "followers:bea-id"... */
+    val reads = mutableListOf<String>()
 
     override fun searchUsers(query: String): Flow<PagingData<UserSummary>> {
         searches += "users:$query"
@@ -155,9 +172,24 @@ class FakePeopleRepository : PeopleRepository {
 
     override suspend fun profile(userId: String) = profileResult
 
-    override suspend fun pets(userId: String) = petsResult
+    override suspend fun counts(userId: String) = countsResult
 
-    override fun walks(userId: String): Flow<PagingData<Walk>> = flowOf(TestSocial.pages(walks))
+    override fun people(userId: String, kind: PeopleListKind): Flow<PagingData<Person>> {
+        reads += "${kind.name.lowercase()}:$userId"
+        return flowOf(TestSocial.pages(people))
+    }
+
+    override suspend fun pets(userId: String): Outcome<List<Pet>> {
+        reads += "pets:$userId"
+        return petsResult
+    }
+
+    override fun walks(userId: String): Flow<PagingData<Walk>> {
+        reads += "walks:$userId"
+        return flowOf(TestSocial.pages(walks))
+    }
+
+    override suspend fun walkTotals(userId: String) = totalsResult
 
     override suspend fun walk(walkId: String) = checkNotNull(walkResult) { "No walk for this test" }
 }

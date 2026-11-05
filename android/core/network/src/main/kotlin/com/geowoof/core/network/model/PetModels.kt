@@ -16,6 +16,7 @@ data class NetworkProfile(
     val city: String? = null,
     val avatar: NetworkImage? = null,
     val createdAt: String,
+    val isPrivate: Boolean = false,
 )
 
 @Serializable

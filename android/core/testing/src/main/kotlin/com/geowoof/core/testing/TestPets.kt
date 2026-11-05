@@ -13,12 +13,14 @@ object TestPets {
     private val CREATED_AT: Instant = Instant.parse("2026-11-01T10:00:00Z")
     private val BIRTH_DATE: LocalDate = LocalDate.of(2021, 4, 12)
 
+    @Suppress("LongParameterList")
     fun profile(
         displayName: String = "Ana",
         username: String? = "ana",
         bio: String? = null,
         city: String? = null,
         avatar: RemoteImage? = null,
+        isPrivate: Boolean = false,
     ) = Profile(
         id = "0193f0c2-6f1e-7cc4-9a2b-3c1d5e7f9a10",
         username = username,
@@ -27,6 +29,7 @@ object TestPets {
         city = city,
         avatar = avatar,
         createdAt = CREATED_AT,
+        isPrivate = isPrivate,
     )
 
     /** Every field has a value: each test names only what matters to it. */

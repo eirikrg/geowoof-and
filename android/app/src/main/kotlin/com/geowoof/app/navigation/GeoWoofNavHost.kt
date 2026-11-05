@@ -26,13 +26,14 @@ import com.geowoof.feature.pets.navigation.navigateToFirstPet
 import com.geowoof.feature.pets.navigation.navigateToPet
 import com.geowoof.feature.pets.navigation.navigateToPetEditor
 import com.geowoof.feature.pets.navigation.petScreens
-import com.geowoof.feature.profile.navigation.profileScreen
+import com.geowoof.feature.profile.navigation.navigateToUserProfile
+import com.geowoof.feature.profile.navigation.profileScreens
 import com.geowoof.feature.search.navigation.searchScreen
 import com.geowoof.feature.settings.navigation.navigateToSettings
 import com.geowoof.feature.settings.navigation.settingsScreens
-import com.geowoof.feature.social.navigation.navigateToUserProfile
-import com.geowoof.feature.social.navigation.socialScreens
+import com.geowoof.feature.social.navigation.communityScreen
 import com.geowoof.feature.walks.navigation.navigateToUserWalk
+import com.geowoof.feature.walks.navigation.navigateToWalkDetail
 import com.geowoof.feature.walks.navigation.navigateToWalks
 import com.geowoof.feature.walks.navigation.walkScreens
 
@@ -47,18 +48,16 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
         modifier = modifier,
     ) {
         mapScreens(navController, onAddPet = { navController.navigateToPetEditor() })
-        socialScreens(
-            navController,
-            onOpenWalk = { walkId -> navController.navigateToUserWalk(walkId) },
-            onVerifyEmail = { navController.navigateToVerifyEmail() },
-        )
+        communityScreen()
         searchScreen(onOpenUser = { userId -> navController.navigateToUserProfile(userId) })
-        profileScreen(
+        profileScreens(
             navController = navController,
             onOpenSettings = { navController.navigateToSettings() },
-            onOpenWalks = { navController.navigateToWalks() },
+            onOpenOwnWalk = { walkId -> navController.navigateToWalkDetail(walkId) },
+            onOpenUserWalk = { walkId -> navController.navigateToUserWalk(walkId) },
             onOpenPet = { petId -> navController.navigateToPet(petId) },
             onAddPet = { navController.navigateToPetEditor() },
+            onVerifyEmail = { navController.navigateToVerifyEmail() },
         )
         petScreens(navController, onOpenWalks = { petId -> navController.navigateToWalks(petId) })
         walkScreens(navController)

@@ -142,4 +142,23 @@ class ChooseUsernameViewModelTest {
         assertEquals(DisplayNameIssue.Empty, viewModel.uiState.value.displayNameIssue)
         assertTrue(accounts.chosenUsernames.isEmpty())
     }
+
+    @Test
+    fun the_profile_is_public_unless_the_person_chooses_otherwise() = runTest {
+        viewModel.username.enter("ana.paws")
+        viewModel.submit()
+
+        assertEquals(listOf(false), accounts.chosenPrivacy)
+    }
+
+    @Test
+    fun the_profile_can_be_chosen_private_when_creating_the_account() = runTest {
+        assertFalse(viewModel.uiState.value.isPrivate)
+
+        viewModel.onPrivateChange(true)
+        viewModel.username.enter("ana.paws")
+        viewModel.submit()
+
+        assertEquals(listOf(true), accounts.chosenPrivacy)
+    }
 }

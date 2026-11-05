@@ -41,6 +41,10 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) { viewModel.onAppVisible() }
+        }
+
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             GeoWoofTheme {

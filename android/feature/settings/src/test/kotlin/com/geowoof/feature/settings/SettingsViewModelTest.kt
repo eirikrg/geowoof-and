@@ -1,6 +1,9 @@
 package com.geowoof.feature.settings
 
+import com.geowoof.core.model.AppError
+import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.SessionState
+import com.geowoof.core.testing.FakeAccountRepository
 import com.geowoof.core.testing.FakeActiveWalkRepository
 import com.geowoof.core.testing.FakeAuthRepository
 import com.geowoof.core.testing.FakeWalksRepository
@@ -11,6 +14,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 
@@ -22,7 +27,8 @@ class SettingsViewModelTest {
     private val auth = FakeAuthRepository(SessionState.SignedIn(user))
     private val walks = FakeWalksRepository()
     private val activeWalks = FakeActiveWalkRepository()
-    private val viewModel by lazy { SettingsViewModel(auth, walks, activeWalks) }
+    private val accounts = FakeAccountRepository()
+    private val viewModel by lazy { SettingsViewModel(auth, walks, activeWalks, accounts) }
 
     @Test
     fun shows_the_signed_in_account() = runTest {
@@ -69,5 +75,27 @@ class SettingsViewModelTest {
         viewModel.signOut()
 
         assertEquals(true, viewModel.uiState.value.isConfirmingSignOut)
+    }
+
+    @Test
+    fun the_privacy_change_goes_to_the_server() = runTest {
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+        viewModel.onPrivateChange(true)
+
+        assertEquals(listOf(true), accounts.chosenPrivacy)
+        assertFalse(viewModel.uiState.value.isChangingPrivacy)
+    }
+
+    @Test
+    fun a_privacy_change_that_fails_is_shown() = runTest {
+        accounts.setPrivateResult = Outcome.Failure(AppError.Network)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+        viewModel.onPrivateChange(true)
+
+        assertEquals(AppError.Network, viewModel.uiState.value.error)
+        viewModel.onErrorShown()
+        assertNull(viewModel.uiState.value.error)
     }
 }

@@ -26,6 +26,9 @@ data class UserWalkRoute(val walkId: String)
 fun NavController.navigateToWalks(petId: String? = null, navOptions: NavOptions? = null) =
     navigate(WalksRoute(petId), navOptions ?: navOptions { launchSingleTop = true })
 
+fun NavController.navigateToWalkDetail(walkId: String, navOptions: NavOptions? = null) =
+    navigate(WalkDetailRoute(walkId), navOptions ?: navOptions { launchSingleTop = true })
+
 fun NavController.navigateToUserWalk(walkId: String, navOptions: NavOptions? = null) =
     navigate(UserWalkRoute(walkId), navOptions ?: navOptions { launchSingleTop = true })
 

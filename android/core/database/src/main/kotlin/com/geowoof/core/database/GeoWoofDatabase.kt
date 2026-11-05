@@ -1,8 +1,10 @@
 package com.geowoof.core.database
 
 import androidx.room.AutoMigration
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
+import androidx.room.DeleteTable
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -11,6 +13,7 @@ import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
 import androidx.room.Upsert
+import androidx.room.migration.AutoMigrationSpec
 import kotlinx.coroutines.flow.Flow
 
 // Room is the source of truth of what the screens show (docs/decisions/0009).
@@ -26,6 +29,7 @@ data class ProfileEntity(
     val avatarThumbUrl: String?,
     val avatarMediumUrl: String?,
     val createdAtEpochMs: Long,
+    @ColumnInfo(defaultValue = "0") val isPrivate: Boolean = false,
 )
 
 @Entity(tableName = "pets", indices = [Index("ownerId")])
@@ -132,6 +136,11 @@ abstract class PetWeightDao {
     }
 }
 
+/** The friends now come from the server when a list opens. The requests come back with the next refresh. */
+@DeleteTable(tableName = "friends")
+@DeleteTable(tableName = "friend_requests")
+class ReplaceFriendsWithFollows : AutoMigrationSpec
+
 @Database(
     entities = [
         ProfileEntity::class,
@@ -145,13 +154,16 @@ abstract class PetWeightDao {
         WalkTrackEntity::class,
         WalkTotalsEntity::class,
         WalkPageKeyEntity::class,
-        FriendEntity::class,
-        FriendRequestEntity::class,
+        FollowRequestEntity::class,
         BlockedUserEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 2, to = 3),
+        AutoMigration(from = 3, to = 4, spec = ReplaceFriendsWithFollows::class),
+    ],
 )
 abstract class GeoWoofDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao

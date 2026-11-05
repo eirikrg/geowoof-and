@@ -10,12 +10,16 @@ import com.geowoof.core.data.mapper.toModel
 import com.geowoof.core.data.mapper.toUserWalk
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.Outcome
+import com.geowoof.core.model.PeopleListKind
+import com.geowoof.core.model.Person
 import com.geowoof.core.model.Pet
 import com.geowoof.core.model.PetSearchResult
 import com.geowoof.core.model.Profile
+import com.geowoof.core.model.ProfileCounts
 import com.geowoof.core.model.UserSummary
 import com.geowoof.core.model.UserWalk
 import com.geowoof.core.model.Walk
+import com.geowoof.core.model.WalkTotals
 import com.geowoof.core.model.map
 import com.geowoof.core.network.PeopleNetworkDataSource
 import com.geowoof.core.network.model.NetworkPage
@@ -36,9 +40,17 @@ interface PeopleRepository {
 
     suspend fun profile(userId: String): Outcome<Profile>
 
+    suspend fun counts(userId: String): Outcome<ProfileCounts>
+
+    /** Only that person and their friends can see these lists. */
+    fun people(userId: String, kind: PeopleListKind): Flow<PagingData<Person>>
+
     suspend fun pets(userId: String): Outcome<List<Pet>>
 
     fun walks(userId: String): Flow<PagingData<Walk>>
+
+    /** The totals of the walks that the person asking can see. */
+    suspend fun walkTotals(userId: String): Outcome<WalkTotals>
 
     suspend fun walk(walkId: String): Outcome<UserWalk>
 }
@@ -56,12 +68,21 @@ internal class DefaultPeopleRepository @Inject constructor(private val network: 
     override suspend fun profile(userId: String): Outcome<Profile> =
         network.profile(userId).map { it.toEntity().toModel() }
 
+    override suspend fun counts(userId: String): Outcome<ProfileCounts> = network.counts(userId).map { it.toModel() }
+
+    override fun people(userId: String, kind: PeopleListKind): Flow<PagingData<Person>> = pager { limit, cursor ->
+        network.people(userId, kind.name.lowercase(), limit, cursor).map { page -> page.mapItems { it.toModel() } }
+    }
+
     override suspend fun pets(userId: String): Outcome<List<Pet>> =
         network.pets(userId).map { page -> page.items.map { it.toEntity().toModel() } }
 
     override fun walks(userId: String): Flow<PagingData<Walk>> = pager { limit, cursor ->
         network.walks(userId, limit, cursor).map { page -> page.mapItems { it.toModel() } }
     }
+
+    override suspend fun walkTotals(userId: String): Outcome<WalkTotals> =
+        network.walkStats(userId).map { it.toModel() }
 
     override suspend fun walk(walkId: String): Outcome<UserWalk> = network.walk(walkId).map { it.toUserWalk() }
 

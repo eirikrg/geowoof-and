@@ -31,6 +31,7 @@ internal fun NetworkUser.toStored() = StoredUser(
     signInMethods = signInMethods,
     language = language,
     createdAtEpochMs = Instant.parse(createdAt).toEpochMilli(),
+    isPrivate = isPrivate,
 )
 
 internal fun StoredUser.toModel() = User(
@@ -43,6 +44,7 @@ internal fun StoredUser.toModel() = User(
     signInMethods = signInMethods.mapNotNull { method -> SignInMethod.entries.find { it.name == method } }.toSet(),
     language = language,
     createdAt = Instant.ofEpochMilli(createdAtEpochMs),
+    isPrivate = isPrivate,
 )
 
 internal fun NetworkAuthProviders.toModel() = AuthProviders(google = google)

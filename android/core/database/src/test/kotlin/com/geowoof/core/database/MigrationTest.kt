@@ -62,4 +62,39 @@ class MigrationTest {
             }
         }
     }
+
+    @Test
+    fun the_tables_of_friends_go_away_and_a_profile_stays_public() {
+        helper.createDatabase(3).use { connection ->
+            connection.execSQL(
+                "INSERT INTO profiles (id, displayName, createdAtEpochMs) VALUES ('ana', 'Ana', 1)",
+            )
+            connection.execSQL(
+                "INSERT INTO blocked_users (userId, username, displayName, sinceEpochMs) " +
+                    "VALUES ('bea', 'bea', 'Bea', 1)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(4).use { connection ->
+            connection.prepare("SELECT displayName, isPrivate FROM profiles").use { statement ->
+                statement.step()
+                assertEquals("Ana", statement.getText(0))
+                assertEquals(0L, statement.getLong(1))
+            }
+            connection.prepare("SELECT COUNT(*) FROM blocked_users").use { statement ->
+                statement.step()
+                assertEquals(1L, statement.getLong(0))
+            }
+            connection.prepare("SELECT COUNT(*) FROM follow_requests").use { statement ->
+                statement.step()
+                assertEquals(0L, statement.getLong(0))
+            }
+            connection.prepare(
+                "SELECT COUNT(*) FROM sqlite_master WHERE name IN ('friends', 'friend_requests')",
+            ).use { statement ->
+                statement.step()
+                assertEquals(0L, statement.getLong(0))
+            }
+        }
+    }
 }

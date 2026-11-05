@@ -13,6 +13,7 @@ data class User(
     val signInMethods: Set<SignInMethod>,
     val language: String,
     val createdAt: Instant,
+    val isPrivate: Boolean = false,
 ) {
     /** Onboarding ends when the user has chosen a @username. */
     val needsOnboarding: Boolean get() = username == null

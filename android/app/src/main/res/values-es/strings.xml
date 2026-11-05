@@ -4,4 +4,9 @@
     <string name="destination_community">Comunidad</string>
     <string name="destination_search">Buscar</string>
     <string name="destination_profile">Perfil</string>
+    <plurals name="pending_follow_requests">
+        <item quantity="one">%1$d solicitud para seguir</item>
+        <item quantity="many">%1$d solicitudes para seguir</item>
+        <item quantity="other">%1$d solicitudes para seguir</item>
+    </plurals>
 </resources>

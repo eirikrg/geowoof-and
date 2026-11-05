@@ -2,42 +2,70 @@ package com.geowoof.feature.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import com.geowoof.core.data.repository.AuthRepository
+import com.geowoof.core.data.repository.PeopleRepository
 import com.geowoof.core.data.repository.PetsRepository
 import com.geowoof.core.data.repository.ProfileRepository
+import com.geowoof.core.data.repository.SocialRepository
+import com.geowoof.core.data.repository.WalksRepository
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.Outcome
-import com.geowoof.core.model.Pet
-import com.geowoof.core.model.Profile
+import com.geowoof.core.model.ProfileCounts
+import com.geowoof.core.model.Relationship
+import com.geowoof.core.model.RelationshipStatus
+import com.geowoof.core.model.SessionState
+import com.geowoof.core.model.Walk
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class ProfileUiState(
-    val profile: Profile? = null,
-    val pets: List<Pet> = emptyList(),
-    val isRefreshing: Boolean = false,
-    val error: AppError? = null,
-)
-
+/** Your own profile. What is yours comes from Room, and the numbers from the server (docs/decisions/0009). */
 @HiltViewModel
-class ProfileViewModel @Inject constructor(private val profiles: ProfileRepository, private val pets: PetsRepository) :
-    ViewModel() {
-    private val isRefreshing = MutableStateFlow(false)
-    private val error = MutableStateFlow<AppError?>(null)
+class ProfileViewModel @Inject constructor(
+    private val auth: AuthRepository,
+    private val profiles: ProfileRepository,
+    private val pets: PetsRepository,
+    private val walksRepository: WalksRepository,
+    private val people: PeopleRepository,
+    private val social: SocialRepository,
+) : ViewModel() {
+    private val status = MutableStateFlow(LoadStatus(isLoading = true))
+    private var isLoadingNow = false
 
-    val uiState: StateFlow<ProfileUiState> =
-        combine(profiles.myProfile, pets.myPets, isRefreshing, error) { profile, myPets, refreshing, failure ->
-            ProfileUiState(profile, myPets, refreshing, failure)
-        }.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            ProfileUiState(isRefreshing = true),
+    val walks: Flow<PagingData<Walk>> = walksRepository.walks().cachedIn(viewModelScope)
+
+    val uiState: StateFlow<ProfileUiState> = combine(
+        combine(profiles.myProfile, pets.myPets, walksRepository.observeTotals(), ::Triple),
+        combine(social.receivedRequests, social.sentRequests, ::Pair),
+        status,
+    ) { (profile, myPets, totals), (received, sent), current ->
+        ProfileUiState(
+            isLoading = current.isLoading,
+            profile = profile,
+            relationship = OWN,
+            counts = current.counts,
+            totals = totals,
+            pets = myPets,
+            receivedRequests = received.size,
+            sentRequests = sent.size,
+            loadError = current.error,
         )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+        ProfileUiState(relationship = OWN),
+    )
 
     init {
         refresh()
@@ -45,21 +73,52 @@ class ProfileViewModel @Inject constructor(private val profiles: ProfileReposito
 
     /** What Room already has stays on screen while this runs (docs/decisions/0009). */
     fun refresh() {
-        if (isRefreshing.value) return
-        isRefreshing.value = true
-        error.value = null
+        status.update { it.copy(isLoading = true) }
+        load()
+    }
+
+    /** Back from another screen, the numbers may have changed. It says nothing if it cannot refresh. */
+    fun onResume() = load()
+
+    fun onErrorShown() = status.update { it.copy(error = null) }
+
+    private fun load() {
+        if (isLoadingNow) return
+        isLoadingNow = true
         viewModelScope.launch {
-            val results = listOf(profiles.refresh(), pets.refreshMyPets())
-            error.value = results.filterIsInstance<Outcome.Failure>().firstOrNull()?.error
-            isRefreshing.value = false
+            val counts = async { myId()?.let { people.counts(it) } }
+            val others = listOf(
+                async { profiles.refresh() },
+                async { pets.refreshMyPets() },
+                async { walksRepository.refreshTotals() },
+                async { social.refreshRequests() },
+            )
+            val countsResult = counts.await()
+            val failure = (others.awaitAll() + listOfNotNull(countsResult))
+                .filterIsInstance<Outcome.Failure>()
+                .firstOrNull()
+                ?.error
+            status.update { current ->
+                LoadStatus(
+                    isLoading = false,
+                    counts = (countsResult as? Outcome.Success)?.value ?: current.counts,
+                    error = failure.takeIf { current.isLoading },
+                )
+            }
+            isLoadingNow = false
         }
     }
 
-    fun onErrorShown() {
-        error.value = null
-    }
+    private fun myId(): String? = (auth.sessionState.value as? SessionState.SignedIn)?.user?.id
+
+    private data class LoadStatus(
+        val isLoading: Boolean = false,
+        val counts: ProfileCounts? = null,
+        val error: AppError? = null,
+    )
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
+        val OWN = Relationship(RelationshipStatus.Self)
     }
 }

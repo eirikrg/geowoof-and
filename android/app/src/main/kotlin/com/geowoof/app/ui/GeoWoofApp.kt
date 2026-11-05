@@ -1,6 +1,8 @@
 package com.geowoof.app.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
@@ -10,9 +12,13 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.navigation.NavHostController
 import com.geowoof.app.AppUiState
+import com.geowoof.app.R
 import com.geowoof.app.navigation.AuthNavHost
 import com.geowoof.app.navigation.GeoWoofNavHost
 import com.geowoof.app.navigation.OnboardingNavHost
@@ -33,7 +39,7 @@ fun GeoWoofApp(uiState: AppUiState, onFinishFirstPetStep: () -> Unit, modifier: 
                 onFinishFirstPetStep = onFinishFirstPetStep,
             )
         },
-        main = { MainShell() },
+        main = { MainShell(pendingRequests = uiState.pendingRequests) },
         modifier = modifier,
     )
 }
@@ -66,10 +72,12 @@ internal fun SessionGate(
 /**
  * Main shell: Material 3 navigation bar on compact windows and navigation rail on medium and
  * expanded windows (NavigationSuiteScaffold picks it from the window size class). Screens opened
- * from a destination, such as settings, use the whole window.
+ * from a destination, such as settings, use the whole window. [pendingRequests] are the people waiting for
+ * an answer to follow a private profile, which are answered from the profile.
  */
 @Composable
 fun MainShell(
+    pendingRequests: Int,
     modifier: Modifier = Modifier,
     appState: GeoWoofAppState = rememberGeoWoofAppState(),
     navHost: @Composable (NavHostController) -> Unit = { GeoWoofNavHost(navController = it) },
@@ -91,13 +99,21 @@ fun MainShell(
                     selected = selected,
                     onClick = { appState.navigateToTopLevelDestination(destination) },
                     icon = {
-                        Icon(
-                            painter = painterResource(
-                                if (selected) destination.selectedIcon else destination.unselectedIcon,
-                            ),
-                            // The label already describes the item for accessibility services.
-                            contentDescription = null,
-                        )
+                        BadgedBox(
+                            badge = {
+                                if (destination == TopLevelDestination.Profile && pendingRequests > 0) {
+                                    PendingRequestsBadge(pendingRequests)
+                                }
+                            },
+                        ) {
+                            Icon(
+                                painter = painterResource(
+                                    if (selected) destination.selectedIcon else destination.unselectedIcon,
+                                ),
+                                // The label already describes the item for accessibility services.
+                                contentDescription = null,
+                            )
+                        }
                     },
                     label = { Text(stringResource(destination.label)) },
                 )
@@ -106,4 +122,10 @@ fun MainShell(
     ) {
         navHost(appState.navController)
     }
+}
+
+@Composable
+private fun PendingRequestsBadge(count: Int, modifier: Modifier = Modifier) {
+    val description = pluralStringResource(R.plurals.pending_follow_requests, count, count)
+    Badge(modifier = modifier.semantics { contentDescription = description }) { Text(count.toString()) }
 }

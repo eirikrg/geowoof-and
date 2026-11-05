@@ -1,11 +1,10 @@
 package com.geowoof.core.network
 
 import com.geowoof.core.model.Outcome
-import com.geowoof.core.network.model.FriendRequestBody
 import com.geowoof.core.network.model.NetworkBlock
-import com.geowoof.core.network.model.NetworkFriend
-import com.geowoof.core.network.model.NetworkFriendRequest
+import com.geowoof.core.network.model.NetworkFollowRequest
 import com.geowoof.core.network.model.NetworkPage
+import com.geowoof.core.network.model.NetworkRelationship
 import com.geowoof.core.network.model.NetworkReport
 import com.geowoof.core.network.model.ReportBody
 import kotlinx.serialization.json.Json
@@ -18,37 +17,37 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import javax.inject.Inject
 
-/** Friends, blocks and reports (docs/api.md, phase 4). */
+/** Following, blocks and reports (docs/api.md, phases 4 and 5). */
 internal interface SocialApi {
-    @POST("api/v1/friend-requests")
-    suspend fun sendRequest(@Body body: FriendRequestBody): NetworkFriendRequest
+    @PUT("api/v1/users/{id}/follow")
+    suspend fun follow(@Path("id") userId: String): NetworkRelationship
 
-    @GET("api/v1/friend-requests/received")
+    @DELETE("api/v1/users/{id}/follow")
+    suspend fun unfollow(@Path("id") userId: String): NetworkRelationship
+
+    @DELETE("api/v1/users/{id}/follower")
+    suspend fun removeFollower(@Path("id") userId: String): NetworkRelationship
+
+    @GET("api/v1/follow-requests/received")
     suspend fun receivedRequests(
         @Query("limit") limit: Int,
         @Query("cursor") cursor: String?,
-    ): NetworkPage<NetworkFriendRequest>
+    ): NetworkPage<NetworkFollowRequest>
 
-    @GET("api/v1/friend-requests/sent")
+    @GET("api/v1/follow-requests/sent")
     suspend fun sentRequests(
         @Query("limit") limit: Int,
         @Query("cursor") cursor: String?,
-    ): NetworkPage<NetworkFriendRequest>
+    ): NetworkPage<NetworkFollowRequest>
 
-    @POST("api/v1/friend-requests/{id}/accept")
-    suspend fun acceptRequest(@Path("id") id: String): NetworkFriendRequest
+    @POST("api/v1/follow-requests/{id}/accept")
+    suspend fun acceptRequest(@Path("id") id: String): NetworkRelationship
 
-    @POST("api/v1/friend-requests/{id}/reject")
+    @POST("api/v1/follow-requests/{id}/reject")
     suspend fun rejectRequest(@Path("id") id: String)
 
-    @DELETE("api/v1/friend-requests/{id}")
+    @DELETE("api/v1/follow-requests/{id}")
     suspend fun cancelRequest(@Path("id") id: String)
-
-    @GET("api/v1/friends")
-    suspend fun friends(@Query("limit") limit: Int, @Query("cursor") cursor: String?): NetworkPage<NetworkFriend>
-
-    @DELETE("api/v1/friends/{userId}")
-    suspend fun removeFriend(@Path("userId") userId: String)
 
     @GET("api/v1/blocks")
     suspend fun blocks(@Query("limit") limit: Int, @Query("cursor") cursor: String?): NetworkPage<NetworkBlock>
@@ -64,21 +63,21 @@ internal interface SocialApi {
 }
 
 interface SocialNetworkDataSource {
-    suspend fun sendRequest(userId: String): Outcome<NetworkFriendRequest>
+    suspend fun follow(userId: String): Outcome<NetworkRelationship>
 
-    suspend fun receivedRequests(limit: Int, cursor: String?): Outcome<NetworkPage<NetworkFriendRequest>>
+    suspend fun unfollow(userId: String): Outcome<NetworkRelationship>
 
-    suspend fun sentRequests(limit: Int, cursor: String?): Outcome<NetworkPage<NetworkFriendRequest>>
+    suspend fun removeFollower(userId: String): Outcome<NetworkRelationship>
 
-    suspend fun acceptRequest(id: String): Outcome<NetworkFriendRequest>
+    suspend fun receivedRequests(limit: Int, cursor: String?): Outcome<NetworkPage<NetworkFollowRequest>>
+
+    suspend fun sentRequests(limit: Int, cursor: String?): Outcome<NetworkPage<NetworkFollowRequest>>
+
+    suspend fun acceptRequest(id: String): Outcome<NetworkRelationship>
 
     suspend fun rejectRequest(id: String): Outcome<Unit>
 
     suspend fun cancelRequest(id: String): Outcome<Unit>
-
-    suspend fun friends(limit: Int, cursor: String?): Outcome<NetworkPage<NetworkFriend>>
-
-    suspend fun removeFriend(userId: String): Outcome<Unit>
 
     suspend fun blocks(limit: Int, cursor: String?): Outcome<NetworkPage<NetworkBlock>>
 
@@ -91,7 +90,11 @@ interface SocialNetworkDataSource {
 
 internal class RetrofitSocialNetworkDataSource @Inject constructor(private val api: SocialApi, private val json: Json) :
     SocialNetworkDataSource {
-    override suspend fun sendRequest(userId: String) = apiCall(json) { api.sendRequest(FriendRequestBody(userId)) }
+    override suspend fun follow(userId: String) = apiCall(json) { api.follow(userId) }
+
+    override suspend fun unfollow(userId: String) = apiCall(json) { api.unfollow(userId) }
+
+    override suspend fun removeFollower(userId: String) = apiCall(json) { api.removeFollower(userId) }
 
     override suspend fun receivedRequests(limit: Int, cursor: String?) =
         apiCall(json) { api.receivedRequests(limit, cursor) }
@@ -103,10 +106,6 @@ internal class RetrofitSocialNetworkDataSource @Inject constructor(private val a
     override suspend fun rejectRequest(id: String) = apiCall(json) { api.rejectRequest(id) }
 
     override suspend fun cancelRequest(id: String) = apiCall(json) { api.cancelRequest(id) }
-
-    override suspend fun friends(limit: Int, cursor: String?) = apiCall(json) { api.friends(limit, cursor) }
-
-    override suspend fun removeFriend(userId: String) = apiCall(json) { api.removeFriend(userId) }
 
     override suspend fun blocks(limit: Int, cursor: String?) = apiCall(json) { api.blocks(limit, cursor) }
 

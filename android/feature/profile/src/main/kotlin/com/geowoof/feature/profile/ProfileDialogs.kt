@@ -1,4 +1,4 @@
-package com.geowoof.feature.social.profile
+package com.geowoof.feature.profile
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
@@ -26,40 +26,69 @@ import androidx.compose.ui.semantics.Role
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.RelationshipStatus
 import com.geowoof.core.model.ReportReason
-import com.geowoof.feature.social.R
 
 @Composable
-internal fun ProfileDialogs(uiState: UserProfileUiState, reportDetails: TextFieldState, actions: UserProfileActions) {
+internal fun ProfileDialogs(uiState: ProfileUiState, reportDetails: TextFieldState, actions: ProfileActions) {
     val name = uiState.profile?.displayName.orEmpty()
+    val isFriend = uiState.relationship?.status == RelationshipStatus.Friends
     when (uiState.dialog) {
         null -> Unit
 
-        ProfileDialog.ConfirmRemoveFriend -> ConfirmDialog(
-            title = stringResource(R.string.feature_social_remove_friend_title, name),
-            message = stringResource(R.string.feature_social_remove_friend_message),
-            confirm = stringResource(R.string.feature_social_remove_friend),
-            onConfirm = actions.onConfirmRemoveFriend,
+        // Following back gives access to what is only for friends, which is easy to miss.
+        ProfileDialog.ConfirmFollowBack -> ConfirmDialog(
+            title = stringResource(R.string.feature_profile_follow_back_title, name),
+            message = stringResource(R.string.feature_profile_follow_back_message, name),
+            confirm = stringResource(R.string.feature_profile_follow_back),
+            onConfirm = actions.onConfirmFollowBack,
+            onDismiss = actions.onDismissDialog,
+        )
+
+        ProfileDialog.ConfirmUnfollow -> ConfirmDialog(
+            title = stringResource(R.string.feature_profile_unfollow_title, name),
+            message = stringResource(
+                when {
+                    isFriend -> R.string.feature_profile_unfollow_friend_message
+                    uiState.profile?.isPrivate == true -> R.string.feature_profile_unfollow_private_message
+                    else -> R.string.feature_profile_unfollow_message
+                },
+            ),
+            confirm = stringResource(R.string.feature_profile_unfollow),
+            onConfirm = actions.onConfirmUnfollow,
+            onDismiss = actions.onDismissDialog,
+        )
+
+        ProfileDialog.ConfirmRemoveFollower -> ConfirmDialog(
+            title = stringResource(R.string.feature_profile_remove_follower_title, name),
+            message = stringResource(
+                if (isFriend) {
+                    R.string.feature_profile_remove_follower_friend_message
+                } else {
+                    R.string.feature_profile_remove_follower_message
+                },
+            ),
+            confirm = stringResource(R.string.feature_profile_remove_follower_confirm),
+            onConfirm = actions.onConfirmRemoveFollower,
             onDismiss = actions.onDismissDialog,
         )
 
         ProfileDialog.ConfirmBlock -> ConfirmDialog(
-            title = stringResource(R.string.feature_social_block_title, name),
+            title = stringResource(R.string.feature_profile_block_title, name),
             message = stringResource(
-                if (uiState.relationship?.status == RelationshipStatus.Friends) {
-                    R.string.feature_social_block_friend_message
+                if (isFriend) {
+                    R.string.feature_profile_block_friend_message
                 } else {
-                    R.string.feature_social_block_message
+                    R.string.feature_profile_block_message
                 },
             ),
-            confirm = stringResource(R.string.feature_social_block),
+            confirm = stringResource(R.string.feature_profile_block),
             onConfirm = actions.onConfirmBlock,
             onDismiss = actions.onDismissDialog,
         )
 
         ProfileDialog.VerifyEmail -> ConfirmDialog(
-            title = stringResource(R.string.feature_social_verify_title),
-            message = stringResource(R.string.feature_social_verify_message),
-            confirm = stringResource(R.string.feature_social_verify),
+            title = stringResource(R.string.feature_profile_verify_title),
+            message = stringResource(R.string.feature_profile_verify_message),
+            confirm = stringResource(R.string.feature_profile_verify),
             onConfirm = actions.onVerifyEmail,
             onDismiss = actions.onDismissDialog,
         )
@@ -83,17 +112,17 @@ private fun ConfirmDialog(
         title = { Text(title) },
         text = { Text(message) },
         confirmButton = { TextButton(onClick = onConfirm) { Text(confirm) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.feature_social_dismiss)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.feature_profile_dismiss)) } },
     )
 }
 
 @StringRes
 private fun ReportReason.labelRes(): Int = when (this) {
-    ReportReason.Spam -> R.string.feature_social_report_spam
-    ReportReason.Harassment -> R.string.feature_social_report_harassment
-    ReportReason.InappropriateContent -> R.string.feature_social_report_inappropriate
-    ReportReason.Impersonation -> R.string.feature_social_report_impersonation
-    ReportReason.Other -> R.string.feature_social_report_other
+    ReportReason.Spam -> R.string.feature_profile_report_spam
+    ReportReason.Harassment -> R.string.feature_profile_report_harassment
+    ReportReason.InappropriateContent -> R.string.feature_profile_report_inappropriate
+    ReportReason.Impersonation -> R.string.feature_profile_report_impersonation
+    ReportReason.Other -> R.string.feature_profile_report_other
 }
 
 @Composable
@@ -101,14 +130,14 @@ private fun ReportDialog(
     selected: ReportReason?,
     name: String,
     details: TextFieldState,
-    actions: UserProfileActions,
+    actions: ProfileActions,
     modifier: Modifier = Modifier,
 ) {
     val spacing = GeoWoofTheme.spacing
     AlertDialog(
         onDismissRequest = actions.onDismissDialog,
         modifier = modifier,
-        title = { Text(stringResource(R.string.feature_social_report_title, name)) },
+        title = { Text(stringResource(R.string.feature_profile_report_title, name)) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -135,18 +164,18 @@ private fun ReportDialog(
                 OutlinedTextField(
                     state = details,
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.feature_social_report_details)) },
+                    label = { Text(stringResource(R.string.feature_profile_report_details)) },
                     inputTransformation = InputTransformation.maxLength(MAX_REPORT_DETAILS),
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = actions.onConfirmReport, enabled = selected != null) {
-                Text(stringResource(R.string.feature_social_report_send))
+                Text(stringResource(R.string.feature_profile_report_send))
             }
         },
         dismissButton = {
-            TextButton(onClick = actions.onDismissDialog) { Text(stringResource(R.string.feature_social_dismiss)) }
+            TextButton(onClick = actions.onDismissDialog) { Text(stringResource(R.string.feature_profile_dismiss)) }
         },
     )
 }

@@ -34,6 +34,8 @@ data class ChooseUsernameUiState(
     val usernameStatus: UsernameStatus? = null,
     val isCheckingUsername: Boolean = false,
     val displayNameIssue: DisplayNameIssue? = null,
+    /** Public by default, and it can be changed later in Settings. */
+    val isPrivate: Boolean = false,
     val isSubmitting: Boolean = false,
     val error: AppError? = null,
 )
@@ -74,6 +76,8 @@ class ChooseUsernameViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    fun onPrivateChange(isPrivate: Boolean) = _uiState.update { it.copy(isPrivate = isPrivate) }
+
     /** Choosing the username ends the onboarding: the session changes and the app shows the main shell. */
     fun submit() {
         val state = _uiState.value
@@ -103,7 +107,7 @@ class ChooseUsernameViewModel @Inject constructor(
                     return@launch
                 }
             }
-            val outcome = accounts.chooseUsername(validateUsername.normalize(rawUsername))
+            val outcome = accounts.chooseUsername(validateUsername.normalize(rawUsername), _uiState.value.isPrivate)
             if (outcome is Outcome.Failure) {
                 val unavailable = outcome.error.unavailableReason()
                 _uiState.update {

@@ -5,8 +5,7 @@ import com.geowoof.core.data.mapper.toModel
 import com.geowoof.core.database.SocialDao
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.BlockedUser
-import com.geowoof.core.model.Friend
-import com.geowoof.core.model.FriendRequest
+import com.geowoof.core.model.FollowRequest
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.Relationship
 import com.geowoof.core.model.RelationshipStatus
@@ -24,16 +23,15 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
- * The friends, requests and blocks of the signed-in person: read from Room, written online
- * (docs/decisions/0009). If a person has changed something meanwhile, the next refresh brings it.
+ * Whom the signed-in person follows, their requests and their blocks. The requests and the blocks are read
+ * from Room and everything is written online (docs/decisions/0009). If a person has changed something
+ * meanwhile, the next refresh brings it.
  */
+@Suppress("TooManyFunctions")
 interface SocialRepository {
-    val friends: Flow<List<Friend>>
-    val receivedRequests: Flow<List<FriendRequest>>
-    val sentRequests: Flow<List<FriendRequest>>
+    val receivedRequests: Flow<List<FollowRequest>>
+    val sentRequests: Flow<List<FollowRequest>>
     val blockedUsers: Flow<List<BlockedUser>>
-
-    suspend fun refreshFriends(): Outcome<Unit>
 
     suspend fun refreshRequests(): Outcome<Unit>
 
@@ -41,16 +39,20 @@ interface SocialRepository {
 
     suspend fun relationship(userId: String): Outcome<Relationship>
 
-    /** The answer can be [RelationshipStatus.Friends], if that person had already asked. */
-    suspend fun sendRequest(userId: String): Outcome<Relationship>
+    /** The answer is [RelationshipStatus.Requested] with a private profile, which has to accept. */
+    suspend fun follow(userId: String): Outcome<Relationship>
 
-    suspend fun acceptRequest(requestId: String): Outcome<Unit>
+    /** Stops following that person, or cancels the request to follow them. */
+    suspend fun unfollow(userId: String): Outcome<Relationship>
+
+    suspend fun removeFollower(userId: String): Outcome<Relationship>
+
+    /** Lets that person follow you. It does not make you follow them. */
+    suspend fun acceptRequest(requestId: String): Outcome<Relationship>
 
     suspend fun rejectRequest(requestId: String): Outcome<Unit>
 
     suspend fun cancelRequest(requestId: String): Outcome<Unit>
-
-    suspend fun removeFriend(userId: String): Outcome<Unit>
 
     suspend fun block(userId: String): Outcome<Unit>
 
@@ -59,26 +61,20 @@ interface SocialRepository {
     suspend fun report(userId: String, reason: ReportReason, details: String?): Outcome<Unit>
 }
 
+@Suppress("TooManyFunctions")
 internal class DefaultSocialRepository @Inject constructor(
     private val network: SocialNetworkDataSource,
     private val people: PeopleNetworkDataSource,
     private val dao: SocialDao,
 ) : SocialRepository {
-    override val friends: Flow<List<Friend>> = dao.observeFriends().map { rows -> rows.map { it.toModel() } }
+    override val receivedRequests: Flow<List<FollowRequest>> = requests(RequestDirection.Received)
 
-    override val receivedRequests: Flow<List<FriendRequest>> = requests(RequestDirection.Received)
-
-    override val sentRequests: Flow<List<FriendRequest>> = requests(RequestDirection.Sent)
+    override val sentRequests: Flow<List<FollowRequest>> = requests(RequestDirection.Sent)
 
     override val blockedUsers: Flow<List<BlockedUser>> = dao.observeBlocked().map { rows -> rows.map { it.toModel() } }
 
     private fun requests(direction: RequestDirection) =
         dao.observeRequests(direction.name).map { rows -> rows.map { it.toModel() } }
-
-    override suspend fun refreshFriends(): Outcome<Unit> =
-        allPages { cursor -> network.friends(PAGE_SIZE, cursor) }.map { items ->
-            dao.replaceFriends(items.map { it.toEntity() })
-        }
 
     override suspend fun refreshRequests(): Outcome<Unit> {
         val received = allPages { cursor -> network.receivedRequests(PAGE_SIZE, cursor) }.map { items ->
@@ -98,21 +94,22 @@ internal class DefaultSocialRepository @Inject constructor(
     override suspend fun relationship(userId: String): Outcome<Relationship> =
         people.relationship(userId).map { it.toModel() }
 
-    override suspend fun sendRequest(userId: String): Outcome<Relationship> =
-        network.sendRequest(userId).map { request ->
-            if (request.status == STATUS_ACCEPTED) {
-                dao.deleteRequest(request.id)
-                refreshFriends()
-                Relationship(RelationshipStatus.Friends)
-            } else {
-                dao.upsertRequest(request.toEntity())
-                Relationship(RelationshipStatus.RequestSent, request.id)
-            }
+    override suspend fun follow(userId: String): Outcome<Relationship> =
+        network.follow(userId).map { it.toModel() }.onSuccess { relationship ->
+            // The answer does not bring the person, and the list of sent requests shows them.
+            if (relationship.status == RelationshipStatus.Requested) refreshRequests()
         }
 
-    override suspend fun acceptRequest(requestId: String): Outcome<Unit> = answer(requestId) {
-        network.acceptRequest(requestId).map { }.onSuccess { refreshFriends() }
-    }
+    override suspend fun unfollow(userId: String): Outcome<Relationship> =
+        network.unfollow(userId).map { it.toModel() }.onSuccess {
+            dao.deleteRequestsWith(userId, RequestDirection.Sent.name)
+        }
+
+    override suspend fun removeFollower(userId: String): Outcome<Relationship> =
+        network.removeFollower(userId).map { it.toModel() }
+
+    override suspend fun acceptRequest(requestId: String): Outcome<Relationship> =
+        answer(requestId) { network.acceptRequest(requestId).map { it.toModel() } }
 
     override suspend fun rejectRequest(requestId: String): Outcome<Unit> =
         answer(requestId) { network.rejectRequest(requestId) }
@@ -121,16 +118,11 @@ internal class DefaultSocialRepository @Inject constructor(
         answer(requestId) { network.cancelRequest(requestId) }
 
     /** If the server rejects the answer, the request has changed: the list must show how it is now. */
-    private suspend fun answer(requestId: String, call: suspend () -> Outcome<Unit>): Outcome<Unit> = call()
+    private suspend fun <T> answer(requestId: String, call: suspend () -> Outcome<T>): Outcome<T> = call()
         .onSuccess { dao.deleteRequest(requestId) }
         .onFailure { error -> if (error is AppError.Api) refreshRequests() }
 
-    override suspend fun removeFriend(userId: String): Outcome<Unit> = network.removeFriend(userId).onSuccess {
-        dao.deleteFriend(userId)
-    }
-
     override suspend fun block(userId: String): Outcome<Unit> = network.block(userId).onSuccess {
-        dao.deleteFriend(userId)
         dao.deleteRequestsWith(userId)
         refreshBlockedUsers()
     }
@@ -165,7 +157,6 @@ internal class DefaultSocialRepository @Inject constructor(
     private companion object {
         const val PAGE_SIZE = 50
         const val MAX_PAGES = 100
-        const val STATUS_ACCEPTED = "Accepted"
         const val TARGET_USER = "User"
     }
 }

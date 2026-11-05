@@ -31,6 +31,9 @@
     <string name="feature_auth_username_title">Choose your username</string>
     <string name="feature_auth_username_message">Your friends will find you by your @username. Your name is what they will see on your walks and posts.</string>
     <string name="feature_auth_username_label">Username</string>
+    <string name="feature_auth_private_profile">Private profile</string>
+    <string name="feature_auth_private_on">You decide who follows you. The rest only see your @username, photo, bio and numbers.</string>
+    <string name="feature_auth_private_off">Anyone can follow you and see what you share with everyone. You can change it in Settings.</string>
     <string name="feature_auth_username_hint">3–30 characters: letters, numbers, _ and .</string>
     <string name="feature_auth_username_checking">Checking availability…</string>
     <string name="feature_auth_username_available">\@%1$s is available</string>

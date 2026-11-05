@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,14 +16,21 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -32,6 +40,7 @@ import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.SignInMethod
 import com.geowoof.core.model.User
+import com.geowoof.core.ui.userMessage
 import java.time.Instant
 
 @Composable
@@ -51,6 +60,8 @@ internal fun SettingsScreen(
         onVerifyEmail = onVerifyEmail,
         onChangePassword = onChangePassword,
         onOpenBlockedUsers = onOpenBlockedUsers,
+        onPrivateChange = viewModel::onPrivateChange,
+        onDismissError = viewModel::onErrorShown,
         onSignOut = viewModel::signOut,
         onConfirmSignOut = viewModel::confirmSignOut,
         onDismissSignOut = viewModel::dismissSignOut,
@@ -67,12 +78,23 @@ internal fun SettingsContent(
     onVerifyEmail: () -> Unit,
     onChangePassword: () -> Unit,
     onOpenBlockedUsers: () -> Unit,
+    onPrivateChange: (Boolean) -> Unit,
+    onDismissError: () -> Unit,
     onSignOut: () -> Unit,
     onConfirmSignOut: () -> Unit,
     onDismissSignOut: () -> Unit,
     onDeleteAccount: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val snackbars = remember { SnackbarHostState() }
+    val errorMessage = uiState.error?.userMessage()
+    val currentOnDismissError by rememberUpdatedState(onDismissError)
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            snackbars.showSnackbar(errorMessage)
+            currentOnDismissError()
+        }
+    }
     if (uiState.isConfirmingSignOut) {
         AlertDialog(
             onDismissRequest = onDismissSignOut,
@@ -88,6 +110,7 @@ internal fun SettingsContent(
     }
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbars) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.feature_settings_title)) },
@@ -163,6 +186,33 @@ internal fun SettingsContent(
                     modifier = Modifier.clickable(onClick = onChangePassword),
                 )
             }
+            HorizontalDivider()
+            SectionHeader(stringResource(R.string.feature_settings_privacy))
+            if (user != null) {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.feature_settings_private_profile)) },
+                    supportingContent = {
+                        Text(
+                            stringResource(
+                                if (user.isPrivate) {
+                                    R.string.feature_settings_private_on
+                                } else {
+                                    R.string.feature_settings_private_off
+                                },
+                            ),
+                        )
+                    },
+                    leadingContent = { Icon(painterResource(GeoWoofIcons.Lock), contentDescription = null) },
+                    // The whole row is the switch, for TalkBack too.
+                    trailingContent = { Switch(checked = user.isPrivate, onCheckedChange = null) },
+                    modifier = Modifier.toggleable(
+                        value = user.isPrivate,
+                        enabled = !uiState.isChangingPrivacy,
+                        role = Role.Switch,
+                        onValueChange = onPrivateChange,
+                    ),
+                )
+            }
             ListItem(
                 headlineContent = { Text(stringResource(R.string.feature_settings_blocked_users)) },
                 leadingContent = { Icon(painterResource(GeoWoofIcons.Block), contentDescription = null) },
@@ -222,6 +272,8 @@ private fun SettingsPreview() {
             onVerifyEmail = {},
             onChangePassword = {},
             onOpenBlockedUsers = {},
+            onPrivateChange = {},
+            onDismissError = {},
             onSignOut = {},
             onConfirmSignOut = {},
             onDismissSignOut = {},

@@ -1,4 +1,4 @@
-package com.geowoof.feature.social.friends
+package com.geowoof.feature.profile.requests
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,95 +33,102 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import com.geowoof.core.data.repository.SocialRepository
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppError
-import com.geowoof.core.model.Friend
-import com.geowoof.core.model.FriendRequest
+import com.geowoof.core.model.FollowRequest
+import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.RequestDirection
 import com.geowoof.core.model.UserSummary
 import com.geowoof.core.ui.UserRow
 import com.geowoof.core.ui.userMessage
-import com.geowoof.feature.social.R
+import com.geowoof.feature.profile.R
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.Instant
+import javax.inject.Inject
 
-@Composable
-internal fun FriendsScreen(
-    onBack: () -> Unit,
-    onOpenUser: (userId: String) -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: FriendsViewModel = hiltViewModel(),
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    FriendsContent(
-        uiState = uiState,
-        onBack = onBack,
-        onRefresh = viewModel::refresh,
-        onOpenUser = onOpenUser,
-        onDismissError = viewModel::onErrorShown,
-        modifier = modifier,
-    )
-}
+data class FollowRequestsUiState(
+    val received: List<FollowRequest> = emptyList(),
+    val sent: List<FollowRequest> = emptyList(),
+    val isRefreshing: Boolean = true,
+    /** The request being answered, whose buttons wait for the server. */
+    val answeringId: String? = null,
+    val error: AppError? = null,
+)
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun FriendsContent(
-    uiState: FriendsUiState,
-    onBack: () -> Unit,
-    onRefresh: () -> Unit,
-    onOpenUser: (userId: String) -> Unit,
-    onDismissError: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val snackbars = errorSnackbar(uiState.error, onDismissError)
-    Scaffold(
-        modifier = modifier,
-        snackbarHost = { SnackbarHost(snackbars) },
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.feature_social_friends_title)) },
-                navigationIcon = { BackButton(onBack) },
-            )
-        },
-    ) { innerPadding ->
-        PullToRefreshBox(
-            isRefreshing = uiState.isRefreshing,
-            onRefresh = onRefresh,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-        ) {
-            // A pull needs something that scrolls, also when the list is empty.
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                if (uiState.friends.isEmpty() && !uiState.isRefreshing) {
-                    item {
-                        EmptyState(
-                            icon = GeoWoofIcons.Groups,
-                            title = stringResource(R.string.feature_social_no_friends_title),
-                            message = stringResource(R.string.feature_social_no_friends_message),
-                            modifier = Modifier.fillParentMaxSize(),
-                        )
-                    }
-                }
-                items(uiState.friends, key = { it.user.id }) { friend ->
-                    UserRow(friend.user, onClick = { onOpenUser(friend.user.id) })
-                }
-            }
+/** What Room already has stays on screen while the list refreshes (docs/decisions/0009). */
+@HiltViewModel
+class FollowRequestsViewModel @Inject constructor(private val social: SocialRepository) : ViewModel() {
+    private val status = MutableStateFlow(RefreshStatus())
+    private val answeringId = MutableStateFlow<String?>(null)
+
+    val uiState: StateFlow<FollowRequestsUiState> =
+        combine(social.receivedRequests, social.sentRequests, status, answeringId) {
+                received,
+                sent,
+                current,
+                answering,
+            ->
+            FollowRequestsUiState(received, sent, current.isRefreshing, answering, current.error)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), FollowRequestsUiState())
+
+    init {
+        refresh()
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            status.value = RefreshStatus(isRefreshing = true)
+            status.value = RefreshStatus(error = (social.refreshRequests() as? Outcome.Failure)?.error)
         }
+    }
+
+    fun onAccept(requestId: String) = answer(requestId) { social.acceptRequest(requestId) }
+
+    fun onReject(requestId: String) = answer(requestId) { social.rejectRequest(requestId) }
+
+    fun onCancel(requestId: String) = answer(requestId) { social.cancelRequest(requestId) }
+
+    private fun answer(requestId: String, call: suspend () -> Outcome<*>) {
+        if (answeringId.value != null) return
+        answeringId.value = requestId
+        viewModelScope.launch {
+            val failure = call() as? Outcome.Failure
+            answeringId.value = null
+            if (failure != null) status.update { it.copy(error = failure.error) }
+        }
+    }
+
+    fun onErrorShown() = status.update { it.copy(error = null) }
+
+    private data class RefreshStatus(val isRefreshing: Boolean = false, val error: AppError? = null)
+
+    private companion object {
+        const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
 
 @Composable
-internal fun FriendRequestsScreen(
+internal fun FollowRequestsScreen(
     onBack: () -> Unit,
     onOpenUser: (userId: String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: FriendRequestsViewModel = hiltViewModel(),
+    viewModel: FollowRequestsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    FriendRequestsContent(
+    FollowRequestsContent(
         uiState = uiState,
         onBack = onBack,
         onRefresh = viewModel::refresh,
@@ -137,8 +144,8 @@ internal fun FriendRequestsScreen(
 @Suppress("LongParameterList")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun FriendRequestsContent(
-    uiState: FriendRequestsUiState,
+internal fun FollowRequestsContent(
+    uiState: FollowRequestsUiState,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
     onOpenUser: (userId: String) -> Unit,
@@ -155,8 +162,15 @@ internal fun FriendRequestsContent(
         snackbarHost = { SnackbarHost(snackbars) },
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.feature_social_requests_title)) },
-                navigationIcon = { BackButton(onBack) },
+                title = { Text(stringResource(R.string.feature_profile_requests_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            painter = painterResource(GeoWoofIcons.ArrowBack),
+                            contentDescription = stringResource(R.string.feature_profile_back),
+                        )
+                    }
+                },
             )
         },
     ) { innerPadding ->
@@ -169,12 +183,12 @@ internal fun FriendRequestsContent(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text(stringResource(R.string.feature_social_tab_received, uiState.received.size)) },
+                    text = { Text(stringResource(R.string.feature_profile_tab_received, uiState.received.size)) },
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text(stringResource(R.string.feature_social_tab_sent, uiState.sent.size)) },
+                    text = { Text(stringResource(R.string.feature_profile_tab_sent, uiState.sent.size)) },
                 )
             }
             PullToRefreshBox(
@@ -183,24 +197,25 @@ internal fun FriendRequestsContent(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 val requests = if (selectedTab == 0) uiState.received else uiState.sent
+                // A pull needs something that scrolls, also when the list is empty.
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     if (requests.isEmpty() && !uiState.isRefreshing) {
                         item {
                             EmptyState(
                                 icon = GeoWoofIcons.GroupAdd,
-                                title = stringResource(R.string.feature_social_no_requests_title),
+                                title = stringResource(R.string.feature_profile_no_requests_title),
                                 message = stringResource(
                                     if (selectedTab == 0) {
-                                        R.string.feature_social_no_received_message
+                                        R.string.feature_profile_no_received_message
                                     } else {
-                                        R.string.feature_social_no_sent_message
+                                        R.string.feature_profile_no_sent_message
                                     },
                                 ),
                                 modifier = Modifier.fillParentMaxSize(),
                             )
                         }
                     }
-                    items(requests, key = FriendRequest::id) { request ->
+                    items(requests, key = FollowRequest::id) { request ->
                         UserRow(
                             user = request.user,
                             onClick = { onOpenUser(request.user.id) },
@@ -212,7 +227,7 @@ internal fun FriendRequestsContent(
                                         onClick = { onCancel(request.id) },
                                         enabled = uiState.answeringId == null,
                                     ) {
-                                        Text(stringResource(R.string.feature_social_cancel_request))
+                                        Text(stringResource(R.string.feature_profile_cancel_request))
                                     }
                                 }
                             },
@@ -226,7 +241,7 @@ internal fun FriendRequestsContent(
 
 @Composable
 private fun ReceivedActions(
-    request: FriendRequest,
+    request: FollowRequest,
     isEnabled: Boolean,
     onAccept: (requestId: String) -> Unit,
     onReject: (requestId: String) -> Unit,
@@ -236,25 +251,15 @@ private fun ReceivedActions(
         IconButton(onClick = { onReject(request.id) }, enabled = isEnabled) {
             Icon(
                 painter = painterResource(GeoWoofIcons.Close),
-                contentDescription = stringResource(R.string.feature_social_reject_request, request.user.displayName),
+                contentDescription = stringResource(R.string.feature_profile_reject_request, request.user.displayName),
             )
         }
         IconButton(onClick = { onAccept(request.id) }, enabled = isEnabled) {
             Icon(
                 painter = painterResource(GeoWoofIcons.Check),
-                contentDescription = stringResource(R.string.feature_social_accept_request, request.user.displayName),
+                contentDescription = stringResource(R.string.feature_profile_accept_request, request.user.displayName),
             )
         }
-    }
-}
-
-@Composable
-private fun BackButton(onBack: () -> Unit, modifier: Modifier = Modifier) {
-    IconButton(onClick = onBack, modifier = modifier) {
-        Icon(
-            painter = painterResource(GeoWoofIcons.ArrowBack),
-            contentDescription = stringResource(R.string.feature_social_back),
-        )
     }
 }
 
@@ -272,32 +277,17 @@ private fun errorSnackbar(error: AppError?, onDismiss: () -> Unit): SnackbarHost
     return snackbars
 }
 
-private val PREVIEW_USER = UserSummary("1", "bea", "Bea", "Madrid", null)
-private val PREVIEW_TIME = Instant.parse("2026-11-05T10:00:00Z")
-
 @PreviewLightDark
 @PreviewFontScale
 @Composable
-private fun FriendsPreview() {
+private fun FollowRequestsPreview() {
+    val user = UserSummary("1", "bea", "Bea", "Madrid", null)
     GeoWoofTheme(dynamicColor = false) {
-        FriendsContent(
-            uiState = FriendsUiState(friends = listOf(Friend(PREVIEW_USER, PREVIEW_TIME)), isRefreshing = false),
-            onBack = {},
-            onRefresh = {},
-            onOpenUser = {},
-            onDismissError = {},
-        )
-    }
-}
-
-@PreviewLightDark
-@PreviewFontScale
-@Composable
-private fun FriendRequestsPreview() {
-    GeoWoofTheme(dynamicColor = false) {
-        FriendRequestsContent(
-            uiState = FriendRequestsUiState(
-                received = listOf(FriendRequest("1", PREVIEW_USER, RequestDirection.Received, PREVIEW_TIME)),
+        FollowRequestsContent(
+            uiState = FollowRequestsUiState(
+                received = listOf(
+                    FollowRequest("1", user, RequestDirection.Received, Instant.parse("2026-11-05T10:00:00Z")),
+                ),
                 isRefreshing = false,
             ),
             onBack = {},

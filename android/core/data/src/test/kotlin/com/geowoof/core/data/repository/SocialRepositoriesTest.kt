@@ -10,16 +10,19 @@ import com.geowoof.core.database.GeoWoofDatabase
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.PetSpecies
+import com.geowoof.core.model.ProfileCounts
 import com.geowoof.core.model.RelationshipStatus
 import com.geowoof.core.model.ReportReason
+import com.geowoof.core.model.WalkTotals
 import com.geowoof.core.model.WalkVisibility
 import com.geowoof.core.network.PeopleNetworkDataSource
 import com.geowoof.core.network.SocialNetworkDataSource
 import com.geowoof.core.network.model.NetworkBlock
-import com.geowoof.core.network.model.NetworkFriend
-import com.geowoof.core.network.model.NetworkFriendRequest
+import com.geowoof.core.network.model.NetworkCounts
+import com.geowoof.core.network.model.NetworkFollowRequest
 import com.geowoof.core.network.model.NetworkImage
 import com.geowoof.core.network.model.NetworkPage
+import com.geowoof.core.network.model.NetworkPerson
 import com.geowoof.core.network.model.NetworkPet
 import com.geowoof.core.network.model.NetworkPetSearchResult
 import com.geowoof.core.network.model.NetworkProfile
@@ -28,6 +31,7 @@ import com.geowoof.core.network.model.NetworkReport
 import com.geowoof.core.network.model.NetworkUserSummary
 import com.geowoof.core.network.model.NetworkWalk
 import com.geowoof.core.network.model.NetworkWalkSegment
+import com.geowoof.core.network.model.NetworkWalkStats
 import com.geowoof.core.network.model.ReportBody
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -51,32 +55,34 @@ private fun networkRequest(
     id: String = "request-1",
     user: NetworkUserSummary = networkUser(),
     direction: String = "Received",
-    status: String = "Pending",
-) = NetworkFriendRequest(id, user, direction, status, TIME)
+) = NetworkFollowRequest(id, user, direction, TIME)
 
+@Suppress("TooManyFunctions")
 private class FakeSocialNetwork : SocialNetworkDataSource {
-    var friendPages = mutableMapOf<String?, NetworkPage<NetworkFriend>>(null to NetworkPage(emptyList(), null))
-    var received: Outcome<NetworkPage<NetworkFriendRequest>> = Outcome.Success(NetworkPage(emptyList(), null))
-    var sent: Outcome<NetworkPage<NetworkFriendRequest>> = Outcome.Success(NetworkPage(emptyList(), null))
+    var received: Outcome<NetworkPage<NetworkFollowRequest>> = Outcome.Success(NetworkPage(emptyList(), null))
+    var sent: Outcome<NetworkPage<NetworkFollowRequest>> = Outcome.Success(NetworkPage(emptyList(), null))
     var blocked: List<NetworkBlock> = emptyList()
-    var sendAnswer: Outcome<NetworkFriendRequest> = Outcome.Success(networkRequest(direction = "Sent"))
+    var relationshipAnswer: Outcome<NetworkRelationship> = Outcome.Success(NetworkRelationship("Following"))
     var answerResult: Outcome<Unit> = Outcome.Success(Unit)
     val reports = mutableListOf<ReportBody>()
     val calls = mutableListOf<String>()
 
-    override suspend fun sendRequest(userId: String) = sendAnswer
+    private fun relationship(call: String): Outcome<NetworkRelationship> {
+        calls += call
+        return relationshipAnswer
+    }
+
+    override suspend fun follow(userId: String) = relationship("follow:$userId")
+
+    override suspend fun unfollow(userId: String) = relationship("unfollow:$userId")
+
+    override suspend fun removeFollower(userId: String) = relationship("removeFollower:$userId")
 
     override suspend fun receivedRequests(limit: Int, cursor: String?) = received
 
     override suspend fun sentRequests(limit: Int, cursor: String?) = sent
 
-    override suspend fun acceptRequest(id: String): Outcome<NetworkFriendRequest> {
-        calls += "accept:$id"
-        return when (val result = answerResult) {
-            is Outcome.Failure -> result
-            is Outcome.Success -> Outcome.Success(networkRequest(id, status = "Accepted"))
-        }
-    }
+    override suspend fun acceptRequest(id: String) = relationship("accept:$id")
 
     override suspend fun rejectRequest(id: String): Outcome<Unit> {
         calls += "reject:$id"
@@ -85,13 +91,6 @@ private class FakeSocialNetwork : SocialNetworkDataSource {
 
     override suspend fun cancelRequest(id: String): Outcome<Unit> {
         calls += "cancel:$id"
-        return answerResult
-    }
-
-    override suspend fun friends(limit: Int, cursor: String?) = Outcome.Success(friendPages.getValue(cursor))
-
-    override suspend fun removeFriend(userId: String): Outcome<Unit> {
-        calls += "remove:$userId"
         return answerResult
     }
 
@@ -113,12 +112,15 @@ private class FakeSocialNetwork : SocialNetworkDataSource {
     }
 }
 
+@Suppress("TooManyFunctions")
 private class FakePeopleNetwork : PeopleNetworkDataSource {
-    var relationshipAnswer = NetworkRelationship("Friends")
+    var relationshipAnswer = NetworkRelationship("Friends", followsYou = true)
     var userPages: Outcome<NetworkPage<NetworkUserSummary>> = Outcome.Success(NetworkPage(emptyList(), null))
     var walkAnswer: Outcome<NetworkWalk> = Outcome.Failure(AppError.Network)
     var petsAnswer: Outcome<NetworkPage<NetworkPet>> = Outcome.Success(NetworkPage(emptyList(), null))
+    var profileAnswer = NetworkProfile("bea-id", "bea", "Bea", null, null, null, TIME)
     val cursors = mutableListOf<String?>()
+    val lists = mutableListOf<String>()
 
     override suspend fun searchUsers(
         query: String,
@@ -140,15 +142,28 @@ private class FakePeopleNetwork : PeopleNetworkDataSource {
         ),
     )
 
-    override suspend fun profile(userId: String) =
-        Outcome.Success(NetworkProfile(userId, "bea", "Bea", null, null, null, TIME))
+    override suspend fun profile(userId: String) = Outcome.Success(profileAnswer)
 
     override suspend fun relationship(userId: String) = Outcome.Success(relationshipAnswer)
+
+    override suspend fun counts(userId: String) = Outcome.Success(NetworkCounts(12, 8, 5))
+
+    override suspend fun people(
+        userId: String,
+        list: String,
+        limit: Int,
+        cursor: String?,
+    ): Outcome<NetworkPage<NetworkPerson>> {
+        lists += list
+        return Outcome.Success(NetworkPage(listOf(NetworkPerson(networkUser(), TIME)), null))
+    }
 
     override suspend fun pets(userId: String) = petsAnswer
 
     override suspend fun walks(userId: String, limit: Int, cursor: String?): Outcome<NetworkPage<NetworkWalk>> =
         Outcome.Success(NetworkPage(emptyList(), null))
+
+    override suspend fun walkStats(userId: String) = Outcome.Success(NetworkWalkStats(4, 1000, 3000, 2500, 2))
 
     override suspend fun walk(walkId: String) = walkAnswer
 }
@@ -168,25 +183,6 @@ class SocialRepositoriesTest {
     fun closeDatabase() = database.close()
 
     @Test
-    fun all_the_pages_of_friends_reach_room_and_what_is_gone_disappears() = runTest {
-        network.friendPages = mutableMapOf(
-            null to NetworkPage(listOf(NetworkFriend(networkUser("1", "bea"), TIME)), "next"),
-            "next" to NetworkPage(listOf(NetworkFriend(networkUser("2", "carlos"), TIME)), null),
-        )
-        repository.refreshFriends()
-        assertEquals(setOf("bea", "carlos"), repository.friends.first().map { it.user.username }.toSet())
-
-        network.friendPages =
-            mutableMapOf(null to NetworkPage(listOf(NetworkFriend(networkUser("2", "carlos"), TIME)), null))
-        repository.refreshFriends()
-
-        val friend = repository.friends.first().single()
-        assertEquals("carlos", friend.user.username)
-        assertEquals("asset", friend.user.avatar?.assetId)
-        assertEquals("Madrid", friend.user.city)
-    }
-
-    @Test
     fun the_requests_are_separated_by_direction() = runTest {
         network.received = Outcome.Success(NetworkPage(listOf(networkRequest("1", networkUser("a", "ana"))), null))
         network.sent = Outcome.Success(NetworkPage(listOf(networkRequest("2", networkUser("b", "bea"), "Sent")), null))
@@ -195,6 +191,20 @@ class SocialRepositoriesTest {
 
         assertEquals(listOf("ana"), repository.receivedRequests.first().map { it.user.username })
         assertEquals(listOf("bea"), repository.sentRequests.first().map { it.user.username })
+    }
+
+    @Test
+    fun what_is_no_longer_on_the_server_disappears() = runTest {
+        network.received = Outcome.Success(NetworkPage(listOf(networkRequest("1"), networkRequest("2")), null))
+        repository.refreshRequests()
+
+        network.received = Outcome.Success(NetworkPage(listOf(networkRequest("2")), null))
+        repository.refreshRequests()
+
+        val request = repository.receivedRequests.first().single()
+        assertEquals("2", request.id)
+        assertEquals("asset", request.user.avatar?.assetId)
+        assertEquals("Madrid", request.user.city)
     }
 
     @Test
@@ -209,39 +219,71 @@ class SocialRepositoriesTest {
     }
 
     @Test
-    fun sending_a_request_keeps_it_in_the_sent_list() = runTest {
-        val answer = repository.sendRequest("bea-id")
+    fun following_a_public_profile_answers_at_once_and_leaves_no_request() = runTest {
+        val answer = repository.follow("bea-id")
 
-        val relationship = (answer as Outcome.Success).value
-        assertEquals(RelationshipStatus.RequestSent, relationship.status)
+        assertEquals(RelationshipStatus.Following, (answer as Outcome.Success).value.status)
+        assertEquals(emptyList<Any>(), repository.sentRequests.first())
+    }
+
+    @Test
+    fun following_a_private_profile_keeps_the_request_in_the_sent_list() = runTest {
+        network.relationshipAnswer = Outcome.Success(NetworkRelationship("Requested", requestId = "request-1"))
+        network.sent = Outcome.Success(NetworkPage(listOf(networkRequest(direction = "Sent")), null))
+
+        val relationship = (repository.follow("bea-id") as Outcome.Success).value
+
+        assertEquals(RelationshipStatus.Requested, relationship.status)
         assertEquals("request-1", relationship.requestId)
         assertEquals(listOf("request-1"), repository.sentRequests.first().map { it.id })
     }
 
     @Test
-    fun asking_someone_who_had_asked_makes_friends_and_leaves_no_request() = runTest {
-        network.received = Outcome.Success(NetworkPage(listOf(networkRequest()), null))
-        repository.refreshRequests()
-        network.sendAnswer = Outcome.Success(networkRequest(status = "Accepted"))
-        network.friendPages = mutableMapOf(null to NetworkPage(listOf(NetworkFriend(networkUser(), TIME)), null))
+    fun the_relationship_says_if_they_follow_you_and_their_request() = runTest {
+        network.relationshipAnswer = Outcome.Success(
+            NetworkRelationship("None", followsYou = true, incomingRequestId = "request-2"),
+        )
 
-        val answer = repository.sendRequest("bea-id")
+        val relationship = (repository.unfollow("bea-id") as Outcome.Success).value
 
-        assertEquals(RelationshipStatus.Friends, (answer as Outcome.Success).value.status)
-        assertEquals(emptyList<Any>(), repository.receivedRequests.first())
-        assertEquals(1, repository.friends.first().size)
+        assertTrue(relationship.followsYou)
+        assertEquals("request-2", relationship.incomingRequestId)
     }
 
     @Test
-    fun accepting_removes_the_request_and_brings_the_new_friend() = runTest {
+    fun unfollowing_removes_the_sent_request_but_not_theirs() = runTest {
+        network.received = Outcome.Success(NetworkPage(listOf(networkRequest("theirs")), null))
+        network.sent = Outcome.Success(NetworkPage(listOf(networkRequest("mine", direction = "Sent")), null))
+        repository.refreshRequests()
+        network.relationshipAnswer = Outcome.Success(NetworkRelationship("None"))
+
+        repository.unfollow("bea-id")
+
+        assertEquals(emptyList<Any>(), repository.sentRequests.first())
+        assertEquals(listOf("theirs"), repository.receivedRequests.first().map { it.id })
+        assertEquals(listOf("unfollow:bea-id"), network.calls)
+    }
+
+    @Test
+    fun a_follower_can_be_removed() = runTest {
+        network.relationshipAnswer = Outcome.Success(NetworkRelationship("Following"))
+
+        val relationship = (repository.removeFollower("bea-id") as Outcome.Success).value
+
+        assertEquals(listOf("removeFollower:bea-id"), network.calls)
+        assertEquals(false, relationship.followsYou)
+    }
+
+    @Test
+    fun accepting_removes_the_request_and_answers_with_the_relationship() = runTest {
         network.received = Outcome.Success(NetworkPage(listOf(networkRequest()), null))
         repository.refreshRequests()
-        network.friendPages = mutableMapOf(null to NetworkPage(listOf(NetworkFriend(networkUser(), TIME)), null))
+        network.relationshipAnswer = Outcome.Success(NetworkRelationship("None", followsYou = true))
 
-        assertEquals(Outcome.Success(Unit), repository.acceptRequest("request-1"))
+        val answer = repository.acceptRequest("request-1")
 
+        assertTrue((answer as Outcome.Success).value.followsYou)
         assertEquals(emptyList<Any>(), repository.receivedRequests.first())
-        assertEquals(listOf("bea"), repository.friends.first().map { it.user.username })
     }
 
     @Test
@@ -263,7 +305,7 @@ class SocialRepositoriesTest {
         network.received = Outcome.Success(NetworkPage(listOf(networkRequest()), null))
         repository.refreshRequests()
         val conflict = AppError.Api(status = 409, code = "social.request_not_pending")
-        network.answerResult = Outcome.Failure(conflict)
+        network.relationshipAnswer = Outcome.Failure(conflict)
         network.received = Outcome.Success(NetworkPage(emptyList(), null))
 
         assertEquals(Outcome.Failure(conflict), repository.acceptRequest("request-1"))
@@ -283,31 +325,16 @@ class SocialRepositoriesTest {
     }
 
     @Test
-    fun removing_a_friend_only_removes_it_if_the_server_agrees() = runTest {
-        network.friendPages = mutableMapOf(null to NetworkPage(listOf(NetworkFriend(networkUser(), TIME)), null))
-        repository.refreshFriends()
-        network.answerResult = Outcome.Failure(AppError.Network)
-
-        repository.removeFriend("bea-id")
-        assertEquals(1, repository.friends.first().size)
-
-        network.answerResult = Outcome.Success(Unit)
-        repository.removeFriend("bea-id")
-        assertEquals(0, repository.friends.first().size)
-    }
-
-    @Test
-    fun blocking_removes_that_person_from_friends_and_requests() = runTest {
-        network.friendPages = mutableMapOf(null to NetworkPage(listOf(NetworkFriend(networkUser(), TIME)), null))
+    fun blocking_removes_the_requests_of_that_person() = runTest {
         network.received = Outcome.Success(NetworkPage(listOf(networkRequest()), null))
-        repository.refreshFriends()
+        network.sent = Outcome.Success(NetworkPage(listOf(networkRequest("2", direction = "Sent")), null))
         repository.refreshRequests()
         network.blocked = listOf(NetworkBlock(networkUser(), TIME))
 
         assertEquals(Outcome.Success(Unit), repository.block("bea-id"))
 
-        assertEquals(emptyList<Any>(), repository.friends.first())
         assertEquals(emptyList<Any>(), repository.receivedRequests.first())
+        assertEquals(emptyList<Any>(), repository.sentRequests.first())
         assertEquals(listOf("bea"), repository.blockedUsers.first().map { it.user.username })
     }
 
@@ -319,6 +346,24 @@ class SocialRepositoriesTest {
         repository.unblock("bea-id")
 
         assertEquals(emptyList<Any>(), repository.blockedUsers.first())
+    }
+
+    @Test
+    fun the_numbers_and_the_totals_of_a_person_come_from_the_server() = runTest {
+        assertEquals(Outcome.Success(ProfileCounts(12, 8, 5)), peopleRepository.counts("bea-id"))
+        assertEquals(Outcome.Success(WalkTotals(4, 1000, 3000, 2500, 2)), peopleRepository.walkTotals("bea-id"))
+    }
+
+    @Test
+    fun a_private_profile_says_so() = runTest {
+        people.profileAnswer = NetworkProfile("bea-id", "bea", "bea", null, null, null, TIME, isPrivate = true)
+
+        assertTrue((peopleRepository.profile("bea-id") as Outcome.Success).value.isPrivate)
+    }
+
+    @Test
+    fun an_older_server_counts_as_public() = runTest {
+        assertEquals(false, (peopleRepository.profile("bea-id") as Outcome.Success).value.isPrivate)
     }
 
     @Test

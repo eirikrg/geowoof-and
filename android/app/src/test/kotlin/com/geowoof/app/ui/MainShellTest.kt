@@ -10,6 +10,7 @@ import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.NavHost
@@ -42,7 +43,7 @@ class MainShellTest {
     fun setUp() {
         composeRule.setContent {
             GeoWoofTheme(dynamicColor = false) {
-                MainShell { navController ->
+                MainShell(pendingRequests = 2) { navController ->
                     NavHost(navController = navController, startDestination = MapRoute) {
                         composable<MapRoute> { Text("map screen") }
                         composable<CommunityRoute> { Text("community screen") }
@@ -63,6 +64,12 @@ class MainShellTest {
         navigationItem("Community").assertIsDisplayed().assertIsNotSelected()
         navigationItem("Search").assertIsDisplayed().assertIsNotSelected()
         navigationItem("Profile").assertIsDisplayed().assertIsNotSelected()
+    }
+
+    @Test
+    fun the_profile_warns_of_the_people_waiting_for_an_answer() {
+        composeRule.onNodeWithText("2", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("2 follow requests", useUnmergedTree = true).assertExists()
     }
 
     @Test

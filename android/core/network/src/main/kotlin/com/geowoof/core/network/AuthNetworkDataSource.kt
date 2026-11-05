@@ -12,6 +12,7 @@ import com.geowoof.core.network.model.NetworkAuthProviders
 import com.geowoof.core.network.model.NetworkSession
 import com.geowoof.core.network.model.NetworkUser
 import com.geowoof.core.network.model.NetworkUsernameAvailability
+import com.geowoof.core.network.model.PrivacyBody
 import com.geowoof.core.network.model.RegisterBody
 import com.geowoof.core.network.model.ResetPasswordBody
 import com.geowoof.core.network.model.UpdateMeBody
@@ -53,7 +54,10 @@ interface AuthNetworkDataSource {
 
     suspend fun updateProfile(displayName: String?, language: String?): Outcome<NetworkUser>
 
-    suspend fun changeUsername(username: String): Outcome<NetworkUser>
+    /** [isPrivate] is chosen when creating the account: `null` leaves it as it is. */
+    suspend fun changeUsername(username: String, isPrivate: Boolean? = null): Outcome<NetworkUser>
+
+    suspend fun changePrivacy(isPrivate: Boolean): Outcome<NetworkUser>
 
     suspend fun usernameAvailability(username: String): Outcome<NetworkUsernameAvailability>
 }
@@ -96,7 +100,10 @@ internal class RetrofitAuthNetworkDataSource @Inject constructor(private val api
     override suspend fun updateProfile(displayName: String?, language: String?) =
         apiCall(json) { api.updateMe(UpdateMeBody(displayName, language)) }
 
-    override suspend fun changeUsername(username: String) = apiCall(json) { api.changeUsername(UsernameBody(username)) }
+    override suspend fun changeUsername(username: String, isPrivate: Boolean?) =
+        apiCall(json) { api.changeUsername(UsernameBody(username, isPrivate)) }
+
+    override suspend fun changePrivacy(isPrivate: Boolean) = apiCall(json) { api.changePrivacy(PrivacyBody(isPrivate)) }
 
     override suspend fun usernameAvailability(username: String) = apiCall(json) { api.usernameAvailability(username) }
 }

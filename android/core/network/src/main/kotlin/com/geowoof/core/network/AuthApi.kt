@@ -11,6 +11,7 @@ import com.geowoof.core.network.model.NetworkAuthProviders
 import com.geowoof.core.network.model.NetworkSession
 import com.geowoof.core.network.model.NetworkUser
 import com.geowoof.core.network.model.NetworkUsernameAvailability
+import com.geowoof.core.network.model.PrivacyBody
 import com.geowoof.core.network.model.RefreshBody
 import com.geowoof.core.network.model.RegisterBody
 import com.geowoof.core.network.model.ResetPasswordBody
@@ -65,6 +66,9 @@ internal interface AuthApi {
 
     @PUT("api/v1/me/username")
     suspend fun changeUsername(@Body body: UsernameBody): NetworkUser
+
+    @PUT("api/v1/me/privacy")
+    suspend fun changePrivacy(@Body body: PrivacyBody): NetworkUser
 
     @HTTP(method = "DELETE", path = "api/v1/me", hasBody = true)
     suspend fun deleteAccount(@Body body: DeleteAccountBody)

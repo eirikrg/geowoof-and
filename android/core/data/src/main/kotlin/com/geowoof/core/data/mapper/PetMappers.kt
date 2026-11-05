@@ -31,6 +31,7 @@ internal fun NetworkProfile.toEntity() = ProfileEntity(
     avatarThumbUrl = avatar?.thumbUrl,
     avatarMediumUrl = avatar?.mediumUrl,
     createdAtEpochMs = Instant.parse(createdAt).toEpochMilli(),
+    isPrivate = isPrivate,
 )
 
 internal fun ProfileEntity.toModel() = Profile(
@@ -41,6 +42,7 @@ internal fun ProfileEntity.toModel() = Profile(
     city = city,
     avatar = avatarAssetId?.let { RemoteImage(it, avatarThumbUrl, avatarMediumUrl) },
     createdAt = Instant.ofEpochMilli(createdAtEpochMs),
+    isPrivate = isPrivate,
 )
 
 internal fun ProfileDraft.toBody() = ProfileBody(displayName.trim(), bio.cleaned(), city.cleaned(), avatarAssetId)

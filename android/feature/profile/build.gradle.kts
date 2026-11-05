@@ -5,3 +5,7 @@ plugins {
 android {
     namespace = "com.geowoof.feature.profile"
 }
+
+dependencies {
+    implementation(libs.androidx.paging.compose)
+}
