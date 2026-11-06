@@ -68,7 +68,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 
 /**
@@ -332,8 +332,13 @@ private fun WalkMap(
     val scope = rememberCoroutineScope()
     val currentOnViewportChange by rememberUpdatedState(onViewportChange)
     LaunchedEffect(cameraPositionState) {
-        snapshotFlow { cameraPositionState.takeUnless { it.isMoving }?.projection?.visibleRegion?.latLngBounds }
-            .filterNotNull()
+        // The position too: a jump while the map is loading does not go through isMoving, and the map
+        // would stay subscribed to where it started.
+        snapshotFlow {
+            cameraPositionState.position to
+                cameraPositionState.takeUnless { it.isMoving }?.projection?.visibleRegion?.latLngBounds
+        }
+            .mapNotNull { (_, bounds) -> bounds }
             .distinctUntilChanged()
             .collect { bounds ->
                 currentOnViewportChange(
