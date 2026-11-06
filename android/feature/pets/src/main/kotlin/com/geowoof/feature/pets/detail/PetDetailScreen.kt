@@ -387,7 +387,7 @@ private fun LazyListScope.weightSection(weights: List<WeightEntry>, actions: Pet
         ListItem(
             headlineContent = {
                 Text(
-                    text = stringResource(R.string.feature_pets_weight_value, entry.weightKg),
+                    text = stringResource(R.string.feature_pets_weight_value, formatWeight(entry.weightKg)),
                     style = MaterialTheme.typography.titleSmall,
                 )
             },

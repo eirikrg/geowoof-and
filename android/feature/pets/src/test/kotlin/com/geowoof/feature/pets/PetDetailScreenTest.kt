@@ -2,6 +2,7 @@ package com.geowoof.feature.pets
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
@@ -82,18 +83,27 @@ class PetDetailScreenTest {
     }
 
     @Test
+    fun the_chart_says_the_last_weight_and_how_much_it_has_changed() {
+        show(PetDetailUiState(pet = TestPets.pet(), weights = listOf(weight("a", 1, 18.0), weight("b", 2, 18.5))))
+
+        composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("+0.5 kg since", substring = true))
+        composeRule.onNodeWithText("+0.5 kg since", substring = true).assertExists()
+    }
+
+    @Test
     fun two_measurements_draw_the_chart_and_each_one_can_be_edited() {
         show(PetDetailUiState(pet = TestPets.pet(), weights = listOf(weight("a", 1, 18.0), weight("b", 2, 18.5))))
 
         composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(
-            hasContentDescription("Weight chart: from 18.0 kg to 18.5 kg"),
+            hasContentDescription("Weight chart: from 18 kg to 18.5 kg"),
         )
         composeRule.onNodeWithContentDescription(
-            "Weight chart: from 18.0 kg to 18.5 kg",
+            "Weight chart: from 18 kg to 18.5 kg",
         ).assertExists()
 
-        scrollTo("18.5 kg")
-        composeRule.onNodeWithText("18.5 kg").performClick()
+        // The last weight is said twice: above the chart, and in its row of the list, which is the one that opens.
+        composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasClickAction() and hasText("18.5 kg"))
+        composeRule.onNode(hasClickAction() and hasText("18.5 kg")).performClick()
         assertEquals(listOf("editWeight:b"), actions)
     }
 
@@ -101,8 +111,8 @@ class PetDetailScreenTest {
     fun one_measurement_is_not_enough_for_a_chart() {
         show(PetDetailUiState(pet = TestPets.pet(), weights = listOf(weight("a", 1, 18.0))))
 
-        scrollTo("18.0 kg")
-        composeRule.onNodeWithText("18.0 kg").assertIsDisplayed()
+        scrollTo("18 kg")
+        composeRule.onNodeWithText("18 kg").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Weight chart", substring = true).assertDoesNotExist()
     }
 

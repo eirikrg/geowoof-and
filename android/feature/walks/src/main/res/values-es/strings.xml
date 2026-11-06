@@ -22,4 +22,5 @@
     <string name="feature_walks_loading_route">La ruta no está disponible sin conexión.</string>
     <string name="feature_walks_route">Ruta del paseo</string>
     <string name="feature_walks_route_hidden">La ruta está oculta: el paseo fue cerca de donde empezó y terminó.</string>
+    <string name="feature_walks_user_walk_error_title">No se ha podido cargar este paseo</string>
 </resources>

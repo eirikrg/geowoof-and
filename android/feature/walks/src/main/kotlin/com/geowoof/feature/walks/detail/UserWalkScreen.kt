@@ -18,7 +18,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -40,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.geowoof.core.common.AppConfig
 import com.geowoof.core.data.repository.PeopleRepository
+import com.geowoof.core.designsystem.component.ErrorState
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppError
@@ -169,14 +169,13 @@ internal fun UserWalkContent(
         when {
             walk != null -> UserWalkDetails(walk, uiState.petNames, map, contentModifier)
 
-            uiState.error != null -> Column(
-                modifier = contentModifier.padding(GeoWoofTheme.spacing.large),
-                verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.medium, Alignment.CenterVertically),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(uiState.error.userMessage())
-                OutlinedButton(onClick = onRetry) { Text(stringResource(R.string.feature_walks_retry)) }
-            }
+            uiState.error != null -> ErrorState(
+                title = stringResource(R.string.feature_walks_user_walk_error_title),
+                message = uiState.error.userMessage(),
+                retryLabel = stringResource(R.string.feature_walks_retry),
+                onRetry = onRetry,
+                modifier = contentModifier,
+            )
 
             else -> Box(contentModifier, contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         }

@@ -47,4 +47,6 @@
     <string name="feature_pets_see_walks">See walks</string>
     <string name="feature_pets_first_message">A name and a photo are enough to go for a walk. You can add the rest whenever you like.</string>
     <string name="feature_pets_more_details">Add more details</string>
+    <string name="feature_pets_weight_change">%1$s kg since %2$s</string>
+    <string name="feature_pets_weight_no_change">The same as on %1$s</string>
 </resources>

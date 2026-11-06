@@ -11,7 +11,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -32,6 +31,9 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.geowoof.core.data.repository.RemoteLoadException
 import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.ErrorState
+import com.geowoof.core.designsystem.component.SkeletonList
+import com.geowoof.core.designsystem.component.SkeletonRow
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.PeopleListKind
@@ -96,18 +98,15 @@ internal fun PeopleListContent(
         val refresh = people.loadState.refresh
         val isEmpty = people.itemCount == 0
         when {
-            isEmpty && refresh is LoadState.Loading -> Box(contentModifier, contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            isEmpty && refresh is LoadState.Loading -> SkeletonList(modifier = contentModifier) { SkeletonRow() }
 
-            isEmpty && refresh is LoadState.Error -> Column(
-                modifier = contentModifier.padding(GeoWoofTheme.spacing.large),
-                verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.medium, Alignment.CenterVertically),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                (refresh.error as? RemoteLoadException)?.error?.let { Text(it.userMessage()) }
-                OutlinedButton(onClick = people::retry) { Text(stringResource(R.string.feature_profile_retry)) }
-            }
+            isEmpty && refresh is LoadState.Error -> ErrorState(
+                title = stringResource(R.string.feature_profile_people_error_title),
+                message = (refresh.error as? RemoteLoadException)?.error?.userMessage().orEmpty(),
+                retryLabel = stringResource(R.string.feature_profile_retry),
+                onRetry = people::retry,
+                modifier = contentModifier,
+            )
 
             isEmpty -> EmptyState(
                 icon = GeoWoofIcons.Groups,

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -24,10 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ReportReason
 
 private const val MAX_REPORT_DETAILS = 500
+private val RowHeight = 48.dp
 
 @StringRes
 private fun ReportReason.labelRes(): Int = when (this) {
@@ -65,6 +68,7 @@ fun ReportDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = RowHeight)
                                 .selectable(
                                     selected = reason == selected,
                                     onClick = { onSelect(reason) },

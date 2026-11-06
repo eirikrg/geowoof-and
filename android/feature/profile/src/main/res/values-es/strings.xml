@@ -89,4 +89,6 @@
     <string name="feature_profile_reject_request">Rechazar la solicitud de %1$s</string>
     <string name="feature_profile_cancel_request">Cancelar</string>
     <string name="feature_profile_send_message">Mensaje</string>
+    <string name="feature_profile_error_title">No se ha podido cargar este perfil</string>
+    <string name="feature_profile_people_error_title">No se ha podido cargar la lista</string>
 </resources>

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -32,6 +31,7 @@ import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.ErrorState
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.PeopleListKind
@@ -176,14 +176,13 @@ internal fun ProfileContent(
                 modifier = contentModifier,
             )
 
-            profile == null && uiState.loadError != null -> Column(
-                modifier = contentModifier.padding(GeoWoofTheme.spacing.large),
-                verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.medium, Alignment.CenterVertically),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(uiState.loadError.userMessage())
-                OutlinedButton(onClick = actions.onRefresh) { Text(stringResource(R.string.feature_profile_retry)) }
-            }
+            profile == null && uiState.loadError != null -> ErrorState(
+                title = stringResource(R.string.feature_profile_error_title),
+                message = uiState.loadError.userMessage(),
+                retryLabel = stringResource(R.string.feature_profile_retry),
+                onRetry = actions.onRefresh,
+                modifier = contentModifier,
+            )
 
             profile == null -> Box(contentModifier, contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()

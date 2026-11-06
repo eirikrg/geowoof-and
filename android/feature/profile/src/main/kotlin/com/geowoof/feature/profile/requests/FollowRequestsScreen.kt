@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.PrimaryTabRow
@@ -254,7 +255,7 @@ private fun ReceivedActions(
                 contentDescription = stringResource(R.string.feature_profile_reject_request, request.user.displayName),
             )
         }
-        IconButton(onClick = { onAccept(request.id) }, enabled = isEnabled) {
+        FilledIconButton(onClick = { onAccept(request.id) }, enabled = isEnabled) {
             Icon(
                 painter = painterResource(GeoWoofIcons.Check),
                 contentDescription = stringResource(R.string.feature_profile_accept_request, request.user.displayName),

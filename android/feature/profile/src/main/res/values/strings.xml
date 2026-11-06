@@ -89,4 +89,6 @@
     <string name="feature_profile_reject_request">Reject the request from %1$s</string>
     <string name="feature_profile_cancel_request">Cancel</string>
     <string name="feature_profile_send_message">Message</string>
+    <string name="feature_profile_error_title">This profile could not be loaded</string>
+    <string name="feature_profile_people_error_title">The list could not be loaded</string>
 </resources>

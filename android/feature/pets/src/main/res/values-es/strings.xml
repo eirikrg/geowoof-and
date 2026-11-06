@@ -47,4 +47,6 @@
     <string name="feature_pets_see_walks">Ver paseos</string>
     <string name="feature_pets_first_message">Con un nombre y una foto ya podéis salir a pasear. El resto, cuando quieras.</string>
     <string name="feature_pets_more_details">Añadir más detalles</string>
+    <string name="feature_pets_weight_change">%1$s kg desde el %2$s</string>
+    <string name="feature_pets_weight_no_change">Igual que el %1$s</string>
 </resources>

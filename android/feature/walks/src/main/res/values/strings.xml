@@ -22,4 +22,5 @@
     <string name="feature_walks_loading_route">The route is not available without a connection.</string>
     <string name="feature_walks_route">Route of the walk</string>
     <string name="feature_walks_route_hidden">The route is hidden: the walk was close to where it started and ended.</string>
+    <string name="feature_walks_user_walk_error_title">This walk could not be loaded</string>
 </resources>

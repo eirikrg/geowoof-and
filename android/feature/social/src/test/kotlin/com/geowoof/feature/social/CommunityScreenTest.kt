@@ -125,6 +125,9 @@ class CommunityScreenTest {
 
         waitForText("Your community feed")
         composeRule.onNodeWithText("Your community feed").assertIsDisplayed()
+        composeRule.onNodeWithText("Find people").performClick()
+
+        assertEquals(listOf("people"), calls)
     }
 
     @Test

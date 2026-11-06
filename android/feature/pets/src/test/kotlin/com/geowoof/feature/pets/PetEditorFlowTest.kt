@@ -3,8 +3,11 @@ package com.geowoof.feature.pets
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -129,6 +132,34 @@ class PetEditorFlowTest {
         showForm()
 
         field("Only you can see this").assertIsDisplayed()
+    }
+
+    @Test
+    fun the_first_pet_asks_only_for_what_a_walk_needs_until_more_is_wanted() {
+        showForm(onboarding = true)
+
+        composeRule.onNodeWithText("Color").assertDoesNotExist()
+        tap("Add more details")
+
+        field("Color").assertIsDisplayed()
+        composeRule.onNodeWithText("Add more details").assertDoesNotExist()
+    }
+
+    @Test
+    fun any_other_pet_shows_the_whole_form() {
+        showForm()
+
+        field("Color").assertIsDisplayed()
+        composeRule.onNodeWithText("Add more details").assertDoesNotExist()
+    }
+
+    @Test
+    fun the_whole_row_is_the_switch() {
+        showForm()
+
+        field("Neutered").assertIsOff().performClick()
+
+        composeRule.onNode(hasText("Neutered") and isToggleable()).assertIsOn()
     }
 
     @Test
