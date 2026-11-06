@@ -23,6 +23,8 @@
     <string name="feature_map_review">Revisar y guardar</string>
     <string name="feature_map_not_now">Ahora no</string>
     <string name="feature_map_open_settings">Abrir ajustes</string>
+    <string name="feature_map_open_at_location_title">Ver el mapa a tu alrededor</string>
+    <string name="feature_map_open_at_location_message">GeoWoof usa tu ubicación para abrir el mapa donde estás y enseñarte quién pasea cerca. Nadie más la ve a menos que empieces un paseo.</string>
     <string name="feature_map_rationale_title">Tu ubicación durante los paseos</string>
     <string name="feature_map_rationale_message">GeoWoof usa tu ubicación precisa para dibujar la ruta y medir la distancia, solo mientras grabas un paseo. Una notificación te avisa de cuándo se está usando.</string>
     <string name="feature_map_rationale_continue">Continuar</string>

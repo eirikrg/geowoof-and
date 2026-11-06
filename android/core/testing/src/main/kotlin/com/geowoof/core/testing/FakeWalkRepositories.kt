@@ -18,6 +18,7 @@ import com.geowoof.core.model.RoutePoint
 import com.geowoof.core.model.RouteSegment
 import com.geowoof.core.model.Walk
 import com.geowoof.core.model.WalkTotals
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +33,10 @@ class FakeLocationDataSource : LocationDataSource {
 
     var hasPermission = true
     var lastKnownPosition: GeoPoint? = null
+
+    /** What comes after [lastKnownPosition], once [betterPositionGate] opens, if there is one. */
+    var betterPosition: GeoPoint? = null
+    var betterPositionGate: CompletableDeferred<Unit>? = null
     var subscriptions = 0
         private set
 
@@ -44,7 +49,11 @@ class FakeLocationDataSource : LocationDataSource {
         positions.collect { emit(it) }
     }
 
-    override suspend fun lastKnown(): GeoPoint? = lastKnownPosition
+    override fun whereThePersonIs(): Flow<GeoPoint> = flow {
+        lastKnownPosition?.let { emit(it) }
+        betterPositionGate?.await()
+        betterPosition?.let { emit(it) }
+    }
 
     suspend fun send(fix: LocationFix) = positions.emit(fix)
 }

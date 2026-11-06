@@ -20,6 +20,8 @@ import com.geowoof.core.model.WalkLimits
 import com.geowoof.core.model.WalkStats
 import com.geowoof.feature.map.tracking.WalkTrackingController
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +33,9 @@ import javax.inject.Inject
 
 /** What has to be explained before a walk can start. */
 enum class WalkPrompt {
+    /** The first time the map opens, to open it where the person is. It is only asked once. */
+    OpenAtLocation,
+
     /** The explanation before the system asks for the permission. */
     PermissionRationale,
 
@@ -58,6 +63,8 @@ data class MapUiState(
     val hideStartDistanceM: Int = UserSettings.DEFAULT_HIDE_START_M,
     val isChoosingVisibility: Boolean = false,
     val cameraTarget: CameraTarget? = null,
+    /** It does not know yet where to open: the map would show another city for a moment. */
+    val isLocating: Boolean = false,
     val error: AppError? = null,
 )
 
@@ -71,6 +78,7 @@ private data class MapChoices(
     /** The first walk waits for the person to say who can see them. */
     val startsAfterChoice: Boolean = false,
     val cameraTarget: CameraTarget? = null,
+    val isLocating: Boolean = true,
     val error: AppError? = null,
 )
 
@@ -88,6 +96,7 @@ class MapViewModel @Inject constructor(
 ) : ViewModel() {
     private val choices = MutableStateFlow(MapChoices())
     private var hasShownThePerson = false
+    private var findingThePerson: Job? = null
 
     /** What to do once the permission is granted. */
     private var pendingStart: PendingStart? = null
@@ -110,9 +119,10 @@ class MapViewModel @Inject constructor(
                 hideStartDistanceM = chosen.hideStartDistanceM,
                 isChoosingVisibility = current.isChoosingVisibility,
                 cameraTarget = current.cameraTarget,
+                isLocating = current.isLocating,
                 error = current.error,
             )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), MapUiState())
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), MapUiState(isLocating = true))
 
     /**
      * Each time the screen comes back. If the walk was recording and the service is not alive, the
@@ -183,18 +193,59 @@ class MapViewModel @Inject constructor(
 
     fun onCameraTargetReached() = choices.update { it.copy(cameraTarget = null) }
 
-    /** The map opens where the person is, in place of a default city, as soon as it can know. */
+    /**
+     * The map opens where the person is, in place of a default city. If it could not know, it tries again the next
+     * time the screen comes back.
+     */
     private fun showThePersonOnce() {
-        if (hasShownThePerson || locationAccess.permissionLevel() == LocationPermissionLevel.None) return
-        hasShownThePerson = true
+        if (hasShownThePerson || findingThePerson?.isActive == true) return
+        if (locationAccess.permissionLevel() == LocationPermissionLevel.None) {
+            askForLocationOnce()
+            return
+        }
         goToThePerson(isJump = true)
+        // Better the default city than an empty screen: the map still goes to the person when the position comes.
+        viewModelScope.launch {
+            delay(MAX_LOCATING_MILLIS)
+            choices.update { it.copy(isLocating = false) }
+        }
+    }
+
+    /** Whoever says no opens the map on the default city, and is not asked again each time. */
+    private fun askForLocationOnce() {
+        viewModelScope.launch {
+            val asks = !settings.wasAskedForLocation() && activeWalks.current() == null
+            choices.update { current ->
+                when {
+                    current.prompt == WalkPrompt.OpenAtLocation -> current
+                    asks && current.prompt == null -> current.copy(prompt = WalkPrompt.OpenAtLocation)
+                    else -> current.copy(isLocating = false)
+                }
+            }
+        }
+    }
+
+    /** Before the system asks: the answer comes in [onPermissionsResult]. */
+    fun onAskForLocationClick() {
+        choices.update { it.copy(prompt = null) }
+        viewModelScope.launch { settings.markAskedForLocation() }
     }
 
     private fun goToThePerson(isJump: Boolean) {
-        viewModelScope.launch {
-            val position = location.lastKnown() ?: return@launch
-            choices.update { it.copy(cameraTarget = CameraTarget(position, isJump)) }
+        findingThePerson?.cancel()
+        findingThePerson = viewModelScope.launch {
+            location.whereThePersonIs().collect { position ->
+                hasShownThePerson = true
+                choices.update { it.copy(isLocating = false, cameraTarget = CameraTarget(position, isJump)) }
+            }
+            choices.update { it.copy(isLocating = false) }
         }
+    }
+
+    /** A position that comes late must not take the map away from where the person has just put it. */
+    fun onMapMovedByHand() {
+        hasShownThePerson = true
+        findingThePerson?.cancel()
     }
 
     fun onResumeClick() = proceed(PendingStart.Resume)
@@ -220,23 +271,34 @@ class MapViewModel @Inject constructor(
 
     fun onDismissPrompt() {
         pendingStart = null
-        choices.update { it.copy(prompt = null) }
+        if (choices.value.prompt == WalkPrompt.OpenAtLocation) {
+            viewModelScope.launch { settings.markAskedForLocation() }
+            choices.update { it.copy(prompt = null, isLocating = false) }
+        } else {
+            choices.update { it.copy(prompt = null) }
+        }
     }
 
     /** The answer of the system. It is read from the system, because the user may also change it in Settings. */
     fun onPermissionsResult() {
         refreshPermission()
-        showThePersonOnce()
+        // When it was the map asking, to open where the person is, any answer is fine: no walk is waiting for it.
+        val isForAWalk = pendingStart != null
         when (locationAccess.permissionLevel()) {
             LocationPermissionLevel.Precise -> {
                 choices.update { it.copy(prompt = null) }
                 runPending()
             }
 
-            LocationPermissionLevel.Approximate -> choices.update { it.copy(prompt = WalkPrompt.ApproximateLocation) }
+            LocationPermissionLevel.Approximate -> if (isForAWalk) {
+                choices.update { it.copy(prompt = WalkPrompt.ApproximateLocation) }
+            }
 
-            LocationPermissionLevel.None -> choices.update { it.copy(prompt = WalkPrompt.PermissionDenied) }
+            LocationPermissionLevel.None -> if (isForAWalk) {
+                choices.update { it.copy(prompt = WalkPrompt.PermissionDenied) }
+            }
         }
+        showThePersonOnce()
     }
 
     private fun proceed(start: PendingStart) {
@@ -279,5 +341,6 @@ class MapViewModel @Inject constructor(
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
+        const val MAX_LOCATING_MILLIS = 3_000L
     }
 }

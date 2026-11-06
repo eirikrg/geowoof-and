@@ -8,6 +8,7 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,6 +65,7 @@ import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.RoundCap
+import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.ComposeMapColorScheme
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
@@ -132,6 +134,10 @@ fun MapScreen(
             onDismissVisibility = viewModel::onDismissVisibility,
             onDismissError = viewModel::onErrorShown,
             onMyLocation = viewModel::onMyLocationClick,
+            onAskForLocation = {
+                viewModel.onAskForLocationClick()
+                permissions.launch(locationPermissions())
+            },
         ),
         live = live,
         liveActions = LiveWalkersActions(
@@ -152,21 +158,25 @@ fun MapScreen(
     ) { mapModifier ->
         WalkMap(
             walk = uiState.walk,
+            isLocating = uiState.isLocating,
             hasLocationPermission = uiState.hasLocationPermission,
             walkers = live.walkers,
             onViewportChange = liveViewModel::onViewportChange,
             onWalkerClick = liveViewModel::onWalkerClick,
             cameraTarget = uiState.cameraTarget,
             onReachCameraTarget = viewModel::onCameraTargetReached,
+            onMoveByHand = viewModel::onMapMovedByHand,
             modifier = mapModifier,
         )
     }
 }
 
+private fun locationPermissions() =
+    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+
 /** Without the notifications, the walk is recorded anyway. */
 private fun walkPermissions(): Array<String> = buildList {
-    add(Manifest.permission.ACCESS_FINE_LOCATION)
-    add(Manifest.permission.ACCESS_COARSE_LOCATION)
+    addAll(locationPermissions())
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) add(Manifest.permission.POST_NOTIFICATIONS)
 }.toTypedArray()
 
@@ -315,12 +325,14 @@ private fun LiveStatus(live: LiveWalkersUiState, actions: LiveWalkersActions, mo
 @Composable
 private fun WalkMap(
     walk: ActiveWalk?,
+    isLocating: Boolean,
     hasLocationPermission: Boolean,
     walkers: List<LiveWalker>,
     onViewportChange: (MapViewport) -> Unit,
     onWalkerClick: (String) -> Unit,
     cameraTarget: CameraTarget?,
     onReachCameraTarget: () -> Unit,
+    onMoveByHand: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val cameraPositionState = rememberCameraPositionState {
@@ -348,6 +360,13 @@ private fun WalkMap(
                 )
             }
     }
+    val currentOnMoveByHand by rememberUpdatedState(onMoveByHand)
+    LaunchedEffect(cameraPositionState) {
+        snapshotFlow {
+            cameraPositionState.isMoving &&
+                cameraPositionState.cameraMoveStartedReason == CameraMoveStartedReason.GESTURE
+        }.collect { isByHand -> if (isByHand) currentOnMoveByHand() }
+    }
     val lastPoint = walk?.lastPoint
     LaunchedEffect(lastPoint) {
         lastPoint?.let {
@@ -358,13 +377,19 @@ private fun WalkMap(
     val currentOnReachCameraTarget by rememberUpdatedState(onReachCameraTarget)
     LaunchedEffect(cameraTarget) {
         cameraTarget?.let { target ->
-            val update = CameraUpdateFactory.newLatLngZoom(
-                LatLng(target.position.latitude, target.position.longitude),
-                PERSON_ZOOM,
-            )
-            if (target.isJump) cameraPositionState.move(update) else cameraPositionState.animate(update)
+            val position = LatLng(target.position.latitude, target.position.longitude)
+            // The position, and not a movement: it can come before there is a map, which then starts here.
+            if (target.isJump) {
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(position, PERSON_ZOOM)
+            } else {
+                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(position, PERSON_ZOOM))
+            }
             currentOnReachCameraTarget()
         }
+    }
+    if (isLocating) {
+        Box(modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainer))
+        return
     }
     val context = LocalContext.current
     val isDark = isThemeDark()
@@ -408,7 +433,7 @@ private fun WalkMap(
     }
 }
 
-/** Initial camera until the user's location is available (Madrid). */
+/** Where the map stays if it cannot know where the person is: without permission or without any position. */
 private val DefaultCenter = LatLng(40.4168, -3.7038)
 
 /** A tall phone at 12 would already need more cells than the live map takes (docs/realtime.md). */

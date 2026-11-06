@@ -23,6 +23,8 @@
     <string name="feature_map_review">Review and save</string>
     <string name="feature_map_not_now">Not now</string>
     <string name="feature_map_open_settings">Open settings</string>
+    <string name="feature_map_open_at_location_title">See the map around you</string>
+    <string name="feature_map_open_at_location_message">GeoWoof uses your location to open the map where you are and show who is walking nearby. Nobody else sees it unless you start a walk.</string>
     <string name="feature_map_rationale_title">Your location during walks</string>
     <string name="feature_map_rationale_message">GeoWoof uses your precise location to draw the route and measure the distance, only while you are recording a walk. A notification tells you when it is in use.</string>
     <string name="feature_map_rationale_continue">Continue</string>

@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 /** What this device has already been asked. Not encrypted, unlike the session: it says nothing about anyone. */
 @Serializable
-data class StoredPrompts(val askedForNotifications: Boolean = false)
+data class StoredPrompts(val askedForNotifications: Boolean = false, val askedForLocation: Boolean = false)
 
 interface PromptsStorage {
     val prompts: Flow<StoredPrompts>

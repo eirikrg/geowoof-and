@@ -5,6 +5,8 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geowoof.core.database.GeoWoofDatabase
+import com.geowoof.core.datastore.PromptsStorage
+import com.geowoof.core.datastore.StoredPrompts
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.GeoPoint
 import com.geowoof.core.model.LiveNearby
@@ -307,12 +309,22 @@ private class FakeSettingsNetwork : SettingsNetworkDataSource {
     }
 }
 
+private class InMemoryPrompts : PromptsStorage {
+    override val prompts = MutableStateFlow(StoredPrompts())
+
+    override suspend fun update(transform: (StoredPrompts) -> StoredPrompts) {
+        prompts.value = transform(prompts.value)
+    }
+}
+
 /** Against a real Room database: a walk reads them from there, without a connection. */
 @RunWith(AndroidJUnit4::class)
 class SettingsRepositoryTest {
     private lateinit var database: GeoWoofDatabase
     private val network = FakeSettingsNetwork()
-    private val repository by lazy { DefaultSettingsRepository(network, database.userSettingsDao()) }
+    private val repository by lazy {
+        DefaultSettingsRepository(network, database.userSettingsDao(), InMemoryPrompts())
+    }
 
     @Before
     fun setUp() {
@@ -327,6 +339,15 @@ class SettingsRepositoryTest {
 
     @After
     fun tearDown() = database.close()
+
+    @Test
+    fun the_device_remembers_that_it_already_asked_for_the_location() = runTest {
+        assertFalse(repository.wasAskedForLocation())
+
+        repository.markAskedForLocation()
+
+        assertTrue(repository.wasAskedForLocation())
+    }
 
     @Test
     fun without_having_asked_the_server_nothing_has_been_chosen() = runTest {

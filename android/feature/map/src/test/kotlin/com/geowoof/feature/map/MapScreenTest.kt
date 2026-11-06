@@ -59,6 +59,7 @@ class MapScreenTest {
                         onChooseVisibility = { actions += "choose:$it" },
                         onDismissVisibility = { actions += "dismissVisibility" },
                         onDismissError = { actions += "dismissError" },
+                        onAskForLocation = { actions += "askForLocation" },
                     ),
                     live = live,
                     liveActions = LiveWalkersActions(
@@ -79,6 +80,25 @@ class MapScreenTest {
     }
 
     private fun click(text: String) = composeRule.onNodeWithText(text).performClick()
+
+    @Test
+    fun the_first_time_it_says_why_it_wants_the_location_and_then_asks_the_system() {
+        show(MapUiState(prompt = WalkPrompt.OpenAtLocation))
+
+        composeRule.onNodeWithText("See the map around you").assertIsDisplayed()
+        click("Continue")
+
+        assertEquals(listOf("askForLocation"), actions)
+    }
+
+    @Test
+    fun the_location_can_be_left_for_later() {
+        show(MapUiState(prompt = WalkPrompt.OpenAtLocation))
+
+        click("Not now")
+
+        assertEquals(listOf("dismissPrompt"), actions)
+    }
 
     @Test
     fun without_a_walk_it_offers_to_start_one() {

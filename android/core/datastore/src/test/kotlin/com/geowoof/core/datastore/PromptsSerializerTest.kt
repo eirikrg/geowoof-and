@@ -24,6 +24,15 @@ class PromptsSerializerTest {
         assertEquals(prompts, PromptsSerializer.readFrom(ByteArrayInputStream(output.toByteArray())))
     }
 
+    @Test
+    fun a_device_that_only_answered_about_notifications_has_not_been_asked_for_its_location() = runTest {
+        val saved = """{"askedForNotifications":true}""".encodeToByteArray()
+
+        val prompts = PromptsSerializer.readFrom(ByteArrayInputStream(saved))
+
+        assertEquals(StoredPrompts(askedForNotifications = true, askedForLocation = false), prompts)
+    }
+
     @Test(expected = CorruptionException::class)
     fun a_broken_file_is_reported_as_corrupt() = runTest {
         PromptsSerializer.readFrom(ByteArrayInputStream("{not json".encodeToByteArray()))

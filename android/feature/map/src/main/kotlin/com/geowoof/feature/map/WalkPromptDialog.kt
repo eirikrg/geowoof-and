@@ -9,6 +9,10 @@ import com.geowoof.core.designsystem.component.IllustratedDialog
 @Composable
 internal fun WalkPromptDialog(prompt: WalkPrompt, actions: MapActions, modifier: Modifier = Modifier) {
     val (title, message) = when (prompt) {
+        WalkPrompt.OpenAtLocation ->
+            R.string.feature_map_open_at_location_title to
+                R.string.feature_map_open_at_location_message
+
         WalkPrompt.PermissionRationale -> R.string.feature_map_rationale_title to R.string.feature_map_rationale_message
 
         WalkPrompt.ApproximateLocation ->
@@ -20,6 +24,7 @@ internal fun WalkPromptDialog(prompt: WalkPrompt, actions: MapActions, modifier:
         WalkPrompt.LocationDisabled -> R.string.feature_map_disabled_title to R.string.feature_map_disabled_message
     }
     val (confirmLabel, onConfirm) = when (prompt) {
+        WalkPrompt.OpenAtLocation -> R.string.feature_map_rationale_continue to actions.onAskForLocation
         WalkPrompt.PermissionRationale -> R.string.feature_map_rationale_continue to actions.onRequestPermissions
         WalkPrompt.LocationDisabled -> R.string.feature_map_open_settings to actions.onOpenLocationSettings
         else -> R.string.feature_map_open_settings to actions.onOpenAppSettings

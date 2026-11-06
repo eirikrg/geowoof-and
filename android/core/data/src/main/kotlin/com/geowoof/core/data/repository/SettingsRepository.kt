@@ -2,6 +2,7 @@ package com.geowoof.core.data.repository
 
 import com.geowoof.core.database.UserSettingsDao
 import com.geowoof.core.database.UserSettingsEntity
+import com.geowoof.core.datastore.PromptsStorage
 import com.geowoof.core.model.LiveVisibility
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.UserSettings
@@ -26,11 +27,17 @@ interface SettingsRepository {
     suspend fun setLiveVisibility(visibility: LiveVisibility): Outcome<UserSettings>
 
     suspend fun setHideStartDistance(meters: Int): Outcome<UserSettings>
+
+    /** This device already asked whether the map can open where the person is. It stays after signing out. */
+    suspend fun wasAskedForLocation(): Boolean
+
+    suspend fun markAskedForLocation()
 }
 
 internal class DefaultSettingsRepository @Inject constructor(
     private val network: SettingsNetworkDataSource,
     private val dao: UserSettingsDao,
+    private val prompts: PromptsStorage,
 ) : SettingsRepository {
     override val settings: Flow<UserSettings> =
         dao.observe().map { it?.toModel() ?: UserSettings() }.distinctUntilChanged()
@@ -44,6 +51,10 @@ internal class DefaultSettingsRepository @Inject constructor(
 
     override suspend fun setHideStartDistance(meters: Int): Outcome<UserSettings> =
         network.updateSettings(SettingsBody(hideStartDistanceM = meters)).map { store(it) }
+
+    override suspend fun wasAskedForLocation(): Boolean = prompts.prompts.first().askedForLocation
+
+    override suspend fun markAskedForLocation() = prompts.update { it.copy(askedForLocation = true) }
 
     private suspend fun store(settings: NetworkSettings): UserSettings {
         val entity = UserSettingsEntity(

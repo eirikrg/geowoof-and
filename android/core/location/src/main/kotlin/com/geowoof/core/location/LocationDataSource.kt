@@ -7,22 +7,30 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.os.Looper
+import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.location.LocationManagerCompat
 import com.geowoof.core.model.GeoPoint
 import com.geowoof.core.model.LocationFix
+import com.google.android.gms.location.CurrentLocationRequest
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.Task
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
@@ -48,8 +56,12 @@ interface LocationDataSource {
     /** Positions while it is collected. It fails with [LocationPermissionException] without permission. */
     fun fixes(): Flow<LocationFix>
 
-    /** Roughly where the person is, to show the map there. `null` if it is not known or there is no permission. */
-    suspend fun lastKnown(): GeoPoint?
+    /**
+     * Where the person is, to show the map there. A recent position is the only answer. An old one can be from another
+     * city, so a new one is asked for: if that takes too long the old one comes first, and then the new one. Nothing
+     * comes without permission or without any position. It ends by itself, and stopping it stops the search.
+     */
+    fun whereThePersonIs(): Flow<GeoPoint>
 }
 
 internal class AndroidLocationAccess @Inject constructor(@ApplicationContext private val context: Context) :
@@ -92,21 +104,45 @@ internal class FusedLocationDataSource @Inject constructor(
         awaitClose { client.removeLocationUpdates(callback) }
     }
 
+    // A revocation surfaces as a SecurityException, and then there is simply nothing to say.
     @SuppressLint("MissingPermission")
-    override suspend fun lastKnown(): GeoPoint? {
-        if (access.permissionLevel() == LocationPermissionLevel.None) return null
+    override fun whereThePersonIs(): Flow<GeoPoint> = flow {
+        if (access.permissionLevel() == LocationPermissionLevel.None) return@flow
         val client = LocationServices.getFusedLocationProviderClient(context)
-        return try {
-            val location = client.lastLocation.awaitOrNull()
-                ?: client.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null).awaitOrNull()
-            location?.let { GeoPoint(it.latitude, it.longitude) }
-        } catch (@Suppress("SwallowedException") exception: SecurityException) {
-            null
+        val last = client.lastLocation.awaitOrNull()
+        if (last?.isRecent() == true) {
+            emit(last.toGeoPoint())
+        } else {
+            emitCurrent(client, last)
+        }
+    }.catch { cause -> if (cause !is SecurityException) throw cause }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun FlowCollector<GeoPoint>.emitCurrent(client: FusedLocationProviderClient, old: Location?) {
+        val cancellation = CancellationTokenSource()
+        try {
+            val current = client.getCurrentLocation(CURRENT_REQUEST, cancellation.token)
+            val inTime = withTimeoutOrNull(OLD_POSITION_WAIT_MS) { current.awaitOrNull() }
+            if (inTime != null) {
+                emit(inTime.toGeoPoint())
+            } else {
+                old?.let { emit(it.toGeoPoint()) }
+                current.awaitOrNull()?.let { emit(it.toGeoPoint()) }
+            }
+        } finally {
+            // Without it, the search would go on using the battery after the answer is no longer needed.
+            cancellation.cancel()
         }
     }
 
+    private fun Location.toGeoPoint() = GeoPoint(latitude, longitude)
+
+    private fun Location.isRecent() =
+        (SystemClock.elapsedRealtimeNanos() - elapsedRealtimeNanos) / NANOS_PER_MILLI <= RECENT_MS
+
+    /** `task.result` throws if the task failed or was cancelled, and here that only means not knowing. */
     private suspend fun <T> Task<T>.awaitOrNull(): T? = suspendCancellableCoroutine { continuation ->
-        addOnCompleteListener { task -> continuation.resume(task.result.takeIf { task.isSuccessful }) }
+        addOnCompleteListener { task -> continuation.resume(if (task.isSuccessful) task.result else null) }
     }
 
     private fun Location.toFix() = LocationFix(
@@ -118,6 +154,16 @@ internal class FusedLocationDataSource @Inject constructor(
     private companion object {
         const val INTERVAL_MS = 4_000L
         const val MIN_INTERVAL_MS = 2_000L
+        const val RECENT_MS = 120_000L
+        const val OLD_POSITION_WAIT_MS = 2_500L
+        const val SEARCH_MS = 30_000L
+        const val NANOS_PER_MILLI = 1_000_000L
+
+        val CURRENT_REQUEST: CurrentLocationRequest = CurrentLocationRequest.Builder()
+            .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+            .setDurationMillis(SEARCH_MS)
+            .setMaxUpdateAgeMillis(RECENT_MS)
+            .build()
 
         val REQUEST: LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, INTERVAL_MS)
             .setMinUpdateIntervalMillis(MIN_INTERVAL_MS)

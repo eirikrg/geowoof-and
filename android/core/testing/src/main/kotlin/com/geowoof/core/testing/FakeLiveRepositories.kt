@@ -42,6 +42,14 @@ class FakeSettingsRepository(initial: UserSettings = UserSettings()) : SettingsR
     var refreshes = 0
         private set
 
+    var askedForLocation = false
+
+    override suspend fun wasAskedForLocation() = askedForLocation
+
+    override suspend fun markAskedForLocation() {
+        askedForLocation = true
+    }
+
     override suspend fun current(): UserSettings = settings.value
 
     override suspend fun refresh(): Outcome<Unit> {

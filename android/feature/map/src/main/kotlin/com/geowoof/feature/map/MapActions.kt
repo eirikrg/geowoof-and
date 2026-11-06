@@ -23,4 +23,5 @@ internal class MapActions(
     val onDismissVisibility: () -> Unit,
     val onDismissError: () -> Unit,
     val onMyLocation: () -> Unit = {},
+    val onAskForLocation: () -> Unit = {},
 )

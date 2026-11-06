@@ -16,8 +16,10 @@ import com.geowoof.core.testing.MainDispatcherRule
 import com.geowoof.core.testing.TestPets
 import com.geowoof.core.testing.TestWalks
 import com.geowoof.feature.map.tracking.WalkTrackingController
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -70,6 +72,156 @@ class MapViewModelTest {
         viewModel.onMyLocationClick()
 
         assertEquals(null, state.cameraTarget)
+    }
+
+    @Test
+    fun it_tries_again_if_it_did_not_know_where_the_person_was() = runTest {
+        subscribe()
+
+        viewModel.onScreenResumed()
+        assertEquals(null, state.cameraTarget)
+
+        location.lastKnownPosition = GeoPoint(39.54, -0.57)
+        viewModel.onScreenResumed()
+        assertEquals(CameraTarget(GeoPoint(39.54, -0.57), isJump = true), state.cameraTarget)
+    }
+
+    @Test
+    fun an_old_position_is_corrected_when_the_real_one_comes() = runTest {
+        subscribe()
+        location.lastKnownPosition = GeoPoint(37.0, -122.0)
+        location.betterPosition = GeoPoint(39.54, -0.57)
+        val gate = CompletableDeferred<Unit>()
+        location.betterPositionGate = gate
+
+        viewModel.onScreenResumed()
+        assertEquals(CameraTarget(GeoPoint(37.0, -122.0), isJump = true), state.cameraTarget)
+        viewModel.onCameraTargetReached()
+
+        gate.complete(Unit)
+
+        assertEquals(CameraTarget(GeoPoint(39.54, -0.57), isJump = true), state.cameraTarget)
+    }
+
+    @Test
+    fun after_moving_the_map_by_hand_a_late_position_does_not_take_it_away() = runTest {
+        subscribe()
+        location.lastKnownPosition = GeoPoint(37.0, -122.0)
+        location.betterPosition = GeoPoint(39.54, -0.57)
+        val gate = CompletableDeferred<Unit>()
+        location.betterPositionGate = gate
+        viewModel.onScreenResumed()
+        viewModel.onCameraTargetReached()
+
+        viewModel.onMapMovedByHand()
+        gate.complete(Unit)
+
+        assertNull(state.cameraTarget)
+    }
+
+    @Test
+    fun if_the_position_takes_too_long_the_map_opens_anyway_and_goes_there_later() = runTest {
+        subscribe()
+        location.betterPosition = GeoPoint(39.54, -0.57)
+        val gate = CompletableDeferred<Unit>()
+        location.betterPositionGate = gate
+
+        viewModel.onScreenResumed()
+        assertTrue(state.isLocating)
+
+        advanceTimeBy(3_001)
+        assertFalse(state.isLocating)
+
+        gate.complete(Unit)
+        assertEquals(CameraTarget(GeoPoint(39.54, -0.57), isJump = true), state.cameraTarget)
+    }
+
+    @Test
+    fun the_map_waits_until_it_knows_where_to_open() = runTest {
+        subscribe()
+        assertTrue(state.isLocating)
+
+        location.lastKnownPosition = GeoPoint(39.54, -0.57)
+        viewModel.onScreenResumed()
+
+        assertFalse(state.isLocating)
+    }
+
+    @Test
+    fun not_knowing_where_the_person_is_does_not_hold_the_map_back() = runTest {
+        subscribe()
+
+        viewModel.onScreenResumed()
+
+        assertFalse(state.isLocating)
+    }
+
+    @Test
+    fun without_permission_the_first_time_it_says_why_it_wants_the_location() = runTest {
+        access.level = LocationPermissionLevel.None
+        subscribe()
+
+        viewModel.onScreenResumed()
+
+        assertEquals(WalkPrompt.OpenAtLocation, state.prompt)
+        assertTrue(state.isLocating)
+    }
+
+    @Test
+    fun saying_not_now_opens_the_map_and_it_does_not_ask_again() = runTest {
+        access.level = LocationPermissionLevel.None
+        subscribe()
+        viewModel.onScreenResumed()
+
+        viewModel.onDismissPrompt()
+
+        assertNull(state.prompt)
+        assertFalse(state.isLocating)
+        assertTrue(settings.askedForLocation)
+        viewModel.onScreenResumed()
+        assertNull(state.prompt)
+    }
+
+    @Test
+    fun allowing_it_takes_the_map_to_the_person() = runTest {
+        access.level = LocationPermissionLevel.None
+        location.lastKnownPosition = GeoPoint(39.54, -0.57)
+        subscribe()
+        viewModel.onScreenResumed()
+
+        viewModel.onAskForLocationClick()
+        access.level = LocationPermissionLevel.Precise
+        viewModel.onPermissionsResult()
+
+        assertTrue(settings.askedForLocation)
+        assertNull(state.prompt)
+        assertFalse(state.isLocating)
+        assertEquals(CameraTarget(GeoPoint(39.54, -0.57), isJump = true), state.cameraTarget)
+    }
+
+    @Test
+    fun refusing_the_system_when_no_walk_is_waiting_only_opens_the_map() = runTest {
+        access.level = LocationPermissionLevel.None
+        subscribe()
+        viewModel.onScreenResumed()
+
+        viewModel.onAskForLocationClick()
+        viewModel.onPermissionsResult()
+
+        assertNull(state.prompt)
+        assertFalse(state.isLocating)
+    }
+
+    @Test
+    fun with_a_walk_on_its_way_the_map_does_not_ask_about_opening() = runTest {
+        access.level = LocationPermissionLevel.None
+        walks.set(TestWalks.activeWalk())
+        subscribe()
+
+        viewModel.onScreenResumed()
+
+        assertNull(state.prompt)
+        assertFalse(state.isLocating)
     }
 
     private fun kotlinx.coroutines.test.TestScope.subscribe() {
