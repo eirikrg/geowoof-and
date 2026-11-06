@@ -41,6 +41,24 @@ class InboxActionsTest {
         composeRule.onNodeWithContentDescription("1 new notification").assertIsDisplayed()
     }
 
+    @Test
+    fun over_the_map_there_are_only_the_messages() {
+        val inbox = Inbox(
+            unreadMessages = 2,
+            unreadNotifications = 1,
+            onOpenMessages = {},
+            onOpenNotifications = {},
+        )
+        composeRule.setContent {
+            GeoWoofTheme(dynamicColor = false) {
+                CompositionLocalProvider(LocalInbox provides inbox) { FloatingMessagesAction() }
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("2 unread messages").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("1 new notification").assertDoesNotExist()
+    }
+
     /**
      * The circle of the button cuts whatever goes out of it, and a count that grows with the font does.
      * It needs the native graphics: with the default ones, the height of a text does not depend on its size.

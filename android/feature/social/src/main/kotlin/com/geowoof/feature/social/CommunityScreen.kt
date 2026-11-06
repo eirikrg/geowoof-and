@@ -47,7 +47,6 @@ import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ReportReason
 import com.geowoof.core.model.TimelineItem
-import com.geowoof.core.ui.InboxActions
 import com.geowoof.core.ui.userMessage
 import com.geowoof.feature.social.post.PostCard
 import com.geowoof.feature.social.post.PostCardActions
@@ -122,7 +121,6 @@ internal fun CommunityContent(
                     )
                 },
                 title = { Text(stringResource(R.string.feature_social_community_title)) },
-                actions = { InboxActions() },
             )
         },
         floatingActionButton = {

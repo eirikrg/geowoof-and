@@ -53,7 +53,6 @@ import com.geowoof.core.model.PetSearchResult
 import com.geowoof.core.model.PetSpecies
 import com.geowoof.core.model.Post
 import com.geowoof.core.model.UserSummary
-import com.geowoof.core.ui.InboxActions
 import com.geowoof.core.ui.PostGridItem
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.UserRow
@@ -109,9 +108,7 @@ internal fun SearchContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(title = {
-                Text(stringResource(R.string.feature_search_search_title))
-            }, actions = { InboxActions() })
+            TopAppBar(title = { Text(stringResource(R.string.feature_search_search_title)) })
         },
     ) { innerPadding ->
         Column(

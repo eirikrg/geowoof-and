@@ -56,7 +56,7 @@ import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ActiveWalk
 import com.geowoof.core.model.LiveWalker
 import com.geowoof.core.model.MapViewport
-import com.geowoof.core.ui.FloatingInboxActions
+import com.geowoof.core.ui.FloatingMessagesAction
 import com.geowoof.core.ui.isThemeDark
 import com.geowoof.core.ui.mapStyleResource
 import com.geowoof.core.ui.userMessage
@@ -275,7 +275,7 @@ private fun TopControls(
         verticalArrangement = Arrangement.spacedBy(spacing.small),
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            FloatingInboxActions()
+            FloatingMessagesAction()
             if (uiState.hasLocationPermission) {
                 Surface(
                     shape = CircleShape,

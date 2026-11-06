@@ -5,8 +5,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -29,7 +29,6 @@ import androidx.core.content.ContextCompat
 import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.IllustratedDialog
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
-import com.geowoof.core.designsystem.theme.GeoWoofTheme
 
 /**
  * What is waiting for this person, and how to reach it. Messages and notifications are other
@@ -48,7 +47,7 @@ data class Inbox(
 /** Without one, as in the tests of a screen, nothing is shown. */
 val LocalInbox = compositionLocalOf<Inbox?> { null }
 
-/** The actions of a top app bar. */
+/** The actions of the top app bar of your own profile. */
 @Composable
 fun InboxActions(modifier: Modifier = Modifier) {
     val inbox = LocalInbox.current ?: return
@@ -58,20 +57,17 @@ fun InboxActions(modifier: Modifier = Modifier) {
     }
 }
 
-/** The same over the map, which has no top app bar: together, on a surface that stands out from it. */
+/** Over the map, which has no top app bar: only the messages, on a surface that stands out from it. */
 @Composable
-fun FloatingInboxActions(modifier: Modifier = Modifier) {
+fun FloatingMessagesAction(modifier: Modifier = Modifier) {
     val inbox = LocalInbox.current ?: return
     Surface(
         modifier = modifier,
-        shape = MaterialTheme.shapes.extraLarge,
+        shape = CircleShape,
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = FloatingElevation,
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.extraSmall)) {
-            IconButton(onClick = inbox.onOpenNotifications) { NotificationsIcon(inbox.unreadNotifications) }
-            IconButton(onClick = inbox.onOpenMessages) { MessagesIcon(inbox.unreadMessages) }
-        }
+        IconButton(onClick = inbox.onOpenMessages) { MessagesIcon(inbox.unreadMessages) }
     }
 }
 
