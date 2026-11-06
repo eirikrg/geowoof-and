@@ -1,5 +1,8 @@
 package com.geowoof.app.ui
 
+import android.content.Intent
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -10,12 +13,15 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.core.util.Consumer
 import androidx.navigation.NavHostController
 import com.geowoof.app.AppUiState
 import com.geowoof.app.R
@@ -25,6 +31,10 @@ import com.geowoof.app.navigation.OnboardingNavHost
 import com.geowoof.app.navigation.TopLevelDestination
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.model.User
+import com.geowoof.core.ui.Inbox
+import com.geowoof.core.ui.LocalInbox
+import com.geowoof.feature.chat.navigation.navigateToConversations
+import com.geowoof.feature.notifications.navigation.navigateToNotifications
 
 /** Root of the UI: the session decides between the signed-out flow, the onboarding and the main shell. */
 @Composable
@@ -39,7 +49,13 @@ fun GeoWoofApp(uiState: AppUiState, onFinishFirstPetStep: () -> Unit, modifier: 
                 onFinishFirstPetStep = onFinishFirstPetStep,
             )
         },
-        main = { MainShell(pendingRequests = uiState.pendingRequests) },
+        main = {
+            MainShell(
+                pendingRequests = uiState.pendingRequests,
+                unreadMessages = uiState.unreadMessages,
+                unreadNotifications = uiState.unreadNotifications,
+            )
+        },
         modifier = modifier,
     )
 }
@@ -78,11 +94,20 @@ internal fun SessionGate(
 @Composable
 fun MainShell(
     pendingRequests: Int,
+    unreadMessages: Int,
+    unreadNotifications: Int,
     modifier: Modifier = Modifier,
     appState: GeoWoofAppState = rememberGeoWoofAppState(),
     navHost: @Composable (NavHostController) -> Unit = { GeoWoofNavHost(navController = it) },
 ) {
     val currentDestination = appState.currentDestination
+    HandleNotificationLinks(appState.navController)
+    val inbox = Inbox(
+        unreadMessages = unreadMessages,
+        unreadNotifications = unreadNotifications,
+        onOpenMessages = { appState.navController.navigateToConversations() },
+        onOpenNotifications = { appState.navController.navigateToNotifications() },
+    )
     val showNavigation = currentDestination == null ||
         TopLevelDestination.entries.any { currentDestination.isInHierarchyOf(it) }
     NavigationSuiteScaffold(
@@ -120,7 +145,26 @@ fun MainShell(
             }
         },
     ) {
-        navHost(appState.navController)
+        CompositionLocalProvider(LocalInbox provides inbox) {
+            navHost(appState.navController)
+        }
+    }
+}
+
+/**
+ * A notification tapped while the app is already open arrives here, and opens on top of what was
+ * there. The NavController only reads by itself the link that started the activity, and
+ * handleDeepLink would restart the activity because of the NEW_TASK of every notification.
+ */
+@Composable
+private fun HandleNotificationLinks(navController: NavHostController) {
+    val activity = LocalActivity.current as? ComponentActivity ?: return
+    DisposableEffect(activity, navController) {
+        val listener = Consumer<Intent> { intent ->
+            intent.data?.takeIf(navController.graph::hasDeepLink)?.let(navController::navigate)
+        }
+        activity.addOnNewIntentListener(listener)
+        onDispose { activity.removeOnNewIntentListener(listener) }
     }
 }
 

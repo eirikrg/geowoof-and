@@ -5,6 +5,7 @@ import com.geowoof.core.model.AppError
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.model.SignInMethod
+import com.geowoof.core.testing.FakePushTokenProvider
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -18,13 +19,16 @@ import java.util.Locale
 class AuthRepositoryTest {
     private val network = FakeAuthNetworkDataSource()
     private val storage = InMemorySessionStorage()
+    private val devices = FakeDevicesNetwork()
+    private val tokens = FakePushTokenProvider()
     private val originalLocale = Locale.getDefault()
 
     @After
     fun restoreLocale() = Locale.setDefault(originalLocale)
 
     private fun TestScope.repository(): DefaultAuthRepository {
-        val repository = DefaultAuthRepository(network, SessionManager(storage, NoUserData, backgroundScope))
+        val repository =
+            DefaultAuthRepository(network, SessionManager(storage, NoUserData, backgroundScope), devices, tokens)
         runCurrent()
         return repository
     }
@@ -111,6 +115,30 @@ class AuthRepositoryTest {
         assertEquals("signOut:refresh-1", network.calls.last())
         assertEquals(SessionState.SignedOut, repository.sessionState.value)
         assertNull(storage.session.value)
+    }
+
+    @Test
+    fun signing_out_takes_the_device_away_while_there_is_a_session_to_ask_with() = runTest {
+        val repository = repository()
+        repository.signIn("ana@geowoof.dev", "GeoWoof2026")
+        runCurrent()
+        tokens.token = "fid-1"
+
+        repository.signOut()
+
+        assertEquals(listOf("delete:fid-1"), devices.calls)
+        assertEquals("signOut:refresh-1", network.calls.last())
+    }
+
+    @Test
+    fun without_firebase_signing_out_has_no_device_to_take_away() = runTest {
+        val repository = repository()
+        repository.signIn("ana@geowoof.dev", "GeoWoof2026")
+        runCurrent()
+
+        repository.signOut()
+
+        assertEquals(emptyList<String>(), devices.calls)
     }
 
     @Test

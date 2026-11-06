@@ -88,4 +88,5 @@
     <string name="feature_profile_accept_request">Aceptar la solicitud de %1$s</string>
     <string name="feature_profile_reject_request">Rechazar la solicitud de %1$s</string>
     <string name="feature_profile_cancel_request">Cancelar</string>
+    <string name="feature_profile_send_message">Mensaje</string>
 </resources>

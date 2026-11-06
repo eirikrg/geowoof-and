@@ -45,6 +45,10 @@ class MainActivity : ComponentActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) { viewModel.onAppVisible() }
         }
 
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) { viewModel.listenToChat() }
+        }
+
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             GeoWoofTheme {

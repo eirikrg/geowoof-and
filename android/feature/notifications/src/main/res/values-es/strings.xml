@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_notifications_title">Notificaciones</string>
+    <string name="feature_notifications_back">Volver</string>
+    <string name="feature_notifications_retry">Reintentar</string>
+    <string name="feature_notifications_empty">Aún no hay nada. Cuando alguien te siga o haga algo con tus publicaciones, lo verás aquí.</string>
+    <string name="feature_notifications_unread">Nueva</string>
+    <string name="feature_notifications_user_followed">%1$s ha empezado a seguirte</string>
+    <string name="feature_notifications_follow_requested">%1$s quiere seguirte</string>
+    <string name="feature_notifications_follow_request_accepted">%1$s ha aceptado tu solicitud</string>
+    <string name="feature_notifications_friendship_started">%1$s y tú ya sois amigos</string>
+    <string name="feature_notifications_post_liked">A %1$s le ha gustado tu publicación</string>
+    <string name="feature_notifications_comment_added">%1$s ha comentado tu publicación</string>
+    <string name="feature_notifications_post_reposted">%1$s ha reposteado tu publicación</string>
+    <string name="feature_notifications_user_mentioned">%1$s te ha mencionado</string>
+</resources>

@@ -17,6 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
+import com.geowoof.core.ui.InboxActions
 import com.geowoof.feature.map.navigation.MapRoute
 import com.geowoof.feature.profile.navigation.ProfileRoute
 import com.geowoof.feature.search.navigation.SearchRoute
@@ -43,10 +44,13 @@ class MainShellTest {
     fun setUp() {
         composeRule.setContent {
             GeoWoofTheme(dynamicColor = false) {
-                MainShell(pendingRequests = 2) { navController ->
+                MainShell(pendingRequests = 2, unreadMessages = 3, unreadNotifications = 0) { navController ->
                     NavHost(navController = navController, startDestination = MapRoute) {
                         composable<MapRoute> { Text("map screen") }
-                        composable<CommunityRoute> { Text("community screen") }
+                        composable<CommunityRoute> {
+                            Text("community screen")
+                            InboxActions()
+                        }
                         composable<SearchRoute> { Text("search screen") }
                         composable<ProfileRoute> {
                             Button(onClick = { navController.navigate(NestedRoute) }) { Text("open nested") }
@@ -64,6 +68,14 @@ class MainShellTest {
         navigationItem("Community").assertIsDisplayed().assertIsNotSelected()
         navigationItem("Search").assertIsDisplayed().assertIsNotSelected()
         navigationItem("Profile").assertIsDisplayed().assertIsNotSelected()
+    }
+
+    @Test
+    fun what_is_unread_reaches_the_screens() {
+        navigationItem("Community").performClick()
+
+        composeRule.onNodeWithContentDescription("3 unread messages", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Notifications", useUnmergedTree = true).assertIsDisplayed()
     }
 
     @Test

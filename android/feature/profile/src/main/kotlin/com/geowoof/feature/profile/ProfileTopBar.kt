@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.model.RelationshipStatus
+import com.geowoof.core.ui.InboxActions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +43,7 @@ internal fun ProfileTopBar(uiState: ProfileUiState, actions: ProfileActions, mod
         },
         actions = {
             actions.onOpenSettings?.let { onOpenSettings ->
+                InboxActions()
                 IconButton(onClick = onOpenSettings) {
                     Icon(
                         painter = painterResource(GeoWoofIcons.Settings),

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_chat_conversations_title">Mensajes</string>
+    <string name="feature_chat_back">Volver</string>
+    <string name="feature_chat_new_conversation">Nueva conversación</string>
+    <string name="feature_chat_no_conversations">Aún no tienes conversaciones. Puedes escribir a tus amigos, las personas a las que sigues y que también te siguen.</string>
+    <string name="feature_chat_no_friends">Aún no tienes amigos. Dos personas que se siguen son amigas, y pueden escribirse.</string>
+    <string name="feature_chat_username">\@%1$s</string>
+    <string name="feature_chat_photo">Foto</string>
+    <string name="feature_chat_you_said">Tú: %1$s</string>
+    <string name="feature_chat_conversation_gone">Esta conversación ya no está disponible.</string>
+    <string name="feature_chat_no_messages">¡Saluda!</string>
+    <string name="feature_chat_failed">No enviado. Toca para reintentar.</string>
+    <string name="feature_chat_status_pending">Esperando a enviarse</string>
+    <string name="feature_chat_status_failed">No enviado</string>
+    <string name="feature_chat_status_sent">Enviado</string>
+    <string name="feature_chat_status_read">Leído</string>
+    <string name="feature_chat_typing">%1$s está escribiendo…</string>
+    <string name="feature_chat_cannot_send">Ya no puedes escribir aquí. Solo los amigos pueden escribirse.</string>
+    <string name="feature_chat_send_photo">Enviar una foto</string>
+    <string name="feature_chat_message_hint">Escribe un mensaje</string>
+    <string name="feature_chat_send">Enviar</string>
+</resources>

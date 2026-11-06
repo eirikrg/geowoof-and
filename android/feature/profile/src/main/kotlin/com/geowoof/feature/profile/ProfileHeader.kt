@@ -177,8 +177,14 @@ internal fun RelationshipButton(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = spacing.large, vertical = spacing.small),
-        horizontalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.spacedBy(spacing.small, Alignment.CenterHorizontally),
     ) {
+        if (relationship.status == RelationshipStatus.Friends) {
+            Button(onClick = actions.onSendMessage) {
+                ButtonIcon(GeoWoofIcons.ChatBubble)
+                Text(stringResource(R.string.feature_profile_send_message))
+            }
+        }
         when (relationship.status) {
             RelationshipStatus.Self -> FilledTonalButton(onClick = actions.onEditProfile) {
                 Text(stringResource(R.string.feature_profile_edit))

@@ -3,6 +3,8 @@ package com.geowoof.core.ui
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -15,11 +17,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.allowHardware
+import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.model.RemoteImage
 
 /**
@@ -76,3 +81,54 @@ fun RemoteAvatar(
         }
     }
 }
+
+/**
+ * A photo with its proportions, from the device while it has not been sent and from the server afterwards.
+ * The server has no links while it processes a photo: without this, there would be nothing to see, at no size.
+ */
+@Composable
+fun RemotePhoto(image: RemoteImage?, localPath: String?, contentDescription: String?, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val url = image?.mediumUrl ?: image?.thumbUrl
+    val cacheKey = image?.let { "${it.assetId}:${ImageVariant.Medium.name}" }
+    if (url == null && localPath == null) {
+        PhotoNotReady(contentDescription, modifier)
+    } else {
+        val model = remember(context, localPath, url, cacheKey) {
+            when {
+                url != null -> ImageRequest.Builder(
+                    context,
+                ).data(url).memoryCacheKey(cacheKey).diskCacheKey(cacheKey).build()
+
+                else -> localPath
+            }
+        }
+        AsyncImage(
+            model = model,
+            contentDescription = contentDescription,
+            contentScale = ContentScale.FillWidth,
+            modifier = modifier.clip(MaterialTheme.shapes.medium),
+        )
+    }
+}
+
+@Composable
+private fun PhotoNotReady(description: String?, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(PHOTO_NOT_READY_RATIO)
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .semantics { description?.let { contentDescription = it } },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(GeoWoofIcons.Image),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+private const val PHOTO_NOT_READY_RATIO = 4f / 3f

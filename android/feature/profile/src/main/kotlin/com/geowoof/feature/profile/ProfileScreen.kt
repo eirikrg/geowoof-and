@@ -100,6 +100,7 @@ internal fun UserProfileScreen(
     onOpenPeople: (userId: String, kind: PeopleListKind) -> Unit,
     onOpenPost: (postId: String) -> Unit,
     onVerifyEmail: () -> Unit,
+    onSendMessage: (userId: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: UserProfileViewModel = hiltViewModel(),
 ) {
@@ -127,6 +128,7 @@ internal fun UserProfileScreen(
             onOpenPost = onOpenPost,
             onFollow = viewModel::onFollow,
             onUnfollow = viewModel::onUnfollow,
+            onSendMessage = { uiState.profile?.let { onSendMessage(it.id) } },
             onAcceptRequest = viewModel::onAcceptRequest,
             onRejectRequest = viewModel::onRejectRequest,
             onShowDialog = viewModel::onShowDialog,

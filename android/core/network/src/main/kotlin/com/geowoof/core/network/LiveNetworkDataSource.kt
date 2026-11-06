@@ -1,6 +1,5 @@
 package com.geowoof.core.network
 
-import com.geowoof.core.model.AppError
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.network.model.NetworkLiveEvent
 import com.geowoof.core.network.model.NetworkLiveWalker
@@ -9,21 +8,18 @@ import com.geowoof.core.network.model.NetworkStartSharing
 import com.geowoof.core.network.model.NetworkViewport
 import com.geowoof.core.network.model.NetworkWalkerLeft
 import com.geowoof.core.network.model.SettingsBody
-import com.geowoof.core.network.realtime.HubCallException
 import com.geowoof.core.network.realtime.HubMessage
 import com.geowoof.core.network.realtime.RealtimeConnection
 import com.geowoof.core.network.realtime.RealtimeState
-import kotlinx.coroutines.TimeoutCancellationException
+import com.geowoof.core.network.realtime.hubCall
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
-import java.io.IOException
 import java.time.Instant
 import javax.inject.Inject
 
@@ -116,23 +112,8 @@ internal class SignalRLiveNetworkDataSource(private val connection: RealtimeConn
         null
     }
 
-    private suspend fun <T> hubCall(call: suspend () -> T): Outcome<T> = try {
-        Outcome.Success(withTimeout(CALL_TIMEOUT_MS) { call() })
-    } catch (exception: HubCallException) {
-        Outcome.Failure(AppError.Api(status = NO_HTTP_STATUS, code = exception.code))
-    } catch (@Suppress("SwallowedException") exception: IOException) {
-        Outcome.Failure(AppError.Network)
-    } catch (@Suppress("SwallowedException") exception: TimeoutCancellationException) {
-        Outcome.Failure(AppError.Network)
-    } catch (exception: SerializationException) {
-        Outcome.Failure(AppError.Unexpected(exception.message))
-    }
-
     companion object {
         const val WALKER_UPDATED = "WalkerUpdated"
         const val WALKER_LEFT = "WalkerLeft"
-
-        private const val NO_HTTP_STATUS = 0
-        private const val CALL_TIMEOUT_MS = 10_000L
     }
 }

@@ -10,7 +10,7 @@ ij_kotlin_imports_layout = *,java.**,javax.**,kotlin.**,^
 # Composable functions are PascalCase by convention.
 ktlint_function_naming_ignore_when_annotated_with = Composable
 # Design-system CompositionLocals allowed by the Compose rules.
-compose_allowed_composition_locals = LocalSpacing
+compose_allowed_composition_locals = LocalSpacing,LocalInbox
 
 [*.xml]
 indent_size = 4

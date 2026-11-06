@@ -5,8 +5,11 @@ import com.geowoof.core.datastore.SessionStorage
 import com.geowoof.core.datastore.StoredSession
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.network.AuthNetworkDataSource
+import com.geowoof.core.network.NotificationsNetworkDataSource
 import com.geowoof.core.network.model.NetworkAccessToken
 import com.geowoof.core.network.model.NetworkAuthProviders
+import com.geowoof.core.network.model.NetworkNotification
+import com.geowoof.core.network.model.NetworkPage
 import com.geowoof.core.network.model.NetworkSession
 import com.geowoof.core.network.model.NetworkUser
 import com.geowoof.core.network.model.NetworkUsernameAvailability
@@ -44,6 +47,30 @@ internal class InMemorySessionStorage(initial: StoredSession? = null) : SessionS
 
     override suspend fun write(session: StoredSession?) {
         this.session.value = session
+    }
+}
+
+/** What the server is told about the notifications and the devices. */
+internal class FakeDevicesNetwork : NotificationsNetworkDataSource {
+    var unreadAnswer: Outcome<Int> = Outcome.Success(0)
+    var readAllAnswer: Outcome<Unit> = Outcome.Success(Unit)
+    var page: Outcome<NetworkPage<NetworkNotification>> = Outcome.Success(NetworkPage(emptyList(), null))
+    val calls = mutableListOf<String>()
+
+    override suspend fun notifications(limit: Int, cursor: String?) = page
+
+    override suspend fun unreadCount() = unreadAnswer
+
+    override suspend fun readAll() = readAllAnswer
+
+    override suspend fun registerDevice(token: String): Outcome<Unit> {
+        calls += "register:$token"
+        return Outcome.Success(Unit)
+    }
+
+    override suspend fun unregisterDevice(token: String): Outcome<Unit> {
+        calls += "delete:$token"
+        return Outcome.Success(Unit)
     }
 }
 

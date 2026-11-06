@@ -180,8 +180,11 @@ class ReplaceFriendsWithFollows : AutoMigrationSpec
         FeedItemEntity::class,
         FeedPageKeyEntity::class,
         UserSettingsEntity::class,
+        ConversationEntity::class,
+        ChatMessageEntity::class,
+        InboxCountersEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -189,12 +192,15 @@ class ReplaceFriendsWithFollows : AutoMigrationSpec
         AutoMigration(from = 3, to = 4, spec = ReplaceFriendsWithFollows::class),
         AutoMigration(from = 4, to = 5),
         AutoMigration(from = 5, to = 6),
+        AutoMigration(from = 6, to = 7),
     ],
 )
 abstract class GeoWoofDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
 
     abstract fun userSettingsDao(): UserSettingsDao
+
+    abstract fun chatDao(): ChatDao
 
     abstract fun socialDao(): SocialDao
 

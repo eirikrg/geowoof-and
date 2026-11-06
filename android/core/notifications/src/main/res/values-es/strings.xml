@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_notifications_channel_messages">Mensajes</string>
+    <string name="core_notifications_channel_social">Actividad</string>
+    <string name="core_notifications_you">Tú</string>
+    <string name="core_notifications_photo">Foto</string>
+    <string name="core_notifications_user_followed">%1$s ha empezado a seguirte</string>
+    <string name="core_notifications_follow_requested">%1$s quiere seguirte</string>
+    <string name="core_notifications_follow_request_accepted">%1$s ha aceptado tu solicitud</string>
+    <string name="core_notifications_friendship_started">%1$s y tú ya sois amigos</string>
+    <string name="core_notifications_post_liked">A %1$s le ha gustado tu publicación</string>
+    <string name="core_notifications_comment_added">%1$s ha comentado tu publicación</string>
+    <string name="core_notifications_post_reposted">%1$s ha reposteado tu publicación</string>
+    <string name="core_notifications_user_mentioned">%1$s te ha mencionado</string>
+</resources>

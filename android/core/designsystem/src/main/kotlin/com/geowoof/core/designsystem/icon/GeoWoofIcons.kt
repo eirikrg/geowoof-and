@@ -105,4 +105,12 @@ object GeoWoofIcons {
     @DrawableRes val Send: Int = R.drawable.core_designsystem_ic_send
 
     @DrawableRes val GroupAdd: Int = R.drawable.core_designsystem_ic_group_add
+
+    @DrawableRes val Notifications: Int = R.drawable.core_designsystem_ic_notifications
+
+    @DrawableRes val DoneAll: Int = R.drawable.core_designsystem_ic_done_all
+
+    @DrawableRes val Schedule: Int = R.drawable.core_designsystem_ic_schedule
+
+    @DrawableRes val Image: Int = R.drawable.core_designsystem_ic_image
 }

@@ -4,9 +4,14 @@ import com.geowoof.core.common.AppConfig
 import com.geowoof.core.common.ApplicationScope
 import com.geowoof.core.network.AuthApi
 import com.geowoof.core.network.AuthNetworkDataSource
+import com.geowoof.core.network.ChatApi
+import com.geowoof.core.network.ChatNetworkDataSource
+import com.geowoof.core.network.ChatRealtimeDataSource
 import com.geowoof.core.network.LiveNetworkDataSource
 import com.geowoof.core.network.MediaApi
 import com.geowoof.core.network.MediaNetworkDataSource
+import com.geowoof.core.network.NotificationsApi
+import com.geowoof.core.network.NotificationsNetworkDataSource
 import com.geowoof.core.network.PeopleApi
 import com.geowoof.core.network.PeopleNetworkDataSource
 import com.geowoof.core.network.PetsApi
@@ -17,7 +22,9 @@ import com.geowoof.core.network.ProfileApi
 import com.geowoof.core.network.ProfileNetworkDataSource
 import com.geowoof.core.network.RefreshApi
 import com.geowoof.core.network.RetrofitAuthNetworkDataSource
+import com.geowoof.core.network.RetrofitChatNetworkDataSource
 import com.geowoof.core.network.RetrofitMediaNetworkDataSource
+import com.geowoof.core.network.RetrofitNotificationsNetworkDataSource
 import com.geowoof.core.network.RetrofitPeopleNetworkDataSource
 import com.geowoof.core.network.RetrofitPetsNetworkDataSource
 import com.geowoof.core.network.RetrofitPostsNetworkDataSource
@@ -27,6 +34,7 @@ import com.geowoof.core.network.RetrofitSocialNetworkDataSource
 import com.geowoof.core.network.RetrofitWalksNetworkDataSource
 import com.geowoof.core.network.SettingsApi
 import com.geowoof.core.network.SettingsNetworkDataSource
+import com.geowoof.core.network.SignalRChatRealtimeDataSource
 import com.geowoof.core.network.SignalRLiveNetworkDataSource
 import com.geowoof.core.network.SocialApi
 import com.geowoof.core.network.SocialNetworkDataSource
@@ -61,6 +69,7 @@ private annotation class Authenticated
 
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("TooManyFunctions")
 internal object NetworkModule {
     @Provides
     @Singleton
@@ -134,6 +143,36 @@ internal object NetworkModule {
 
     @Provides
     @Singleton
+    fun providesChatApi(@Authenticated retrofit: Retrofit): ChatApi = retrofit.create()
+
+    @Provides
+    @Singleton
+    fun providesNotificationsApi(@Authenticated retrofit: Retrofit): NotificationsApi = retrofit.create()
+
+    @Provides
+    @Singleton
+    fun providesChatRealtimeDataSource(
+        config: AppConfig,
+        json: Json,
+        tokens: SessionTokenProvider,
+        authenticator: TokenAuthenticator,
+        @ApplicationScope scope: CoroutineScope,
+    ): ChatRealtimeDataSource {
+        val url = config.apiBaseUrl.trimEnd('/') + CHAT_HUB_PATH
+        val connection = RealtimeConnection(
+            newClient = { SignalRHubClient(url, tokens, authenticator) },
+            events = listOf(
+                SignalRChatRealtimeDataSource.MESSAGE_RECEIVED,
+                SignalRChatRealtimeDataSource.CONVERSATION_READ,
+                SignalRChatRealtimeDataSource.TYPING_CHANGED,
+            ),
+            scope = scope,
+        )
+        return SignalRChatRealtimeDataSource(connection, json)
+    }
+
+    @Provides
+    @Singleton
     fun providesLiveNetworkDataSource(
         config: AppConfig,
         json: Json,
@@ -181,6 +220,7 @@ internal object NetworkModule {
         .build()
 
     private const val LIVE_HUB_PATH = "/hubs/live"
+    private const val CHAT_HUB_PATH = "/hubs/chat"
     private const val CONNECT_TIMEOUT_SECONDS = 15L
     private const val READ_TIMEOUT_SECONDS = 30L
     private const val UPLOAD_TIMEOUT_SECONDS = 120L
@@ -212,6 +252,14 @@ internal interface NetworkBindings {
 
     @Binds
     fun bindsSettingsNetworkDataSource(dataSource: RetrofitSettingsNetworkDataSource): SettingsNetworkDataSource
+
+    @Binds
+    fun bindsChatNetworkDataSource(dataSource: RetrofitChatNetworkDataSource): ChatNetworkDataSource
+
+    @Binds
+    fun bindsNotificationsNetworkDataSource(
+        dataSource: RetrofitNotificationsNetworkDataSource,
+    ): NotificationsNetworkDataSource
 
     @Binds
     fun bindsPostsNetworkDataSource(dataSource: RetrofitPostsNetworkDataSource): PostsNetworkDataSource

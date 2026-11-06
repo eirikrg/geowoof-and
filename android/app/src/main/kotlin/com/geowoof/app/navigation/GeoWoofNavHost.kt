@@ -19,13 +19,18 @@ import com.geowoof.feature.auth.navigation.chooseUsernameScreen
 import com.geowoof.feature.auth.navigation.navigateToChooseUsername
 import com.geowoof.feature.auth.navigation.navigateToVerifyEmail
 import com.geowoof.feature.auth.navigation.verifyEmailScreen
+import com.geowoof.feature.chat.navigation.chatScreens
+import com.geowoof.feature.chat.navigation.navigateToChatWith
 import com.geowoof.feature.map.navigation.MapRoute
 import com.geowoof.feature.map.navigation.mapScreens
+import com.geowoof.feature.notifications.NotificationsActions
+import com.geowoof.feature.notifications.navigation.notificationsScreen
 import com.geowoof.feature.pets.navigation.firstPetScreen
 import com.geowoof.feature.pets.navigation.navigateToFirstPet
 import com.geowoof.feature.pets.navigation.navigateToPet
 import com.geowoof.feature.pets.navigation.navigateToPetEditor
 import com.geowoof.feature.pets.navigation.petScreens
+import com.geowoof.feature.profile.navigation.navigateToFollowRequests
 import com.geowoof.feature.profile.navigation.navigateToUserProfile
 import com.geowoof.feature.profile.navigation.profileScreens
 import com.geowoof.feature.search.navigation.searchScreen
@@ -69,6 +74,16 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
             onVerifyEmail = { navController.navigateToVerifyEmail() },
             onOpenPost = { postId -> navController.navigateToPost(postId) },
             onCreatePost = { navController.navigateToCreatePost() },
+            onSendMessage = { userId -> navController.navigateToChatWith(userId) },
+        )
+        chatScreens(navController, onOpenUser = { userId -> navController.navigateToUserProfile(userId) })
+        notificationsScreen(
+            NotificationsActions(
+                onBack = { navController.popBackStack() },
+                onOpenPost = { postId -> navController.navigateToPost(postId) },
+                onOpenUser = { userId -> navController.navigateToUserProfile(userId) },
+                onOpenRequests = { navController.navigateToFollowRequests() },
+            ),
         )
         petScreens(navController, onOpenWalks = { petId -> navController.navigateToWalks(petId) })
         walkScreens(navController)

@@ -23,6 +23,8 @@ internal class ProfileActions(
     val onCreatePost: (() -> Unit)? = null,
     val onFollow: () -> Unit = {},
     val onUnfollow: () -> Unit = {},
+    /** Only friends can write to each other. */
+    val onSendMessage: () -> Unit = {},
     val onAcceptRequest: () -> Unit = {},
     val onRejectRequest: () -> Unit = {},
     val onShowDialog: (ProfileDialog) -> Unit = {},

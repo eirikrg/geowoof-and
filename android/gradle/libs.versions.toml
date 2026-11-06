@@ -41,6 +41,7 @@ mapsCompose = "9.0.1"
 okhttp = "5.5.1"
 signalr = "10.0.14"
 gson = "2.8.9"
+firebaseBom = "35.1.0"
 playServicesLocation = "21.4.0"
 retrofit = "3.0.0"
 tink = "1.24.0"
@@ -100,6 +101,9 @@ maps-compose-utils = { group = "com.google.maps.android", name = "maps-compose-u
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 signalr = { group = "com.microsoft.signalr", name = "signalr", version.ref = "signalr" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-installations = { group = "com.google.firebase", name = "firebase-installations" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 okhttp-loggingInterceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 okhttp-mockWebServer = { group = "com.squareup.okhttp3", name = "mockwebserver3", version.ref = "okhttp" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }

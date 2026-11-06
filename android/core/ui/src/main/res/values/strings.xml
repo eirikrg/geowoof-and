@@ -110,4 +110,17 @@
     <string name="core_ui_live_friends_description">Only the people you follow who also follow you.</string>
     <string name="core_ui_live_nobody">Nobody</string>
     <string name="core_ui_live_nobody_description">Your position is not shared. Your walk is saved all the same.</string>
+    <string name="core_ui_notifications">Notifications</string>
+    <string name="core_ui_messages">Messages</string>
+    <string name="core_ui_many_unread">%1$d+</string>
+    <plurals name="core_ui_unread_notifications">
+        <item quantity="one">%1$d new notification</item>
+        <item quantity="other">%1$d new notifications</item>
+    </plurals>
+    <plurals name="core_ui_unread_messages">
+        <item quantity="one">%1$d unread message</item>
+        <item quantity="other">%1$d unread messages</item>
+    </plurals>
+    <string name="core_ui_error_chat_not_friends">Only friends can write to each other.</string>
+    <string name="core_ui_error_chat_gone">This conversation is no longer available.</string>
 </resources>

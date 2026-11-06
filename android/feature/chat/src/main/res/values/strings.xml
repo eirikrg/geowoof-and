@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_chat_conversations_title">Messages</string>
+    <string name="feature_chat_back">Back</string>
+    <string name="feature_chat_new_conversation">New conversation</string>
+    <string name="feature_chat_no_conversations">No conversations yet. You can write to your friends, the people you follow who also follow you.</string>
+    <string name="feature_chat_no_friends">You have no friends yet. Two people who follow each other are friends, and they can write to each other.</string>
+    <string name="feature_chat_username">\@%1$s</string>
+    <string name="feature_chat_photo">Photo</string>
+    <string name="feature_chat_you_said">You: %1$s</string>
+    <string name="feature_chat_conversation_gone">This conversation is no longer available.</string>
+    <string name="feature_chat_no_messages">Say hello!</string>
+    <string name="feature_chat_failed">Not sent. Tap to try again.</string>
+    <string name="feature_chat_status_pending">Waiting to be sent</string>
+    <string name="feature_chat_status_failed">Not sent</string>
+    <string name="feature_chat_status_sent">Sent</string>
+    <string name="feature_chat_status_read">Read</string>
+    <string name="feature_chat_typing">%1$s is writing…</string>
+    <string name="feature_chat_cannot_send">You can no longer write here. Only friends can write to each other.</string>
+    <string name="feature_chat_send_photo">Send a photo</string>
+    <string name="feature_chat_message_hint">Write a message</string>
+    <string name="feature_chat_send">Send</string>
+</resources>

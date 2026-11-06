@@ -45,6 +45,7 @@ import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ActiveWalk
 import com.geowoof.core.model.LiveWalker
 import com.geowoof.core.model.MapViewport
+import com.geowoof.core.ui.FloatingInboxActions
 import com.geowoof.core.ui.userMessage
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -176,6 +177,11 @@ internal fun MapContent(
                 .safeDrawingPadding(),
         ) {
             LiveStatus(live = live, actions = liveActions, modifier = Modifier.align(Alignment.TopCenter))
+            FloatingInboxActions(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = GeoWoofTheme.spacing.small, top = InboxTopPadding),
+            )
             Column(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -329,3 +335,6 @@ private const val WALK_ZOOM = 17f
 private const val ROUTE_WIDTH = 14f
 private const val CLUSTER_ZOOM_STEP = 2f
 private val StatusElevation = 3.dp
+
+/** Below what the status says, so that they never touch. */
+private val InboxTopPadding = 56.dp

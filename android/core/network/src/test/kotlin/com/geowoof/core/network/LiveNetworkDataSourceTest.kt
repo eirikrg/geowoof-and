@@ -165,7 +165,7 @@ class LiveNetworkDataSourceTest {
     }
 }
 
-private class RecordingHubClient : HubClient {
+internal class RecordingHubClient : HubClient {
     private val handlers = mutableMapOf<String, (String) -> Unit>()
 
     val calls = mutableListOf<Pair<String, Any?>>()

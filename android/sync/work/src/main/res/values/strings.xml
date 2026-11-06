@@ -2,4 +2,6 @@
 <resources>
     <string name="sync_work_channel">Walk uploads</string>
     <string name="sync_work_uploading">Uploading your walk</string>
+    <string name="sync_work_messages_channel">Sending messages</string>
+    <string name="sync_work_sending_messages">Sending your messages…</string>
 </resources>

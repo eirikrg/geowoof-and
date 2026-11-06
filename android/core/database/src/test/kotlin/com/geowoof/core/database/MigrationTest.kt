@@ -137,4 +137,26 @@ class MigrationTest {
             }
         }
     }
+
+    @Test
+    fun the_chat_starts_empty_and_nothing_else_changes() {
+        helper.createDatabase(6).use { connection ->
+            connection.execSQL(
+                "INSERT INTO user_settings (id, liveVisibility, hideStartDistanceM) VALUES (0, 'Everyone', 500)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(7).use { connection ->
+            connection.prepare("SELECT liveVisibility FROM user_settings").use { statement ->
+                statement.step()
+                assertEquals("Everyone", statement.getText(0))
+            }
+            listOf("conversations", "chat_messages", "inbox_counters").forEach { table ->
+                connection.prepare("SELECT COUNT(*) FROM $table").use { statement ->
+                    statement.step()
+                    assertEquals(0L, statement.getLong(0))
+                }
+            }
+        }
+    }
 }

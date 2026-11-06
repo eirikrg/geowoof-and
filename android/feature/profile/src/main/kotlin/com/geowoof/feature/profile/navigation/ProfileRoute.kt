@@ -4,6 +4,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import androidx.navigation.navOptions
 import com.geowoof.core.model.PeopleListKind
 import com.geowoof.feature.profile.EditProfileScreen
@@ -38,6 +39,8 @@ fun NavController.navigateToProfile(navOptions: NavOptions? = null) = navigate(P
 fun NavController.navigateToUserProfile(userId: String, navOptions: NavOptions? = null) =
     navigate(UserProfileRoute(userId), navOptions ?: navOptions { launchSingleTop = true })
 
+fun NavController.navigateToFollowRequests() = navigate(FollowRequestsRoute, navOptions { launchSingleTop = true })
+
 /** Settings, pets, walks and email verification are other features: the app provides how to reach them. */
 @Suppress("LongParameterList")
 fun NavGraphBuilder.profileScreens(
@@ -50,6 +53,7 @@ fun NavGraphBuilder.profileScreens(
     onVerifyEmail: () -> Unit,
     onOpenPost: (postId: String) -> Unit,
     onCreatePost: () -> Unit,
+    onSendMessage: (userId: String) -> Unit,
 ) {
     val openPeople = { userId: String, kind: PeopleListKind ->
         navController.navigate(PeopleListRoute(userId, kind.name)) { launchSingleTop = true }
@@ -71,7 +75,7 @@ fun NavGraphBuilder.profileScreens(
     composable<EditProfileRoute> {
         EditProfileScreen(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
     }
-    composable<UserProfileRoute> {
+    composable<UserProfileRoute>(deepLinks = listOf(navDeepLink<UserProfileRoute>(basePath = "geowoof://user"))) {
         UserProfileScreen(
             onBack = { navController.popBackStack() },
             onEditProfile = editProfile,
@@ -79,6 +83,7 @@ fun NavGraphBuilder.profileScreens(
             onOpenPeople = openPeople,
             onOpenPost = onOpenPost,
             onVerifyEmail = onVerifyEmail,
+            onSendMessage = onSendMessage,
         )
     }
     composable<PeopleListRoute> {
@@ -87,7 +92,9 @@ fun NavGraphBuilder.profileScreens(
             onOpenUser = { navController.navigateToUserProfile(it) },
         )
     }
-    composable<FollowRequestsRoute> {
+    composable<FollowRequestsRoute>(
+        deepLinks = listOf(navDeepLink<FollowRequestsRoute>(basePath = "geowoof://follow-requests")),
+    ) {
         FollowRequestsScreen(
             onBack = { navController.popBackStack() },
             onOpenUser = { navController.navigateToUserProfile(it) },

@@ -1,11 +1,19 @@
 package com.geowoof.app
 
 import com.geowoof.core.model.SessionState
+import com.geowoof.core.notifications.PushRegistrar
 import com.geowoof.core.testing.FakeAuthRepository
+import com.geowoof.core.testing.FakeChatRepository
+import com.geowoof.core.testing.FakeNotificationsRepository
+import com.geowoof.core.testing.FakePushTokenProvider
 import com.geowoof.core.testing.FakeSocialRepository
 import com.geowoof.core.testing.MainDispatcherRule
+import com.geowoof.core.testing.TestChat
 import com.geowoof.core.testing.TestSocial
 import com.geowoof.core.testing.TestUsers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -19,12 +27,23 @@ class MainActivityViewModelTest {
     private val social = FakeSocialRepository()
     private val onboarding = SessionState.SignedIn(TestUsers.user(username = null))
     private val onboarded = SessionState.SignedIn(TestUsers.user(username = "ana"))
+    private val chat = FakeChatRepository()
+    private val notifications = FakeNotificationsRepository()
+    private val tokens = FakePushTokenProvider(token = "fid-1")
+
+    private fun create(auth: FakeAuthRepository) = MainActivityViewModel(
+        auth,
+        social,
+        chat,
+        notifications,
+        PushRegistrar(auth, notifications, tokens, CoroutineScope(mainDispatcherRule.testDispatcher)),
+    )
 
     @Test
     fun exposes_the_session_of_the_repository() {
         val auth = FakeAuthRepository(SessionState.SignedOut)
 
-        val viewModel = MainActivityViewModel(auth, social)
+        val viewModel = create(auth)
         auth.setSession(onboarded)
 
         assertEquals(onboarded, viewModel.uiState.value.sessionState)
@@ -33,7 +52,7 @@ class MainActivityViewModelTest {
     @Test
     fun refreshes_the_user_once_the_stored_session_is_read() {
         val auth = FakeAuthRepository(SessionState.Loading)
-        MainActivityViewModel(auth, social)
+        create(auth)
         assertEquals(0, auth.refreshes)
 
         auth.setSession(SessionState.SignedIn(TestUsers.user()))
@@ -46,7 +65,7 @@ class MainActivityViewModelTest {
     fun does_not_refresh_without_a_session() {
         val auth = FakeAuthRepository(SessionState.SignedOut)
 
-        MainActivityViewModel(auth, social)
+        create(auth)
 
         assertEquals(0, auth.refreshes)
     }
@@ -54,7 +73,7 @@ class MainActivityViewModelTest {
     @Test
     fun finishing_the_username_step_offers_the_first_pet_until_it_is_done() {
         val auth = FakeAuthRepository(onboarding)
-        val viewModel = MainActivityViewModel(auth, social)
+        val viewModel = create(auth)
         assertFalse(viewModel.uiState.value.offerFirstPet)
 
         auth.setSession(onboarded)
@@ -72,7 +91,7 @@ class MainActivityViewModelTest {
     fun an_account_that_was_already_set_up_is_not_asked_for_a_pet() {
         val auth = FakeAuthRepository(onboarded)
 
-        val viewModel = MainActivityViewModel(auth, social)
+        val viewModel = create(auth)
         auth.setSession(SessionState.SignedIn(TestUsers.user(username = "ana", displayName = "Ana B.")))
 
         assertFalse(viewModel.uiState.value.offerFirstPet)
@@ -81,7 +100,7 @@ class MainActivityViewModelTest {
     @Test
     fun signing_out_during_the_step_cancels_it() {
         val auth = FakeAuthRepository(onboarding)
-        val viewModel = MainActivityViewModel(auth, social)
+        val viewModel = create(auth)
         auth.setSession(onboarded)
 
         auth.setSession(SessionState.SignedOut)
@@ -91,7 +110,7 @@ class MainActivityViewModelTest {
 
     @Test
     fun the_pending_requests_reach_the_navigation_bar() {
-        val viewModel = MainActivityViewModel(FakeAuthRepository(onboarded), social)
+        val viewModel = create(FakeAuthRepository(onboarded))
 
         social.receivedRequests.value = listOf(TestSocial.request("1"), TestSocial.request("2"))
 
@@ -101,7 +120,7 @@ class MainActivityViewModelTest {
     @Test
     fun the_requests_refresh_when_a_person_finishes_signing_in_and_each_time_they_come_back() {
         val auth = FakeAuthRepository(SessionState.SignedOut)
-        val viewModel = MainActivityViewModel(auth, social)
+        val viewModel = create(auth)
         assertEquals(emptyList<String>(), social.calls)
 
         auth.setSession(onboarding)
@@ -116,10 +135,59 @@ class MainActivityViewModelTest {
 
     @Test
     fun signed_out_coming_back_asks_nothing() {
-        val viewModel = MainActivityViewModel(FakeAuthRepository(SessionState.SignedOut), social)
+        val viewModel = create(FakeAuthRepository(SessionState.SignedOut))
 
         viewModel.onAppVisible()
 
         assertEquals(emptyList<String>(), social.calls)
+    }
+
+    @Test
+    fun the_badges_follow_what_is_unread() {
+        val viewModel = create(FakeAuthRepository(onboarded))
+
+        chat.conversationsState.value = listOf(TestChat.conversation(unreadCount = 3))
+        notifications.unread.value = 2
+
+        assertEquals(3, viewModel.uiState.value.unreadMessages)
+        assertEquals(2, viewModel.uiState.value.unreadNotifications)
+    }
+
+    @Test
+    fun someone_who_finishes_signing_in_registers_the_device_and_reads_what_is_waiting() {
+        val auth = FakeAuthRepository(onboarding)
+        create(auth)
+        assertEquals(0, tokens.registrations)
+
+        auth.setSession(onboarded)
+
+        assertEquals(1, tokens.registrations)
+        assertEquals(listOf("refresh"), chat.calls)
+        assertEquals(1, notifications.refreshes)
+    }
+
+    @Test
+    fun coming_back_brings_the_badges_up_to_date() {
+        val viewModel = create(FakeAuthRepository(onboarded))
+        chat.calls.clear()
+
+        viewModel.onAppVisible()
+
+        assertEquals(listOf("refresh"), chat.calls)
+        assertEquals(2, notifications.refreshes)
+    }
+
+    @Test
+    fun the_chat_only_listens_while_there_is_someone_signed_in() = runTest(mainDispatcherRule.testDispatcher) {
+        val auth = FakeAuthRepository(SessionState.SignedOut)
+        val viewModel = create(auth)
+        backgroundScope.launch { viewModel.listenToChat() }
+        assertFalse(chat.isListening)
+
+        auth.setSession(onboarded)
+        assertTrue(chat.isListening)
+
+        auth.setSession(SessionState.SignedOut)
+        assertFalse(chat.isListening)
     }
 }

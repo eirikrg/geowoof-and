@@ -7,11 +7,15 @@ import com.geowoof.core.data.media.WalkPhotoStore
 import com.geowoof.core.data.repository.AccountRepository
 import com.geowoof.core.data.repository.ActiveWalkRepository
 import com.geowoof.core.data.repository.AuthRepository
+import com.geowoof.core.data.repository.ChatRepository
+import com.geowoof.core.data.repository.ChatSender
 import com.geowoof.core.data.repository.DefaultAccountRepository
 import com.geowoof.core.data.repository.DefaultActiveWalkRepository
 import com.geowoof.core.data.repository.DefaultAuthRepository
+import com.geowoof.core.data.repository.DefaultChatRepository
 import com.geowoof.core.data.repository.DefaultLiveRepository
 import com.geowoof.core.data.repository.DefaultMediaRepository
+import com.geowoof.core.data.repository.DefaultNotificationsRepository
 import com.geowoof.core.data.repository.DefaultPeopleRepository
 import com.geowoof.core.data.repository.DefaultPetsRepository
 import com.geowoof.core.data.repository.DefaultPostsRepository
@@ -22,6 +26,7 @@ import com.geowoof.core.data.repository.DefaultWalkSynchronizer
 import com.geowoof.core.data.repository.DefaultWalksRepository
 import com.geowoof.core.data.repository.LiveRepository
 import com.geowoof.core.data.repository.MediaRepository
+import com.geowoof.core.data.repository.NotificationsRepository
 import com.geowoof.core.data.repository.PeopleRepository
 import com.geowoof.core.data.repository.PetsRepository
 import com.geowoof.core.data.repository.PostsRepository
@@ -41,6 +46,7 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("TooManyFunctions")
 internal interface DataModule {
     @Binds
     fun bindsSessionTokenProvider(sessionManager: SessionManager): SessionTokenProvider
@@ -92,4 +98,13 @@ internal interface DataModule {
 
     @Binds
     fun bindsLiveRepository(repository: DefaultLiveRepository): LiveRepository
+
+    @Binds
+    fun bindsChatRepository(repository: DefaultChatRepository): ChatRepository
+
+    @Binds
+    fun bindsChatSender(repository: DefaultChatRepository): ChatSender
+
+    @Binds
+    fun bindsNotificationsRepository(repository: DefaultNotificationsRepository): NotificationsRepository
 }

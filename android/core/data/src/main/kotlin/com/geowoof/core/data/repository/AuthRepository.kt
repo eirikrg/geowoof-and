@@ -9,6 +9,7 @@ import com.geowoof.core.model.SessionState
 import com.geowoof.core.model.User
 import com.geowoof.core.model.map
 import com.geowoof.core.network.AuthNetworkDataSource
+import com.geowoof.core.network.NotificationsNetworkDataSource
 import com.geowoof.core.network.model.NetworkSession
 import kotlinx.coroutines.flow.StateFlow
 import java.time.Instant
@@ -50,6 +51,8 @@ interface AuthRepository {
 internal class DefaultAuthRepository @Inject constructor(
     private val network: AuthNetworkDataSource,
     private val sessions: SessionManager,
+    private val notifications: NotificationsNetworkDataSource,
+    private val pushTokens: PushTokenProvider,
 ) : AuthRepository {
     override val sessionState: StateFlow<SessionState> = sessions.sessionState
 
@@ -64,6 +67,8 @@ internal class DefaultAuthRepository @Inject constructor(
         startSession(network.signInWithGoogle(idToken, deviceLanguage()))
 
     override suspend fun signOut() {
+        // While there is a session to ask with. If it fails, the device goes to the next account that signs in.
+        pushTokens.currentToken()?.let { notifications.unregisterDevice(it) }
         network.signOut(sessions.refreshToken())
         sessions.clear()
     }

@@ -110,4 +110,19 @@
     <string name="core_ui_live_friends_description">Solo las personas a las que sigues y que también te siguen.</string>
     <string name="core_ui_live_nobody">Nadie</string>
     <string name="core_ui_live_nobody_description">Tu posición no se comparte. El paseo se guarda igual.</string>
+    <string name="core_ui_notifications">Notificaciones</string>
+    <string name="core_ui_messages">Mensajes</string>
+    <string name="core_ui_many_unread">%1$d+</string>
+    <plurals name="core_ui_unread_notifications">
+        <item quantity="one">%1$d notificación nueva</item>
+        <item quantity="many">%1$d notificaciones nuevas</item>
+        <item quantity="other">%1$d notificaciones nuevas</item>
+    </plurals>
+    <plurals name="core_ui_unread_messages">
+        <item quantity="one">%1$d mensaje sin leer</item>
+        <item quantity="many">%1$d mensajes sin leer</item>
+        <item quantity="other">%1$d mensajes sin leer</item>
+    </plurals>
+    <string name="core_ui_error_chat_not_friends">Solo los amigos pueden escribirse.</string>
+    <string name="core_ui_error_chat_gone">Esta conversación ya no está disponible.</string>
 </resources>

@@ -4,6 +4,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import androidx.navigation.navOptions
 import com.geowoof.feature.social.CommunityScreen
 import com.geowoof.feature.social.create.CreatePostScreen
@@ -38,7 +39,7 @@ fun NavGraphBuilder.socialScreens(navController: NavController, onOpenUser: (use
             onOpenUser = onOpenUser,
         )
     }
-    composable<PostRoute> {
+    composable<PostRoute>(deepLinks = listOf(navDeepLink<PostRoute>(basePath = "geowoof://post"))) {
         PostDetailScreen(onBack = { navController.popBackStack() }, onOpenUser = onOpenUser)
     }
     composable<CreatePostRoute> {
