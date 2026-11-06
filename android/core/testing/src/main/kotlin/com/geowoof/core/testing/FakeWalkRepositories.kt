@@ -1,5 +1,6 @@
 package com.geowoof.core.testing
 
+import android.location.Location
 import androidx.paging.PagingData
 import com.geowoof.core.data.repository.ActiveWalkRepository
 import com.geowoof.core.data.repository.WalkSyncScheduler
@@ -22,6 +23,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -54,6 +56,8 @@ class FakeLocationDataSource : LocationDataSource {
         betterPositionGate?.await()
         betterPosition?.let { emit(it) }
     }
+
+    override fun quietLocations(): Flow<Location> = emptyFlow()
 
     suspend fun send(fix: LocationFix) = positions.emit(fix)
 }

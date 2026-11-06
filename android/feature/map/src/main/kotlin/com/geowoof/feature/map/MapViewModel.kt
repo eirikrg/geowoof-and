@@ -1,5 +1,6 @@
 package com.geowoof.feature.map
 
+import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.geowoof.core.data.repository.ActiveWalkRepository
@@ -22,6 +23,7 @@ import com.geowoof.feature.map.tracking.WalkTrackingController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -95,6 +97,10 @@ class MapViewModel @Inject constructor(
     private val location: LocationDataSource,
 ) : ViewModel() {
     private val choices = MutableStateFlow(MapChoices())
+
+    /** For the dot on the map when no walk is being recorded. */
+    val quietLocations: Flow<Location> = location.quietLocations()
+
     private var hasShownThePerson = false
     private var findingThePerson: Job? = null
 

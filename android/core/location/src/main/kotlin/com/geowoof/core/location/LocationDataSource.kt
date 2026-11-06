@@ -62,6 +62,12 @@ interface LocationDataSource {
      * comes without permission or without any position. It ends by itself, and stopping it stops the search.
      */
     fun whereThePersonIs(): Flow<GeoPoint>
+
+    /**
+     * Positions for the dot on the map when no walk is being recorded: from Wi-Fi and the cell network, because the
+     * GPS would use a lot of battery for something that does not need that precision. Only while it is collected.
+     */
+    fun quietLocations(): Flow<Location>
 }
 
 internal class AndroidLocationAccess @Inject constructor(@ApplicationContext private val context: Context) :
@@ -141,6 +147,19 @@ internal class FusedLocationDataSource @Inject constructor(
         (SystemClock.elapsedRealtimeNanos() - elapsedRealtimeNanos) / NANOS_PER_MILLI <= RECENT_MS
 
     /** `task.result` throws if the task failed or was cancelled, and here that only means not knowing. */
+    @SuppressLint("MissingPermission")
+    override fun quietLocations(): Flow<Location> = callbackFlow {
+        val client = LocationServices.getFusedLocationProviderClient(context)
+        val callback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                result.lastLocation?.let { trySend(it) }
+            }
+        }
+        client.lastLocation.awaitOrNull()?.takeIf { it.isRecent() }?.let { trySend(it) }
+        client.requestLocationUpdates(QUIET_REQUEST, callback, Looper.getMainLooper())
+        awaitClose { client.removeLocationUpdates(callback) }
+    }.catch { cause -> if (cause !is SecurityException) throw cause }
+
     private suspend fun <T> Task<T>.awaitOrNull(): T? = suspendCancellableCoroutine { continuation ->
         addOnCompleteListener { task -> continuation.resume(if (task.isSuccessful) task.result else null) }
     }
@@ -157,6 +176,8 @@ internal class FusedLocationDataSource @Inject constructor(
         const val RECENT_MS = 120_000L
         const val OLD_POSITION_WAIT_MS = 2_500L
         const val SEARCH_MS = 30_000L
+        const val QUIET_INTERVAL_MS = 15_000L
+        const val QUIET_MIN_INTERVAL_MS = 5_000L
         const val NANOS_PER_MILLI = 1_000_000L
 
         val CURRENT_REQUEST: CurrentLocationRequest = CurrentLocationRequest.Builder()
@@ -164,6 +185,11 @@ internal class FusedLocationDataSource @Inject constructor(
             .setDurationMillis(SEARCH_MS)
             .setMaxUpdateAgeMillis(RECENT_MS)
             .build()
+
+        val QUIET_REQUEST: LocationRequest =
+            LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, QUIET_INTERVAL_MS)
+                .setMinUpdateIntervalMillis(QUIET_MIN_INTERVAL_MS)
+                .build()
 
         val REQUEST: LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, INTERVAL_MS)
             .setMinUpdateIntervalMillis(MIN_INTERVAL_MS)

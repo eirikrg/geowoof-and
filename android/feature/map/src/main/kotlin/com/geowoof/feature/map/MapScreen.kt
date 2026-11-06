@@ -3,6 +3,7 @@ package com.geowoof.feature.map
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -46,7 +47,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.flowWithLifecycle
 import com.geowoof.core.designsystem.component.GeoWoofLogoHead
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
@@ -72,6 +75,7 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
@@ -159,6 +163,7 @@ fun MapScreen(
         WalkMap(
             walk = uiState.walk,
             isLocating = uiState.isLocating,
+            quietLocations = viewModel.quietLocations,
             hasLocationPermission = uiState.hasLocationPermission,
             walkers = live.walkers,
             onViewportChange = liveViewModel::onViewportChange,
@@ -326,6 +331,7 @@ private fun LiveStatus(live: LiveWalkersUiState, actions: LiveWalkersActions, mo
 private fun WalkMap(
     walk: ActiveWalk?,
     isLocating: Boolean,
+    quietLocations: Flow<Location>,
     hasLocationPermission: Boolean,
     walkers: List<LiveWalker>,
     onViewportChange: (MapViewport) -> Unit,
@@ -339,6 +345,11 @@ private fun WalkMap(
         position = CameraPosition.fromLatLngZoom(DefaultCenter, DEFAULT_ZOOM)
     }
     val scope = rememberCoroutineScope()
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    // Only while the app is on the screen, whatever the map does with its source when it goes to the background.
+    val quietSource = remember(quietLocations, lifecycle, scope) {
+        QuietLocationSource(quietLocations.flowWithLifecycle(lifecycle), scope)
+    }
     val currentOnViewportChange by rememberUpdatedState(onViewportChange)
     LaunchedEffect(cameraPositionState) {
         // The position too: a jump while the map is loading does not go through isMoving, and the map
@@ -399,6 +410,8 @@ private fun WalkMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
         contentDescription = stringResource(R.string.feature_map_content_description),
+        // During a walk the GPS is already on for the route, and the dot has to follow it.
+        locationSource = if (walk == null) quietSource else null,
         properties = MapProperties(isMyLocationEnabled = hasLocationPermission, mapStyleOptions = style),
         uiSettings = MapUiSettings(
             zoomControlsEnabled = false,
