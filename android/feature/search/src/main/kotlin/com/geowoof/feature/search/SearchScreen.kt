@@ -45,6 +45,7 @@ import androidx.paging.compose.itemKey
 import com.geowoof.core.data.repository.RemoteLoadException
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.component.ErrorState
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
@@ -180,6 +181,7 @@ private fun ExploreGrid(
             title = stringResource(R.string.feature_search_search_empty_title),
             message = stringResource(R.string.feature_search_search_empty_message),
             modifier = modifier,
+            illustration = GeoWoofIllustrations.EmptySearch,
         )
     } else {
         LazyVerticalGrid(
@@ -228,6 +230,7 @@ private fun <T : Any> Results(
             title = stringResource(R.string.feature_search_nothing_found),
             message = emptyMessage,
             modifier = modifier,
+            illustration = GeoWoofIllustrations.EmptySearch,
         )
 
         else -> LazyColumn(modifier = modifier.fillMaxSize(), content = content)

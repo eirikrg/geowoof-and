@@ -13,6 +13,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(AndroidJUnit4::class)
 class WelcomeScreenTest {
@@ -48,5 +49,23 @@ class WelcomeScreenTest {
         show()
 
         composeRule.onNodeWithText("Continue with Google").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = "w320dp-h480dp", fontScale = 2f)
+    fun with_a_big_font_on_a_small_screen_the_text_is_whole() {
+        show()
+
+        val title = composeRule.onNodeWithText("GeoWoof").getUnclippedBoundsInRoot().top
+        val message = composeRule.onNodeWithText("Walk with your dog", substring = true)
+            .getUnclippedBoundsInRoot()
+        val firstButton = composeRule.onNodeWithText("Create account").getUnclippedBoundsInRoot().top
+
+        assertTrue("The title starts at $title", title >= 0.dp)
+        assertTrue(
+            "The message ends at ${message.bottom}, the buttons start at $firstButton",
+            message.bottom <= firstButton,
+        )
     }
 }

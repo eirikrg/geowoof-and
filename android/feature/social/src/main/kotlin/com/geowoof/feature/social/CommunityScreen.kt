@@ -39,6 +39,7 @@ import androidx.paging.compose.itemKey
 import com.geowoof.core.data.repository.RemoteLoadException
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.component.ErrorState
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.GeoWoofLogoHead
 import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.component.SkeletonPost
@@ -186,6 +187,7 @@ private fun FeedList(
                     icon = GeoWoofIcons.Groups,
                     title = stringResource(R.string.feature_social_community_empty_title),
                     message = stringResource(R.string.feature_social_community_empty_message),
+                    illustration = GeoWoofIllustrations.EmptyFeed,
                     modifier = Modifier.fillParentMaxSize(),
                     action = {
                         FilledTonalButton(onClick = onFindPeople) {

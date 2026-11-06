@@ -162,6 +162,7 @@ class NewConversationScreenTest {
                 androidx.compose.ui.test.hasText("follow each other", substring = true),
             ).fetchSemanticsNodes().isNotEmpty()
         }
+        composeRule.onNodeWithText("You have no friends yet").assertExists()
     }
 }
 

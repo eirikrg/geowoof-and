@@ -37,7 +37,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.geowoof.core.designsystem.component.GeoWoofLogo
+import com.geowoof.core.designsystem.component.GeoWoofIllustration
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.MinButtonHeight
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.ui.FormError
@@ -124,7 +125,7 @@ internal fun WelcomeContent(
 
 /**
  * The actions take what they need at the bottom and the hero the rest of the screen, without going
- * below [MinHeroHeight]: with a big font on a small screen, it all scrolls.
+ * below [MinHeroHeight] or what it holds: with a big font on a small screen, it all scrolls.
  */
 @Composable
 private fun HeroOverActions(
@@ -141,8 +142,13 @@ private fun HeroOverActions(
     ) { (heroParts, actionParts), constraints ->
         val free = constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity)
         val actionsPlaced = actionParts.first().measure(free.copy(minWidth = 0))
-        val heroHeight = maxOf(screenHeight.roundToPx() - actionsPlaced.height, MinHeroHeight.roundToPx())
-        val heroPlaced = heroParts.first().measure(Constraints.fixed(constraints.maxWidth, heroHeight))
+        val hero = heroParts.first()
+        val heroHeight = maxOf(
+            screenHeight.roundToPx() - actionsPlaced.height,
+            MinHeroHeight.roundToPx(),
+            hero.minIntrinsicHeight(constraints.maxWidth),
+        )
+        val heroPlaced = hero.measure(Constraints.fixed(constraints.maxWidth, heroHeight))
         layout(constraints.maxWidth, heroHeight + actionsPlaced.height) {
             heroPlaced.place(0, 0)
             actionsPlaced.place((constraints.maxWidth - actionsPlaced.width) / 2, heroHeight)
@@ -150,7 +156,7 @@ private fun HeroOverActions(
     }
 }
 
-/** The logo and what the app is for, on the color of the brand and reaching the top of the screen. */
+/** The scene and what the app is for, on the color of the brand and reaching the top of the screen. */
 @Composable
 private fun Hero(topPadding: Dp, modifier: Modifier = Modifier) {
     val spacing = GeoWoofTheme.spacing
@@ -166,7 +172,10 @@ private fun Hero(topPadding: Dp, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(spacing.small),
         ) {
-            GeoWoofLogo(contentDescription = null, modifier = Modifier.height(LogoHeight))
+            GeoWoofIllustration(
+                illustration = GeoWoofIllustrations.WelcomeHero,
+                modifier = Modifier.fillMaxWidth(),
+            )
             Spacer(Modifier.height(spacing.small))
             Text(
                 text = stringResource(R.string.feature_auth_welcome_title),
@@ -184,7 +193,6 @@ private fun Hero(topPadding: Dp, modifier: Modifier = Modifier) {
     }
 }
 
-private val LogoHeight = 176.dp
 private val MinHeroHeight = 340.dp
 private val HeroShape = RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp)
 

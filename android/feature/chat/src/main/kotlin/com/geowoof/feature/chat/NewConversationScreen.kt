@@ -1,7 +1,6 @@
 package com.geowoof.feature.chat
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,12 +8,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -24,10 +21,11 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.component.SkeletonRow
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
-import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Person
 import com.geowoof.core.ui.RemoteAvatar
 
@@ -96,12 +94,13 @@ internal fun NewConversationContent(
             friends.loadState.refresh is LoadState.Loading ->
                 SkeletonList(modifier = Modifier.padding(innerPadding)) { SkeletonRow() }
 
-            else -> Box(
-                modifier = Modifier.padding(innerPadding).padding(GeoWoofTheme.spacing.large).fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(stringResource(R.string.feature_chat_no_friends), style = MaterialTheme.typography.bodyLarge)
-            }
+            else -> EmptyState(
+                icon = GeoWoofIcons.Groups,
+                title = stringResource(R.string.feature_chat_no_friends_title),
+                message = stringResource(R.string.feature_chat_no_friends),
+                modifier = Modifier.padding(innerPadding),
+                illustration = GeoWoofIllustrations.EmptyFriends,
+            )
         }
     }
 }

@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.geowoof.core.data.repository.SocialRepository
 import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppError
@@ -165,6 +166,7 @@ internal fun BlockedUsersContent(
                             title = stringResource(R.string.feature_settings_no_blocked_title),
                             message = stringResource(R.string.feature_settings_no_blocked_message),
                             modifier = Modifier.fillParentMaxSize(),
+                            illustration = GeoWoofIllustrations.EmptyBlocked,
                         )
                     }
                 }

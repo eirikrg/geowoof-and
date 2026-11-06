@@ -36,6 +36,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
@@ -132,6 +133,7 @@ internal fun ConversationsContent(
                 icon = GeoWoofIcons.Forum,
                 title = stringResource(R.string.feature_chat_no_conversations_title),
                 message = stringResource(R.string.feature_chat_no_conversations),
+                illustration = GeoWoofIllustrations.EmptyMessages,
                 modifier = Modifier.padding(innerPadding),
             )
         }

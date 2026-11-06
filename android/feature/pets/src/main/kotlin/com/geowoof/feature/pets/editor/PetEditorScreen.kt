@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
@@ -40,6 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geowoof.core.designsystem.component.FormTextField
+import com.geowoof.core.designsystem.component.GeoWoofIllustration
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.ProgressButton
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
@@ -152,7 +155,15 @@ internal fun PetEditorContent(
             modifier = modifier,
             message = stringResource(R.string.feature_pets_first_message),
             actions = { TextButton(onClick = onSkip) { Text(stringResource(R.string.feature_pets_skip)) } },
-            lead = { OnboardingProgress(OnboardingStep.FirstPet) },
+            lead = {
+                OnboardingProgress(OnboardingStep.FirstPet)
+                GeoWoofIllustration(
+                    illustration = GeoWoofIllustrations.FirstPet,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = FirstPetIllustrationMaxHeight),
+                )
+            },
             content = form,
         )
     } else {
@@ -301,6 +312,7 @@ private fun tooLongMessage(issue: TextIssue): String = when (issue) {
     TextIssue.TooLong -> stringResource(R.string.feature_pets_too_long)
 }
 
+private val FirstPetIllustrationMaxHeight = 120.dp
 private val WordsKeyboard = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next)
 
 @PreviewLightDark

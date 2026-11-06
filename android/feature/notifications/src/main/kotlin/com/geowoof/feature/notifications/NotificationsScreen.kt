@@ -42,6 +42,7 @@ import com.geowoof.core.data.repository.NotificationsRepository
 import com.geowoof.core.data.repository.RemoteLoadException
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.component.ErrorState
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.IconBadge
 import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
@@ -134,6 +135,7 @@ internal fun NotificationsContent(
                 icon = GeoWoofIcons.Notifications,
                 title = stringResource(R.string.feature_notifications_empty_title),
                 message = stringResource(R.string.feature_notifications_empty),
+                illustration = GeoWoofIllustrations.EmptyNotifications,
                 modifier = Modifier.padding(innerPadding),
             )
         }

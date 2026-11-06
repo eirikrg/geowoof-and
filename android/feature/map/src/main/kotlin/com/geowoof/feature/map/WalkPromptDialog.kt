@@ -1,11 +1,10 @@
 package com.geowoof.feature.map
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
+import com.geowoof.core.designsystem.component.IllustratedDialog
 
 @Composable
 internal fun WalkPromptDialog(prompt: WalkPrompt, actions: MapActions, modifier: Modifier = Modifier) {
@@ -25,14 +24,14 @@ internal fun WalkPromptDialog(prompt: WalkPrompt, actions: MapActions, modifier:
         WalkPrompt.LocationDisabled -> R.string.feature_map_open_settings to actions.onOpenLocationSettings
         else -> R.string.feature_map_open_settings to actions.onOpenAppSettings
     }
-    AlertDialog(
-        onDismissRequest = actions.onDismissPrompt,
+    IllustratedDialog(
+        illustration = GeoWoofIllustrations.PermissionLocation,
+        title = stringResource(title),
+        message = stringResource(message),
+        confirmLabel = stringResource(confirmLabel),
+        onConfirm = onConfirm,
+        dismissLabel = stringResource(R.string.feature_map_not_now),
+        onDismiss = actions.onDismissPrompt,
         modifier = modifier,
-        title = { Text(stringResource(title)) },
-        text = { Text(stringResource(message)) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(confirmLabel)) } },
-        dismissButton = {
-            TextButton(onClick = actions.onDismissPrompt) { Text(stringResource(R.string.feature_map_not_now)) }
-        },
     )
 }

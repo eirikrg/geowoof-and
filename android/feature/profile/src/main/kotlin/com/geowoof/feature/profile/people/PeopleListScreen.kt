@@ -32,6 +32,7 @@ import androidx.paging.compose.itemKey
 import com.geowoof.core.data.repository.RemoteLoadException
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.component.ErrorState
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.component.SkeletonRow
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
@@ -112,6 +113,7 @@ internal fun PeopleListContent(
                 icon = GeoWoofIcons.Groups,
                 title = stringResource(kind.emptyTitleRes()),
                 message = stringResource(kind.emptyMessageRes()),
+                illustration = GeoWoofIllustrations.EmptyFriends,
                 modifier = contentModifier,
             )
 

@@ -51,6 +51,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geowoof.core.designsystem.component.FittedText
 import com.geowoof.core.designsystem.component.FormTextField
+import com.geowoof.core.designsystem.component.GeoWoofIllustration
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ActiveWalk
@@ -157,6 +159,13 @@ internal fun WalkSummaryContent(
                 .padding(spacing.large),
             verticalArrangement = Arrangement.spacedBy(spacing.large),
         ) {
+            // Too short to be saved, there is nothing to celebrate.
+            if (uiState.canSave) {
+                GeoWoofIllustration(
+                    illustration = GeoWoofIllustrations.WalkDone,
+                    modifier = Modifier.fillMaxWidth().heightIn(max = CelebrationMaxHeight),
+                )
+            }
             Column {
                 Text(
                     text = stringResource(R.string.feature_map_summary_cheer),
@@ -317,6 +326,7 @@ private fun ColumnScope.WalkDetailsForm(
     }
 }
 
+private val CelebrationMaxHeight = 180.dp
 private val RoutePreviewHeight = 200.dp
 private val PhotoSize = 96.dp
 private const val NOTE_MAX_LINES = 5

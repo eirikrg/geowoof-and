@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.painterResource
 import com.geowoof.core.designsystem.R
 
-private const val DARK_SURFACE = 0.5f
+internal const val DARK_SURFACE = 0.5f
 
 /**
  * The logo with its trail. On a dark surface the trail changes to a light green: the app can be dark

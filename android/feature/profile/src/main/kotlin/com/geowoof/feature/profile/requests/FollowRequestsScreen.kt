@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.geowoof.core.data.repository.SocialRepository
 import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppError
@@ -213,6 +214,7 @@ internal fun FollowRequestsContent(
                                     },
                                 ),
                                 modifier = Modifier.fillParentMaxSize(),
+                                illustration = GeoWoofIllustrations.EmptyRequests,
                             )
                         }
                     }

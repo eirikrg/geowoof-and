@@ -34,6 +34,7 @@ import androidx.paging.compose.itemKey
 import com.geowoof.core.data.repository.WalkLoadException
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.component.ErrorState
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
@@ -170,6 +171,7 @@ private fun NoWalks(modifier: Modifier = Modifier) {
                 icon = GeoWoofIcons.DirectionsWalk,
                 title = stringResource(R.string.feature_walks_empty_title),
                 message = stringResource(R.string.feature_walks_empty_message),
+                illustration = GeoWoofIllustrations.EmptyWalks,
             )
         }
     }

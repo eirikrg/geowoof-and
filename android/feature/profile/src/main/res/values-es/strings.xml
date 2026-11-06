@@ -91,4 +91,7 @@
     <string name="feature_profile_send_message">Mensaje</string>
     <string name="feature_profile_error_title">No se ha podido cargar este perfil</string>
     <string name="feature_profile_people_error_title">No se ha podido cargar la lista</string>
+    <string name="feature_profile_no_own_walks_title">Todavía no hay paseos</string>
+    <string name="feature_profile_no_own_photos_title">Todavía no hay fotos</string>
+    <string name="feature_profile_no_saved_title">Todavía no has guardado nada</string>
 </resources>

@@ -157,6 +157,13 @@ class ProfileScreenTest {
         composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText(text))
     }
 
+    /** The pages of a list arrive through a coroutine that the clock of the test does not wait for. */
+    private fun waitFor(text: String) {
+        composeRule.waitUntil(WAIT_MILLIS) {
+            composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
     @Test
     fun your_profile_shows_who_you_are_and_your_numbers() {
         show(own(), ownActions)
@@ -423,6 +430,27 @@ class ProfileScreenTest {
     }
 
     @Test
+    fun your_walks_tab_invites_to_the_first_walk() {
+        show(own(), ownActions)
+
+        openWalksTab()
+
+        waitFor("No walks yet")
+        scrollTo("No walks yet")
+        composeRule.onNodeWithText("No walks yet").assertIsDisplayed()
+    }
+
+    @Test
+    fun the_walks_tab_of_someone_else_only_says_there_are_none() {
+        show(bea(RelationshipStatus.Following))
+
+        openWalksTab()
+
+        waitFor("No walks you can see.")
+        composeRule.onNodeWithText("No walks yet").assertDoesNotExist()
+    }
+
+    @Test
     fun the_totals_are_on_the_walks_tab() {
         show(bea(RelationshipStatus.Following).copy(totals = TestWalks.totals(walkCount = 42)))
 
@@ -546,6 +574,15 @@ class ProfileScreenTest {
 
         scrollTo("No photos you can see.")
         composeRule.onNodeWithText("No photos you can see.").assertIsDisplayed()
+    }
+
+    @Test
+    fun your_photos_tab_invites_to_the_first_photo() {
+        show(own(), ownActions)
+
+        waitFor("No photos yet")
+        scrollTo("No photos yet")
+        composeRule.onNodeWithText("No photos yet").assertIsDisplayed()
     }
 
     @Test

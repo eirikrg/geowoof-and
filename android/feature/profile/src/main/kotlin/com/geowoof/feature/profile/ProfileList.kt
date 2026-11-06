@@ -47,6 +47,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemKey
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.component.FittedText
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.IconBadge
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
@@ -178,9 +179,29 @@ private fun LazyListScope.photosTab(
     posts: LazyPagingItems<TimelineItem>,
     actions: ProfileActions,
 ) {
+    val onCreatePost = actions.onCreatePost
+    if (uiState.isOwn && posts.itemCount == 0 && posts.loadState.refresh is LoadState.NotLoading) {
+        item {
+            EmptyState(
+                icon = GeoWoofIcons.PhotoLibrary,
+                title = stringResource(R.string.feature_profile_no_own_photos_title),
+                message = stringResource(R.string.feature_profile_no_own_photos),
+                illustration = GeoWoofIllustrations.EmptyPhotos,
+                action = if (onCreatePost != null) {
+                    {
+                        FilledTonalButton(onClick = onCreatePost) {
+                            Text(stringResource(R.string.feature_profile_add_photo))
+                        }
+                    }
+                } else {
+                    null
+                },
+            )
+        }
+        return
+    }
     item { Spacer(Modifier.height(GridSpacing)) }
     // The first cell of your own photos is the way to add another.
-    val onCreatePost = actions.onCreatePost
     val first = if (onCreatePost != null) 1 else 0
     gridRows(posts.itemCount + first) { index ->
         if (onCreatePost != null && index == 0) {
@@ -204,10 +225,10 @@ private fun LazyListScope.photosTab(
                     GeoWoofIcons.PhotoLibrary
                 },
                 text = stringResource(
-                    when {
-                        posts.loadState.refresh is LoadState.Error -> R.string.feature_profile_photos_failed
-                        uiState.isOwn -> R.string.feature_profile_no_own_photos
-                        else -> R.string.feature_profile_no_photos
+                    if (posts.loadState.refresh is LoadState.Error) {
+                        R.string.feature_profile_photos_failed
+                    } else {
+                        R.string.feature_profile_no_photos
                     },
                 ),
             )
@@ -241,16 +262,16 @@ private fun AddPhotoCell(onClick: () -> Unit, modifier: Modifier = Modifier) {
 private fun LazyListScope.savedTab(saved: LazyPagingItems<Post>, actions: ProfileActions) {
     if (saved.itemCount == 0 && saved.loadState.refresh !is LoadState.Loading) {
         item {
-            EmptyLine(
-                icon = if (saved.loadState.refresh is LoadState.Error) GeoWoofIcons.Error else GeoWoofIcons.Bookmark,
-                text = stringResource(
-                    if (saved.loadState.refresh is LoadState.Error) {
-                        R.string.feature_profile_saved_failed
-                    } else {
-                        R.string.feature_profile_no_saved
-                    },
-                ),
-            )
+            if (saved.loadState.refresh is LoadState.Error) {
+                EmptyLine(GeoWoofIcons.Error, stringResource(R.string.feature_profile_saved_failed))
+            } else {
+                EmptyState(
+                    icon = GeoWoofIcons.Bookmark,
+                    title = stringResource(R.string.feature_profile_no_saved_title),
+                    message = stringResource(R.string.feature_profile_no_saved),
+                    illustration = GeoWoofIllustrations.EmptySaved,
+                )
+            }
         }
     }
     gridRows(saved.itemCount) { index ->
@@ -275,16 +296,22 @@ private fun LazyListScope.walksTab(uiState: ProfileUiState, walks: LazyPagingIte
     }
     if (walks.itemCount == 0 && walks.loadState.refresh !is LoadState.Loading) {
         item {
-            EmptyLine(
-                icon = if (walks.loadState.refresh is LoadState.Error) GeoWoofIcons.Error else GeoWoofIcons.Route,
-                text = stringResource(
-                    when {
-                        walks.loadState.refresh is LoadState.Error -> R.string.feature_profile_walks_failed
-                        uiState.isOwn -> R.string.feature_profile_no_own_walks
-                        else -> R.string.feature_profile_no_walks
-                    },
-                ),
-            )
+            val failed = walks.loadState.refresh is LoadState.Error
+            if (uiState.isOwn && !failed) {
+                EmptyState(
+                    icon = GeoWoofIcons.Route,
+                    title = stringResource(R.string.feature_profile_no_own_walks_title),
+                    message = stringResource(R.string.feature_profile_no_own_walks),
+                    illustration = GeoWoofIllustrations.EmptyWalks,
+                )
+            } else {
+                EmptyLine(
+                    icon = if (failed) GeoWoofIcons.Error else GeoWoofIcons.Route,
+                    text = stringResource(
+                        if (failed) R.string.feature_profile_walks_failed else R.string.feature_profile_no_walks,
+                    ),
+                )
+            }
         }
     }
     val petNames = uiState.pets.associate { it.id to it.name }
@@ -323,6 +350,7 @@ private fun LazyListScope.petsTab(uiState: ProfileUiState, actions: ProfileActio
                     icon = GeoWoofIcons.Pets,
                     title = stringResource(R.string.feature_profile_no_pets_title),
                     message = stringResource(R.string.feature_profile_no_pets_message),
+                    illustration = GeoWoofIllustrations.EmptyPets,
                 )
             } else {
                 EmptyLine(GeoWoofIcons.Pets, stringResource(R.string.feature_profile_no_pets_of_person))

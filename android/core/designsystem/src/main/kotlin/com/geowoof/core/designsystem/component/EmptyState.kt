@@ -1,7 +1,6 @@
 package com.geowoof.core.designsystem.component
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -22,11 +22,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
@@ -48,7 +48,8 @@ fun EmptyState(
     val spacing = GeoWoofTheme.spacing
     // Inside a list there is no limit of height, and that is where it must not scroll.
     BoxWithConstraints(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        val scrolling = if (constraints.hasBoundedHeight) {
+        val hasScreenForItself = constraints.hasBoundedHeight
+        val scrolling = if (hasScreenForItself) {
             Modifier
                 .heightIn(min = maxHeight)
                 .verticalScroll(rememberScrollState())
@@ -60,6 +61,7 @@ fun EmptyState(
             title,
             message,
             illustration,
+            if (hasScreenForItself) IllustrationMaxHeight else IllustrationInListMaxHeight,
             action,
             scrolling.padding(horizontal = spacing.extraLarge),
         )
@@ -72,6 +74,7 @@ private fun EmptyStateContent(
     title: String,
     message: String,
     @DrawableRes illustration: Int?,
+    illustrationMaxHeight: Dp,
     action: (@Composable () -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
@@ -82,10 +85,9 @@ private fun EmptyStateContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (illustration != null) {
-            Image(
-                painter = painterResource(illustration),
-                contentDescription = null,
-                modifier = Modifier.size(IllustrationSize),
+            GeoWoofIllustration(
+                illustration = illustration,
+                modifier = Modifier.sizeIn(maxWidth = IllustrationMaxWidth, maxHeight = illustrationMaxHeight),
             )
         } else {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.size(IconAreaSize)) {
@@ -130,20 +132,22 @@ fun ErrorState(
     retryLabel: String,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
-    @DrawableRes icon: Int = GeoWoofIcons.SyncProblem,
-    @DrawableRes illustration: Int? = null,
 ) {
     EmptyState(
-        icon = icon,
+        icon = GeoWoofIcons.SyncProblem,
         title = title,
         message = message,
         modifier = modifier,
-        illustration = illustration,
+        illustration = GeoWoofIllustrations.ErrorConnection,
         action = { FilledTonalButton(onClick = onRetry) { Text(retryLabel) } },
     )
 }
 
-private val IllustrationSize = 220.dp
+private val IllustrationMaxWidth = 260.dp
+private val IllustrationMaxHeight = 220.dp
+
+/** Under the header of a profile: bigger, and the text would stay below the bottom of the screen. */
+private val IllustrationInListMaxHeight = 150.dp
 private val IconAreaSize = 132.dp
 private val IconCircleSize = 88.dp
 private val IconSize = 40.dp

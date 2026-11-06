@@ -91,4 +91,7 @@
     <string name="feature_profile_send_message">Message</string>
     <string name="feature_profile_error_title">This profile could not be loaded</string>
     <string name="feature_profile_people_error_title">The list could not be loaded</string>
+    <string name="feature_profile_no_own_walks_title">No walks yet</string>
+    <string name="feature_profile_no_own_photos_title">No photos yet</string>
+    <string name="feature_profile_no_saved_title">Nothing saved yet</string>
 </resources>
