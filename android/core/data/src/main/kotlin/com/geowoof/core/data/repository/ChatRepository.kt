@@ -131,6 +131,9 @@ internal class DefaultChatRepository @Inject constructor(
     /** Where the next older page starts. A cursor cannot be made up, so it is learned from the server. */
     private val olderCursors = mutableMapOf<String, String?>()
 
+    /** The queue goes by the time of each message, and two in the same millisecond have to keep their order. */
+    private var lastSentAtMs = 0L
+
     private val myUserId: String? get() = (sessions.sessionState.value as? SessionState.SignedIn)?.user?.id
 
     override val conversations: Flow<List<Conversation>> =
@@ -257,7 +260,8 @@ internal class DefaultChatRepository @Inject constructor(
 
     override suspend fun send(conversationId: String, body: String?, imageUri: String?): Outcome<Unit> {
         val userId = myUserId ?: return Outcome.Failure(AppError.SessionExpired)
-        val now = clock.millis()
+        val now = maxOf(clock.millis(), lastSentAtMs + 1)
+        lastSentAtMs = now
         val clientMessageId = UuidV7.generate(now)
         return storedPhoto(clientMessageId, imageUri).map { localPath ->
             dao.upsertMessage(

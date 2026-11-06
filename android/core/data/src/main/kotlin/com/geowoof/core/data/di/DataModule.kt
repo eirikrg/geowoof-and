@@ -6,11 +6,13 @@ import com.geowoof.core.data.media.ImageCompressor
 import com.geowoof.core.data.media.WalkPhotoStore
 import com.geowoof.core.data.repository.AccountRepository
 import com.geowoof.core.data.repository.ActiveWalkRepository
+import com.geowoof.core.data.repository.AppearanceRepository
 import com.geowoof.core.data.repository.AuthRepository
 import com.geowoof.core.data.repository.ChatRepository
 import com.geowoof.core.data.repository.ChatSender
 import com.geowoof.core.data.repository.DefaultAccountRepository
 import com.geowoof.core.data.repository.DefaultActiveWalkRepository
+import com.geowoof.core.data.repository.DefaultAppearanceRepository
 import com.geowoof.core.data.repository.DefaultAuthRepository
 import com.geowoof.core.data.repository.DefaultChatRepository
 import com.geowoof.core.data.repository.DefaultLiveRepository
@@ -98,6 +100,9 @@ internal interface DataModule {
 
     @Binds
     fun bindsLiveRepository(repository: DefaultLiveRepository): LiveRepository
+
+    @Binds
+    fun bindsAppearanceRepository(repository: DefaultAppearanceRepository): AppearanceRepository
 
     @Binds
     fun bindsChatRepository(repository: DefaultChatRepository): ChatRepository

@@ -1,12 +1,15 @@
 package com.geowoof.feature.settings
 
 import com.geowoof.core.model.AppError
+import com.geowoof.core.model.Appearance
 import com.geowoof.core.model.LiveVisibility
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.SessionState
+import com.geowoof.core.model.ThemeMode
 import com.geowoof.core.model.UserSettings
 import com.geowoof.core.testing.FakeAccountRepository
 import com.geowoof.core.testing.FakeActiveWalkRepository
+import com.geowoof.core.testing.FakeAppearanceRepository
 import com.geowoof.core.testing.FakeAuthRepository
 import com.geowoof.core.testing.FakeSettingsRepository
 import com.geowoof.core.testing.FakeWalksRepository
@@ -15,6 +18,7 @@ import com.geowoof.core.testing.TestUsers
 import com.geowoof.core.testing.TestWalks
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -32,7 +36,20 @@ class SettingsViewModelTest {
     private val activeWalks = FakeActiveWalkRepository()
     private val accounts = FakeAccountRepository()
     private val settings = FakeSettingsRepository()
-    private val viewModel by lazy { SettingsViewModel(auth, walks, activeWalks, accounts, settings) }
+    private val appearance = FakeAppearanceRepository()
+    private val viewModel by lazy { SettingsViewModel(auth, walks, activeWalks, accounts, settings, appearance) }
+
+    @Test
+    fun the_appearance_can_be_chosen_and_it_shows() = runTest {
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        runCurrent()
+
+        viewModel.onThemeModeChange(ThemeMode.Dark)
+        viewModel.onWallpaperColorsChange(true)
+        runCurrent()
+
+        assertEquals(Appearance(ThemeMode.Dark, useWallpaperColors = true), viewModel.uiState.value.appearance)
+    }
 
     @Test
     fun shows_the_signed_in_account() = runTest {

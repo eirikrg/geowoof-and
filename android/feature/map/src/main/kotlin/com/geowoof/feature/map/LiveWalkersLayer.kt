@@ -1,20 +1,15 @@
 package com.geowoof.feature.map
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.geowoof.core.designsystem.component.GeoWoofPin
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.model.LiveWalker
 import com.geowoof.core.ui.RemoteAvatar
@@ -87,20 +82,15 @@ internal fun LiveWalkersLayer(
     }
 }
 
-/** It is drawn on a bitmap for the map, and that cannot hold a hardware image. */
+/** The head of the logo with the pet in its face. It is drawn on a bitmap, which cannot hold a hardware image. */
 @Composable
 private fun WalkerMarker(walker: LiveWalker) {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(MarkerBorder, MaterialTheme.colorScheme.primary),
-        modifier = Modifier.size(MarkerSize),
-    ) {
+    GeoWoofPin(width = MarkerWidth) { faceSize ->
         RemoteAvatar(
             image = walker.pets.firstOrNull()?.avatar,
             fallbackIcon = GeoWoofIcons.Pets,
             contentDescription = null,
-            size = MarkerSize,
+            size = faceSize,
             allowHardware = false,
         )
     }
@@ -108,20 +98,20 @@ private fun WalkerMarker(walker: LiveWalker) {
 
 @Composable
 private fun WalkersBadge(count: Int) {
-    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(MarkerSize)) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = count.toString(),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimary,
-            )
-        }
+    GeoWoofPin(width = MarkerWidth) {
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            color = BrandFace,
+        )
     }
 }
 
 private const val MIN_CLUSTER_SIZE = 2
 
 /** Closer than this, on screen, their markers touch. */
-private const val CLUSTER_DISTANCE_DP = 44
-private val MarkerSize = CLUSTER_DISTANCE_DP.dp
-private val MarkerBorder = 2.dp
+private const val CLUSTER_DISTANCE_DP = 52
+private val MarkerWidth = CLUSTER_DISTANCE_DP.dp
+
+/** The face of the pin is always white, also in the dark theme. */
+private val BrandFace = Color(0xFF214233)

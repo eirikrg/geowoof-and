@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -17,18 +18,18 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -155,17 +156,30 @@ internal fun WalkSummaryContent(
                 .padding(spacing.large),
             verticalArrangement = Arrangement.spacedBy(spacing.large),
         ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.feature_map_summary_cheer),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.semantics { heading() },
+                )
+                if (uiState.petNames.isNotEmpty()) {
+                    Text(
+                        text = stringResource(R.string.feature_map_summary_with, uiState.petNames.joinToString()),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
             uiState.walk?.let { walk -> RoutePreview(walk) }
             uiState.stats?.let { stats -> WalkStatsGrid(stats) }
-            if (uiState.petNames.isNotEmpty()) {
-                Text(uiState.petNames.joinToString(), style = MaterialTheme.typography.bodyLarge)
-            }
             if (uiState.canSave) {
                 WalkDetailsForm(uiState, noteText, actions)
                 Button(
                     onClick = actions.onSave,
                     enabled = !uiState.isSaving,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = SaveButtonHeight),
                 ) {
                     Text(stringResource(R.string.feature_map_save))
                 }
@@ -175,10 +189,11 @@ internal fun WalkSummaryContent(
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
-            OutlinedButton(
+            TextButton(
                 onClick = actions.onRequestDiscard,
                 enabled = !uiState.isSaving,
                 modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
             ) {
                 Text(stringResource(R.string.feature_map_discard))
             }
@@ -211,7 +226,7 @@ private fun RoutePreview(walk: ActiveWalk, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .height(RoutePreviewHeight)
             .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+            .background(MaterialTheme.colorScheme.secondaryContainer),
     ) {
         RouteCanvas(
             lines = lines,
@@ -259,9 +274,22 @@ private fun ColumnScope.WalkDetailsForm(
             }
             if (uiState.photoUris.size < WalkLimits.MAX_PHOTOS) {
                 item {
-                    FilledTonalButton(onClick = actions.onAddPhoto, modifier = Modifier.height(PhotoSize)) {
-                        Icon(painterResource(GeoWoofIcons.AddAPhoto), contentDescription = null)
-                        Text(stringResource(R.string.feature_map_add_photo))
+                    Surface(
+                        onClick = actions.onAddPhoto,
+                        modifier = Modifier.size(PhotoSize),
+                        shape = MaterialTheme.shapes.medium,
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Icon(painterResource(GeoWoofIcons.AddAPhoto), contentDescription = null)
+                            Text(
+                                text = stringResource(R.string.feature_map_add_photo),
+                                style = MaterialTheme.typography.labelMedium,
+                            )
+                        }
                     }
                 }
             }
@@ -320,3 +348,5 @@ private fun WalkSummaryPreview() {
         )
     }
 }
+
+private val SaveButtonHeight = 52.dp

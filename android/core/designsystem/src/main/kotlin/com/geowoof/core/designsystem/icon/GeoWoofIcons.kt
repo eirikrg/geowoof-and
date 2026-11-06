@@ -113,4 +113,28 @@ object GeoWoofIcons {
     @DrawableRes val Schedule: Int = R.drawable.core_designsystem_ic_schedule
 
     @DrawableRes val Image: Int = R.drawable.core_designsystem_ic_image
+
+    @DrawableRes val Palette: Int = R.drawable.core_designsystem_ic_palette
+
+    @DrawableRes val Route: Int = R.drawable.core_designsystem_ic_route
+
+    @DrawableRes val Timer: Int = R.drawable.core_designsystem_ic_timer
+
+    @DrawableRes val Speed: Int = R.drawable.core_designsystem_ic_speed
+
+    @DrawableRes val Fire: Int = R.drawable.core_designsystem_ic_local_fire_department
+
+    @DrawableRes val Straighten: Int = R.drawable.core_designsystem_ic_straighten
+
+    @DrawableRes val Forum: Int = R.drawable.core_designsystem_ic_forum
+
+    @DrawableRes val WifiOff: Int = R.drawable.core_designsystem_ic_wifi_off
+
+    @DrawableRes val MyLocation: Int = R.drawable.core_designsystem_ic_my_location
+
+    @DrawableRes val Info: Int = R.drawable.core_designsystem_ic_info
+
+    @DrawableRes val PhotoCamera: Int = R.drawable.core_designsystem_ic_photo_camera
+
+    @DrawableRes val Celebration: Int = R.drawable.core_designsystem_ic_celebration
 }

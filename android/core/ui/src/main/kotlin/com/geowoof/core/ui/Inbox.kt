@@ -9,9 +9,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
@@ -49,13 +51,20 @@ fun InboxActions(modifier: Modifier = Modifier) {
     }
 }
 
-/** The same over the map, which has no top app bar. */
+/** The same over the map, which has no top app bar: together, on a surface that stands out from it. */
 @Composable
 fun FloatingInboxActions(modifier: Modifier = Modifier) {
     val inbox = LocalInbox.current ?: return
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.small)) {
-        FilledTonalIconButton(onClick = inbox.onOpenNotifications) { NotificationsIcon(inbox.unreadNotifications) }
-        FilledTonalIconButton(onClick = inbox.onOpenMessages) { MessagesIcon(inbox.unreadMessages) }
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = FloatingElevation,
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.extraSmall)) {
+            IconButton(onClick = inbox.onOpenNotifications) { NotificationsIcon(inbox.unreadNotifications) }
+            IconButton(onClick = inbox.onOpenMessages) { MessagesIcon(inbox.unreadMessages) }
+        }
     }
 }
 
@@ -92,7 +101,10 @@ private fun CountedIcon(icon: Int, count: Int, description: String, modifier: Mo
         badge = {
             if (count > 0) {
                 val isTooMany = count > MAX_COUNT
-                Badge {
+                Badge(
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
+                ) {
                     Text(if (isTooMany) stringResource(R.string.core_ui_many_unread, MAX_COUNT) else count.toString())
                 }
             }
@@ -119,3 +131,4 @@ fun RequestNotificationPermission() {
 }
 
 private const val MAX_COUNT = 99
+private val FloatingElevation = 3.dp

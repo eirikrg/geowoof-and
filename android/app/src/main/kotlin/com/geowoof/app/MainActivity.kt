@@ -1,11 +1,15 @@
 package com.geowoof.app
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
@@ -16,6 +20,7 @@ import com.geowoof.app.ui.GeoWoofApp
 import com.geowoof.core.data.credentials.PasswordSaveRequests
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.SessionState
+import com.geowoof.core.model.ThemeMode
 import com.geowoof.core.ui.offerToSavePassword
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -32,7 +37,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
-        splashScreen.setKeepOnScreenCondition { viewModel.uiState.value.sessionState == SessionState.Loading }
+        splashScreen.setKeepOnScreenCondition {
+            val state = viewModel.uiState.value
+            state.sessionState == SessionState.Loading || state.appearance == null
+        }
         enableEdgeToEdge()
 
         // Coming back from its saved state, the activity gets the same intent, and that link was already opened.
@@ -56,7 +64,18 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            GeoWoofTheme {
+            val isDark = when (uiState.appearance?.themeMode) {
+                ThemeMode.Light -> false
+                ThemeMode.Dark -> true
+                else -> isSystemInDarkTheme()
+            }
+            // The app can be dark while the system is not, and the icons of the bars have to follow it.
+            DisposableEffect(isDark) {
+                val bars = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { isDark }
+                enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
+                onDispose {}
+            }
+            GeoWoofTheme(darkTheme = isDark, dynamicColor = uiState.appearance?.useWallpaperColors == true) {
                 GeoWoofApp(
                     uiState = uiState,
                     onFinishFirstPetStep = viewModel::onFirstPetStepDone,

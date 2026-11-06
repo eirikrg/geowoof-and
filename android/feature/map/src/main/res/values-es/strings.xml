@@ -74,4 +74,8 @@
     <string name="feature_map_live_visibility_confirm">Continuar</string>
     <string name="feature_map_live_shown_to">Quién te ve: %1$s</string>
     <string name="feature_map_live_not_shared">No compartes tu posición</string>
+    <string name="feature_map_my_location">Ir a mi ubicación</string>
+    <string name="feature_map_on_a_walk">De paseo</string>
+    <string name="feature_map_summary_cheer">¡Buen paseo!</string>
+    <string name="feature_map_summary_with">Con %1$s</string>
 </resources>

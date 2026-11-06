@@ -2,10 +2,12 @@ package com.geowoof.app
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.geowoof.core.data.repository.AppearanceRepository
 import com.geowoof.core.data.repository.AuthRepository
 import com.geowoof.core.data.repository.ChatRepository
 import com.geowoof.core.data.repository.NotificationsRepository
 import com.geowoof.core.data.repository.SocialRepository
+import com.geowoof.core.model.Appearance
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.notifications.PushRegistrar
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,9 +23,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/** While [sessionState] is [SessionState.Loading], the splash screen stays visible. */
+/** While [sessionState] is [SessionState.Loading] or there is no [appearance] yet, the splash screen stays visible. */
 data class AppUiState(
     val sessionState: SessionState = SessionState.Loading,
+    val appearance: Appearance? = null,
     /** The user has just finished choosing a username: the last, optional step comes next. */
     val offerFirstPet: Boolean = false,
     /** The people waiting for an answer to follow this profile: the navigation bar shows it. */
@@ -41,6 +44,7 @@ class MainActivityViewModel @Inject constructor(
     private val chat: ChatRepository,
     private val notifications: NotificationsRepository,
     private val push: PushRegistrar,
+    appearance: AppearanceRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppUiState(sessionState = auth.sessionState.value))
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
@@ -56,6 +60,10 @@ class MainActivityViewModel @Inject constructor(
             if (auth.sessionState.first { it != SessionState.Loading } is SessionState.SignedIn) {
                 auth.refreshUser()
             }
+        }
+
+        viewModelScope.launch {
+            appearance.appearance.collect { current -> _uiState.update { it.copy(appearance = current) } }
         }
 
         viewModelScope.launch {

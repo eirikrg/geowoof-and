@@ -8,16 +8,21 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ElevatedAssistChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -32,6 +37,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -49,7 +55,12 @@ import com.geowoof.core.ui.FloatingInboxActions
 import com.geowoof.core.ui.userMessage
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.Dash
+import com.google.android.gms.maps.model.Gap
+import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.compose.ComposeMapColorScheme
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
@@ -117,6 +128,7 @@ fun MapScreen(
             onChooseVisibility = viewModel::onChooseVisibility,
             onDismissVisibility = viewModel::onDismissVisibility,
             onDismissError = viewModel::onErrorShown,
+            onMyLocation = viewModel::onMyLocationClick,
         ),
         live = live,
         liveActions = LiveWalkersActions(
@@ -141,6 +153,8 @@ fun MapScreen(
             walkers = live.walkers,
             onViewportChange = liveViewModel::onViewportChange,
             onWalkerClick = liveViewModel::onWalkerClick,
+            cameraTarget = uiState.cameraTarget,
+            onReachCameraTarget = viewModel::onCameraTargetReached,
             modifier = mapModifier,
         )
     }
@@ -176,12 +190,7 @@ internal fun MapContent(
                 .fillMaxSize()
                 .safeDrawingPadding(),
         ) {
-            LiveStatus(live = live, actions = liveActions, modifier = Modifier.align(Alignment.TopCenter))
-            FloatingInboxActions(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = GeoWoofTheme.spacing.small, top = InboxTopPadding),
-            )
+            TopControls(uiState, actions, live, liveActions, Modifier.align(Alignment.TopCenter))
             Column(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -230,6 +239,44 @@ private fun MapErrors(
     }
 }
 
+/** What is always at hand: what is waiting, who is around and going back to where the person is. */
+@Composable
+private fun TopControls(
+    uiState: MapUiState,
+    actions: MapActions,
+    live: LiveWalkersUiState,
+    liveActions: LiveWalkersActions,
+    modifier: Modifier = Modifier,
+) {
+    val spacing = GeoWoofTheme.spacing
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.medium, vertical = spacing.small),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(spacing.small),
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            FloatingInboxActions()
+            if (uiState.hasLocationPermission) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = StatusElevation,
+                ) {
+                    IconButton(onClick = actions.onMyLocation) {
+                        Icon(
+                            painter = painterResource(GeoWoofIcons.MyLocation),
+                            contentDescription = stringResource(R.string.feature_map_my_location),
+                        )
+                    }
+                }
+            }
+        }
+        LiveStatus(live = live, actions = liveActions)
+    }
+}
+
 /** What there is to say about the people on the map: also the way to reach them without the markers. */
 @Composable
 private fun LiveStatus(live: LiveWalkersUiState, actions: LiveWalkersActions, modifier: Modifier = Modifier) {
@@ -253,7 +300,14 @@ private fun LiveStatus(live: LiveWalkersUiState, actions: LiveWalkersActions, mo
         live.walkers.isNotEmpty() -> ElevatedAssistChip(
             onClick = actions.onOpenList,
             modifier = modifier,
-            leadingIcon = { Icon(painterResource(GeoWoofIcons.Pets), contentDescription = null) },
+            shape = CircleShape,
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(GeoWoofIcons.Pets),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.tertiary,
+                )
+            },
             label = {
                 Text(pluralStringResource(R.plurals.feature_map_live_walkers, live.walkers.size, live.walkers.size))
             },
@@ -268,6 +322,8 @@ private fun WalkMap(
     walkers: List<LiveWalker>,
     onViewportChange: (MapViewport) -> Unit,
     onWalkerClick: (String) -> Unit,
+    cameraTarget: CameraTarget?,
+    onReachCameraTarget: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val cameraPositionState = rememberCameraPositionState {
@@ -297,20 +353,48 @@ private fun WalkMap(
             cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(target, WALK_ZOOM))
         }
     }
+    val currentOnReachCameraTarget by rememberUpdatedState(onReachCameraTarget)
+    LaunchedEffect(cameraTarget) {
+        cameraTarget?.let { target ->
+            val update = CameraUpdateFactory.newLatLngZoom(
+                LatLng(target.position.latitude, target.position.longitude),
+                PERSON_ZOOM,
+            )
+            if (target.isJump) cameraPositionState.move(update) else cameraPositionState.animate(update)
+            currentOnReachCameraTarget()
+        }
+    }
+    val context = LocalContext.current
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < DARK_SURFACE
+    val style = remember(context, isDark) {
+        MapStyleOptions.loadRawResourceStyle(
+            context,
+            if (isDark) R.raw.feature_map_style_dark else R.raw.feature_map_style_light,
+        )
+    }
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
         contentDescription = stringResource(R.string.feature_map_content_description),
-        properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
-        uiSettings = MapUiSettings(zoomControlsEnabled = false),
+        properties = MapProperties(isMyLocationEnabled = hasLocationPermission, mapStyleOptions = style),
+        uiSettings = MapUiSettings(
+            zoomControlsEnabled = false,
+            myLocationButtonEnabled = false,
+            mapToolbarEnabled = false,
+        ),
         contentPadding = WindowInsets.safeDrawing.asPaddingValues(),
-        mapColorScheme = ComposeMapColorScheme.FOLLOW_SYSTEM,
+        mapColorScheme = if (isDark) ComposeMapColorScheme.DARK else ComposeMapColorScheme.LIGHT,
     ) {
+        // The dashed trail of the logo: the walk is drawing it.
         walk?.segments?.forEach { segment ->
             Polyline(
                 points = segment.points.map { LatLng(it.position.latitude, it.position.longitude) },
                 color = MaterialTheme.colorScheme.primary,
                 width = ROUTE_WIDTH,
+                pattern = RoutePattern,
+                jointType = JointType.ROUND,
+                startCap = RoundCap(),
+                endCap = RoundCap(),
             )
         }
         LiveWalkersLayer(
@@ -332,9 +416,9 @@ private val DefaultCenter = LatLng(40.4168, -3.7038)
 /** A tall phone at 12 would already need more cells than the live map takes (docs/realtime.md). */
 private const val DEFAULT_ZOOM = 13f
 private const val WALK_ZOOM = 17f
+private const val PERSON_ZOOM = 15f
 private const val ROUTE_WIDTH = 14f
 private const val CLUSTER_ZOOM_STEP = 2f
+private const val DARK_SURFACE = 0.5f
 private val StatusElevation = 3.dp
-
-/** Below what the status says, so that they never touch. */
-private val InboxTopPadding = 56.dp
+private val RoutePattern = listOf(Dash(ROUTE_WIDTH * 2.4f), Gap(ROUTE_WIDTH * 1.8f))

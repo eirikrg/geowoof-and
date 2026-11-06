@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
@@ -177,5 +178,11 @@ private fun OpenPendingLink(link: String?, navController: NavHostController, onC
 @Composable
 private fun PendingRequestsBadge(count: Int, modifier: Modifier = Modifier) {
     val description = pluralStringResource(R.plurals.pending_follow_requests, count, count)
-    Badge(modifier = modifier.semantics { contentDescription = description }) { Text(count.toString()) }
+    Badge(
+        modifier = modifier.semantics { contentDescription = description },
+        containerColor = MaterialTheme.colorScheme.tertiary,
+        contentColor = MaterialTheme.colorScheme.onTertiary,
+    ) {
+        Text(count.toString())
+    }
 }

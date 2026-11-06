@@ -9,11 +9,15 @@ import com.geowoof.core.common.ApplicationScope
 import com.geowoof.core.common.Dispatcher
 import com.geowoof.core.common.GeoWoofDispatchers
 import com.geowoof.core.datastore.AeadSessionCipher
+import com.geowoof.core.datastore.AppearanceSerializer
+import com.geowoof.core.datastore.AppearanceStorage
+import com.geowoof.core.datastore.DataStoreAppearanceStorage
 import com.geowoof.core.datastore.EncryptedSessionStorage
 import com.geowoof.core.datastore.SessionCipher
 import com.geowoof.core.datastore.SessionFile
 import com.geowoof.core.datastore.SessionFileSerializer
 import com.geowoof.core.datastore.SessionStorage
+import com.geowoof.core.datastore.StoredAppearance
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -40,6 +44,19 @@ internal object DataStoreModule {
         scope = scope + ioDispatcher,
         produceFile = { context.dataStoreFile("session.bin") },
     )
+
+    @Provides
+    @Singleton
+    fun providesAppearanceDataStore(
+        @ApplicationContext context: Context,
+        @Dispatcher(GeoWoofDispatchers.IO) ioDispatcher: CoroutineDispatcher,
+        @ApplicationScope scope: CoroutineScope,
+    ): DataStore<StoredAppearance> = DataStoreFactory.create(
+        serializer = AppearanceSerializer,
+        corruptionHandler = ReplaceFileCorruptionHandler { StoredAppearance() },
+        scope = scope + ioDispatcher,
+        produceFile = { context.dataStoreFile("appearance.json") },
+    )
 }
 
 @Module
@@ -47,6 +64,9 @@ internal object DataStoreModule {
 internal interface DataStoreBindings {
     @Binds
     fun bindsSessionStorage(storage: EncryptedSessionStorage): SessionStorage
+
+    @Binds
+    fun bindsAppearanceStorage(storage: DataStoreAppearanceStorage): AppearanceStorage
 }
 
 /** Creates the Keystore-backed cipher on first use, on the DataStore's IO dispatcher. */

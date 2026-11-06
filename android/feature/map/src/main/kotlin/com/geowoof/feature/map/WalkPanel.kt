@@ -3,12 +3,15 @@ package com.geowoof.feature.map
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -19,8 +22,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -37,11 +38,6 @@ import com.geowoof.core.model.GeoPoint
 import com.geowoof.core.model.RoutePoint
 import com.geowoof.core.model.RouteSegment
 import com.geowoof.core.model.WalkStats
-import com.geowoof.core.ui.WalkStat
-import com.geowoof.core.ui.distanceText
-import com.geowoof.core.ui.formatDuration
-import com.geowoof.core.ui.paceText
-import kotlinx.coroutines.delay
 import java.time.Instant
 
 /** What can be done now: start a walk, or follow the one in progress. */
@@ -51,11 +47,16 @@ internal fun WalkPanel(uiState: MapUiState, actions: MapActions, modifier: Modif
     if (walk == null) {
         ExtendedFloatingActionButton(
             onClick = actions.onStart,
-            modifier = modifier.padding(GeoWoofTheme.spacing.large),
+            modifier = modifier
+                .padding(GeoWoofTheme.spacing.large)
+                .heightIn(min = StartHeight),
+            shape = CircleShape,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
         ) {
             Icon(painterResource(GeoWoofIcons.DirectionsWalk), contentDescription = null)
             Spacer(Modifier.width(GeoWoofTheme.spacing.small))
-            Text(stringResource(R.string.feature_map_start_walk))
+            Text(stringResource(R.string.feature_map_start_walk), style = MaterialTheme.typography.titleMedium)
         }
         return
     }
@@ -64,8 +65,8 @@ internal fun WalkPanel(uiState: MapUiState, actions: MapActions, modifier: Modif
         modifier = modifier
             .fillMaxWidth()
             .padding(spacing.medium),
-        shape = MaterialTheme.shapes.large,
-        tonalElevation = PanelElevation,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = PanelElevation,
     ) {
         Column(
@@ -73,10 +74,17 @@ internal fun WalkPanel(uiState: MapUiState, actions: MapActions, modifier: Modif
             verticalArrangement = Arrangement.spacedBy(spacing.medium),
         ) {
             if (walk.isTracking) {
-                LiveVisibilityChip(
-                    visibility = uiState.liveVisibility,
-                    onClick = actions.onChangeVisibility,
-                )
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (walk.status == ActiveWalkStatus.Recording) OnAWalk()
+                    LiveVisibilityChip(
+                        visibility = uiState.liveVisibility,
+                        onClick = actions.onChangeVisibility,
+                    )
+                }
             }
             when (walk.status) {
                 ActiveWalkStatus.Preparing -> PreparingContent(actions)
@@ -110,12 +118,24 @@ private fun ColumnScope.PreparingContent(actions: MapActions) {
 private fun ColumnScope.RecordingContent(walk: ActiveWalk, stats: WalkStats?, actions: MapActions) {
     LiveStats(walk, stats)
     Row(horizontalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.medium)) {
-        FilledTonalButton(onClick = actions.onPause, modifier = Modifier.weight(1f)) {
+        FilledTonalButton(
+            onClick = actions.onPause,
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(min = ButtonHeight),
+        ) {
             Icon(painterResource(GeoWoofIcons.Pause), contentDescription = null)
+            Spacer(Modifier.width(GeoWoofTheme.spacing.small))
             Text(stringResource(R.string.feature_map_pause))
         }
-        Button(onClick = actions.onFinish, modifier = Modifier.weight(1f)) {
+        Button(
+            onClick = actions.onFinish,
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(min = ButtonHeight),
+        ) {
             Icon(painterResource(GeoWoofIcons.Stop), contentDescription = null)
+            Spacer(Modifier.width(GeoWoofTheme.spacing.small))
             Text(stringResource(R.string.feature_map_finish))
         }
     }
@@ -146,12 +166,24 @@ private fun ColumnScope.InterruptedContent(actions: MapActions) {
 @Composable
 private fun ResumeOrFinish(resumeLabel: Int, actions: MapActions) {
     Row(horizontalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.medium)) {
-        FilledTonalButton(onClick = actions.onResume, modifier = Modifier.weight(1f)) {
+        FilledTonalButton(
+            onClick = actions.onResume,
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(min = ButtonHeight),
+        ) {
             Icon(painterResource(GeoWoofIcons.PlayArrow), contentDescription = null)
+            Spacer(Modifier.width(GeoWoofTheme.spacing.small))
             Text(stringResource(resumeLabel))
         }
-        Button(onClick = actions.onFinish, modifier = Modifier.weight(1f)) {
+        Button(
+            onClick = actions.onFinish,
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(min = ButtonHeight),
+        ) {
             Icon(painterResource(GeoWoofIcons.Stop), contentDescription = null)
+            Spacer(Modifier.width(GeoWoofTheme.spacing.small))
             Text(stringResource(R.string.feature_map_finish))
         }
     }
@@ -169,45 +201,10 @@ private fun ColumnScope.FinishedContent(actions: MapActions) {
     }
 }
 
-@Composable
-private fun LiveStats(walk: ActiveWalk, stats: WalkStats?) {
-    val elapsed = rememberElapsedSeconds(walk)
-    Row(modifier = Modifier.fillMaxWidth()) {
-        WalkStat(
-            value = distanceText(stats?.distanceM ?: 0),
-            label = stringResource(R.string.feature_map_distance),
-            modifier = Modifier.weight(1f),
-        )
-        WalkStat(
-            value = formatDuration(elapsed),
-            label = stringResource(R.string.feature_map_time),
-            modifier = Modifier.weight(1f),
-        )
-        WalkStat(
-            value = paceText(stats?.paceSecondsPerKm),
-            label = stringResource(R.string.feature_map_pace),
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-/** It runs while recording. While paused, it stays at the last position. */
-@Composable
-private fun rememberElapsedSeconds(walk: ActiveWalk): Int {
-    val stopped = ((walk.lastPoint?.offsetMs ?: 0) / MS_PER_SECOND).toInt()
-    val elapsed by produceState(stopped, walk.status, walk.startedAt) {
-        value = stopped
-        while (walk.status == ActiveWalkStatus.Recording) {
-            value = ((Instant.now().toEpochMilli() - walk.startedAt.toEpochMilli()) / MS_PER_SECOND).toInt()
-            delay(MS_PER_SECOND)
-        }
-    }
-    return elapsed
-}
-
-private val PanelElevation = 3.dp
+private val PanelElevation = 6.dp
 private val ProgressSize = 32.dp
-private const val MS_PER_SECOND = 1000L
+private val StartHeight = 64.dp
+private val ButtonHeight = 52.dp
 
 @PreviewLightDark
 @Composable

@@ -1,10 +1,13 @@
 package com.geowoof.feature.map
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,8 +19,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -58,7 +63,7 @@ internal fun PetPickerSheet(uiState: MapUiState, actions: MapActions, modifier: 
 @Composable
 private fun ColumnScope.NoPets(actions: MapActions) {
     Text(stringResource(R.string.feature_map_no_pets), style = MaterialTheme.typography.bodyMedium)
-    Button(onClick = actions.onAddPet, modifier = Modifier.fillMaxWidth()) {
+    Button(onClick = actions.onAddPet, modifier = Modifier.fillMaxWidth().heightIn(min = ButtonHeight)) {
         Text(stringResource(R.string.feature_map_add_pet))
     }
 }
@@ -66,34 +71,56 @@ private fun ColumnScope.NoPets(actions: MapActions) {
 @Composable
 private fun ColumnScope.OnePet(pet: Pet, actions: MapActions) {
     PetLine(pet)
-    Button(onClick = { actions.onConfirmPets(pet.id) }, modifier = Modifier.fillMaxWidth()) {
+    Button(
+        onClick = { actions.onConfirmPets(pet.id) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = ButtonHeight),
+    ) {
         Text(stringResource(R.string.feature_map_start))
     }
 }
 
 @Composable
 private fun ColumnScope.ManyPets(uiState: MapUiState, actions: MapActions) {
-    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+    val spacing = GeoWoofTheme.spacing
+    LazyColumn(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(spacing.small),
+    ) {
         items(uiState.pets, key = Pet::id) { pet ->
             val isSelected = pet.id in uiState.selectedPetIds
+            val background by animateColorAsState(
+                if (isSelected) {
+                    MaterialTheme.colorScheme.secondaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerHigh
+                },
+                label = "pet row",
+            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clip(MaterialTheme.shapes.large)
+                    .background(background)
                     .toggleable(value = isSelected, role = Role.Checkbox, onValueChange = {
                         actions.onTogglePet(pet.id)
                     })
-                    .padding(vertical = GeoWoofTheme.spacing.small),
+                    .padding(horizontal = spacing.medium, vertical = spacing.small),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
+                PetLine(pet)
                 Checkbox(checked = isSelected, onCheckedChange = null)
-                PetLine(pet, modifier = Modifier.padding(start = GeoWoofTheme.spacing.medium))
             }
         }
     }
     Button(
         onClick = { actions.onConfirmPets(null) },
         enabled = uiState.selectedPetIds.isNotEmpty(),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = ButtonHeight),
     ) {
         Text(stringResource(R.string.feature_map_start))
     }
@@ -113,8 +140,10 @@ private fun PetLine(pet: Pet, modifier: Modifier = Modifier) {
             size = PetAvatarSize,
             variant = ImageVariant.Thumb,
         )
-        Text(pet.name, style = MaterialTheme.typography.bodyLarge)
+        Text(pet.name, style = MaterialTheme.typography.titleSmall)
     }
 }
 
 private val PetAvatarSize = 40.dp
+
+private val ButtonHeight = 52.dp

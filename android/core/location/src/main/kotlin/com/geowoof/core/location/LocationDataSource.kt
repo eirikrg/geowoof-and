@@ -17,11 +17,14 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.Task
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
 /** The location that the app can use. A walk needs [Precise]: an approximate one cannot draw a route. */
 enum class LocationPermissionLevel {
@@ -44,6 +47,9 @@ class LocationPermissionException : RuntimeException("The location permission is
 interface LocationDataSource {
     /** Positions while it is collected. It fails with [LocationPermissionException] without permission. */
     fun fixes(): Flow<LocationFix>
+
+    /** Roughly where the person is, to show the map there. `null` if it is not known or there is no permission. */
+    suspend fun lastKnown(): GeoPoint?
 }
 
 internal class AndroidLocationAccess @Inject constructor(@ApplicationContext private val context: Context) :
@@ -84,6 +90,23 @@ internal class FusedLocationDataSource @Inject constructor(
         }
 
         awaitClose { client.removeLocationUpdates(callback) }
+    }
+
+    @SuppressLint("MissingPermission")
+    override suspend fun lastKnown(): GeoPoint? {
+        if (access.permissionLevel() == LocationPermissionLevel.None) return null
+        val client = LocationServices.getFusedLocationProviderClient(context)
+        return try {
+            val location = client.lastLocation.awaitOrNull()
+                ?: client.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null).awaitOrNull()
+            location?.let { GeoPoint(it.latitude, it.longitude) }
+        } catch (@Suppress("SwallowedException") exception: SecurityException) {
+            null
+        }
+    }
+
+    private suspend fun <T> Task<T>.awaitOrNull(): T? = suspendCancellableCoroutine { continuation ->
+        addOnCompleteListener { task -> continuation.resume(task.result.takeIf { task.isSuccessful }) }
     }
 
     private fun Location.toFix() = LocationFix(

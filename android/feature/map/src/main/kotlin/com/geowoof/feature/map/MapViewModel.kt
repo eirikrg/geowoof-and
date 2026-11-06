@@ -7,9 +7,11 @@ import com.geowoof.core.data.repository.PetsRepository
 import com.geowoof.core.data.repository.SettingsRepository
 import com.geowoof.core.domain.walks.ComputeWalkStatsUseCase
 import com.geowoof.core.location.LocationAccess
+import com.geowoof.core.location.LocationDataSource
 import com.geowoof.core.location.LocationPermissionLevel
 import com.geowoof.core.model.ActiveWalk
 import com.geowoof.core.model.AppError
+import com.geowoof.core.model.GeoPoint
 import com.geowoof.core.model.LiveVisibility
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.Pet
@@ -38,6 +40,9 @@ enum class WalkPrompt {
     LocationDisabled,
 }
 
+/** Where to take the camera, once. [isJump] is for the first time, when it should not fly across the country. */
+data class CameraTarget(val position: GeoPoint, val isJump: Boolean)
+
 data class MapUiState(
     val walk: ActiveWalk? = null,
     val stats: WalkStats? = null,
@@ -52,6 +57,7 @@ data class MapUiState(
     val liveVisibility: LiveVisibility? = null,
     val hideStartDistanceM: Int = UserSettings.DEFAULT_HIDE_START_M,
     val isChoosingVisibility: Boolean = false,
+    val cameraTarget: CameraTarget? = null,
     val error: AppError? = null,
 )
 
@@ -64,11 +70,12 @@ private data class MapChoices(
     val isChoosingVisibility: Boolean = false,
     /** The first walk waits for the person to say who can see them. */
     val startsAfterChoice: Boolean = false,
+    val cameraTarget: CameraTarget? = null,
     val error: AppError? = null,
 )
 
 /** Each function is one thing the user can do with a walk. */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val activeWalks: ActiveWalkRepository,
@@ -77,8 +84,10 @@ class MapViewModel @Inject constructor(
     private val tracking: WalkTrackingController,
     private val computeStats: ComputeWalkStatsUseCase,
     private val settings: SettingsRepository,
+    private val location: LocationDataSource,
 ) : ViewModel() {
     private val choices = MutableStateFlow(MapChoices())
+    private var hasShownThePerson = false
 
     /** What to do once the permission is granted. */
     private var pendingStart: PendingStart? = null
@@ -100,6 +109,7 @@ class MapViewModel @Inject constructor(
                 liveVisibility = chosen.liveVisibility,
                 hideStartDistanceM = chosen.hideStartDistanceM,
                 isChoosingVisibility = current.isChoosingVisibility,
+                cameraTarget = current.cameraTarget,
                 error = current.error,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), MapUiState())
@@ -110,6 +120,7 @@ class MapViewModel @Inject constructor(
      */
     fun onScreenResumed() {
         refreshPermission()
+        showThePersonOnce()
         viewModelScope.launch {
             val walk = activeWalks.current()
             if (walk?.isTracking == true && !tracking.isRunning && !isStarting) activeWalks.interrupt()
@@ -168,6 +179,24 @@ class MapViewModel @Inject constructor(
 
     fun onErrorShown() = choices.update { it.copy(error = null) }
 
+    fun onMyLocationClick() = goToThePerson(isJump = false)
+
+    fun onCameraTargetReached() = choices.update { it.copy(cameraTarget = null) }
+
+    /** The map opens where the person is, in place of a default city, as soon as it can know. */
+    private fun showThePersonOnce() {
+        if (hasShownThePerson || locationAccess.permissionLevel() == LocationPermissionLevel.None) return
+        hasShownThePerson = true
+        goToThePerson(isJump = true)
+    }
+
+    private fun goToThePerson(isJump: Boolean) {
+        viewModelScope.launch {
+            val position = location.lastKnown() ?: return@launch
+            choices.update { it.copy(cameraTarget = CameraTarget(position, isJump)) }
+        }
+    }
+
     fun onResumeClick() = proceed(PendingStart.Resume)
 
     fun onPauseClick() {
@@ -197,6 +226,7 @@ class MapViewModel @Inject constructor(
     /** The answer of the system. It is read from the system, because the user may also change it in Settings. */
     fun onPermissionsResult() {
         refreshPermission()
+        showThePersonOnce()
         when (locationAccess.permissionLevel()) {
             LocationPermissionLevel.Precise -> {
                 choices.update { it.copy(prompt = null) }

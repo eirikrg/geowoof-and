@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,7 +40,11 @@ import com.geowoof.core.ui.labelRes
 internal fun LiveVisibilitySheet(uiState: MapUiState, actions: MapActions, modifier: Modifier = Modifier) {
     val spacing = GeoWoofTheme.spacing
     var choice by rememberSaveable { mutableStateOf(uiState.liveVisibility) }
-    ModalBottomSheet(onDismissRequest = actions.onDismissVisibility, modifier = modifier) {
+    ModalBottomSheet(
+        onDismissRequest = actions.onDismissVisibility,
+        modifier = modifier,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
         Column(
             modifier = Modifier
                 .padding(start = spacing.large, end = spacing.large, bottom = spacing.large)

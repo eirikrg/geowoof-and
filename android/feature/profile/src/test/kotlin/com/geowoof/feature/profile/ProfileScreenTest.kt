@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -398,6 +399,7 @@ class ProfileScreenTest {
         composeRule.onNodeWithText("Con Bimba").assertIsDisplayed()
         composeRule.onNodeWithText("Private profile").assertIsDisplayed()
         composeRule.onNodeWithText("3").assertIsDisplayed()
+        composeRule.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("This profile is private"))
         composeRule.onNodeWithText("This profile is private").assertIsDisplayed()
         composeRule.onNodeWithText("dani").assertDoesNotExist()
         composeRule.onNodeWithText("Photos").assertDoesNotExist()

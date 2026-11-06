@@ -1,6 +1,5 @@
 package com.geowoof.feature.settings
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,8 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -22,9 +19,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import com.geowoof.core.designsystem.component.ListGroupDivider
+import com.geowoof.core.designsystem.component.ListGroupItem
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.LiveVisibility
@@ -43,22 +41,19 @@ internal fun LiveSettings(
     var isChoosingVisibility by rememberSaveable { mutableStateOf(false) }
     var isChoosingHideStart by rememberSaveable { mutableStateOf(false) }
     Column(modifier = modifier) {
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.feature_settings_live_visibility)) },
-            supportingContent = {
-                Text(
-                    settings.liveVisibility?.let { stringResource(it.labelRes()) }
-                        ?: stringResource(R.string.feature_settings_live_visibility_not_chosen),
-                )
-            },
-            leadingContent = { Icon(painterResource(GeoWoofIcons.Visibility), contentDescription = null) },
-            modifier = Modifier.clickable { isChoosingVisibility = true },
+        ListGroupItem(
+            headline = stringResource(R.string.feature_settings_live_visibility),
+            supporting = settings.liveVisibility?.let { stringResource(it.labelRes()) }
+                ?: stringResource(R.string.feature_settings_live_visibility_not_chosen),
+            icon = GeoWoofIcons.Visibility,
+            onClick = { isChoosingVisibility = true },
         )
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.feature_settings_hide_start)) },
-            supportingContent = { Text(hideStartLabel(settings.hideStartDistanceM)) },
-            leadingContent = { Icon(painterResource(GeoWoofIcons.LocationOn), contentDescription = null) },
-            modifier = Modifier.clickable { isChoosingHideStart = true },
+        ListGroupDivider()
+        ListGroupItem(
+            headline = stringResource(R.string.feature_settings_hide_start),
+            supporting = hideStartLabel(settings.hideStartDistanceM),
+            icon = GeoWoofIcons.LocationOn,
+            onClick = { isChoosingHideStart = true },
         )
     }
     if (isChoosingVisibility) {

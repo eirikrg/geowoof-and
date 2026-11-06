@@ -2,6 +2,7 @@ package com.geowoof.app
 
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.notifications.PushRegistrar
+import com.geowoof.core.testing.FakeAppearanceRepository
 import com.geowoof.core.testing.FakeAuthRepository
 import com.geowoof.core.testing.FakeChatRepository
 import com.geowoof.core.testing.FakeNotificationsRepository
@@ -37,6 +38,7 @@ class MainActivityViewModelTest {
         chat,
         notifications,
         PushRegistrar(auth, notifications, tokens, CoroutineScope(mainDispatcherRule.testDispatcher)),
+        FakeAppearanceRepository(),
     )
 
     @Test

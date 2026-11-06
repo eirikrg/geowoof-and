@@ -22,4 +22,5 @@ internal class MapActions(
     val onChooseVisibility: (LiveVisibility) -> Unit,
     val onDismissVisibility: () -> Unit,
     val onDismissError: () -> Unit,
+    val onMyLocation: () -> Unit = {},
 )

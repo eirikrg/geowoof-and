@@ -15,14 +15,14 @@ import androidx.compose.ui.platform.LocalContext
 /**
  * GeoWoof Material 3 theme.
  *
- * On Android 12+ it uses dynamic color (wallpaper-based) unless [dynamicColor] is false; otherwise
- * it uses the brand scheme generated from the seed color, honouring the system contrast setting
- * (Android 14+).
+ * It uses the colors of the brand, generated from the icon, honouring the system contrast setting
+ * (Android 14+). With [dynamicColor], on Android 12+, it takes them from the wallpaper instead: it is
+ * something the person can choose in Settings, not the default, because it would hide the brand.
  */
 @Composable
 fun GeoWoofTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val colorScheme = if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

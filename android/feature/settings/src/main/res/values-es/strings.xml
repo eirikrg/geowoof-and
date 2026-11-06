@@ -41,4 +41,11 @@
     <string name="feature_settings_hide_start_message">Tu posición se queda en el móvil hasta que estés a esta distancia de donde empezaste, para que nadie vea tu portal.</string>
     <string name="feature_settings_hide_start_meters">%1$d m</string>
     <string name="feature_settings_hide_start_never">No ocultarlo</string>
+    <string name="feature_settings_appearance">Apariencia</string>
+    <string name="feature_settings_theme">Tema</string>
+    <string name="feature_settings_theme_system">Automático</string>
+    <string name="feature_settings_theme_light">Claro</string>
+    <string name="feature_settings_theme_dark">Oscuro</string>
+    <string name="feature_settings_wallpaper_colors">Colores de tu fondo de pantalla</string>
+    <string name="feature_settings_wallpaper_colors_summary">En lugar de los verdes de GeoWoof</string>
 </resources>

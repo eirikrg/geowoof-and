@@ -9,7 +9,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.net.toUri
-import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.model.NotificationType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -57,7 +56,8 @@ internal class AndroidNotificationPresenter @Inject constructor(@ApplicationCont
         val sender = Person.Builder().setName(message.senderName).build()
         style.addMessage(message.text(), System.currentTimeMillis(), sender)
         val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
-            .setSmallIcon(GeoWoofIcons.ChatBubble)
+            .setSmallIcon(R.drawable.core_notifications_ic_notification)
+            .setColor(BRAND_COLOR)
             .setStyle(style)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setContentIntent(openLink("geowoof://chat?conversationId=${message.conversationId}"))
@@ -74,7 +74,8 @@ internal class AndroidNotificationPresenter @Inject constructor(@ApplicationCont
 
     private fun showSocial(social: PushContent.Social) {
         val notification = NotificationCompat.Builder(context, CHANNEL_SOCIAL)
-            .setSmallIcon(GeoWoofIcons.Notifications)
+            .setSmallIcon(R.drawable.core_notifications_ic_notification)
+            .setColor(BRAND_COLOR)
             .setContentTitle(context.getString(social.type.textRes(), social.actorName))
             .setCategory(NotificationCompat.CATEGORY_SOCIAL)
             .setContentIntent(openLink(social.link()))
@@ -131,3 +132,6 @@ internal class AndroidNotificationPresenter @Inject constructor(@ApplicationCont
         const val SOCIAL_NOTIFICATION_ID = 3002
     }
 }
+
+/** The primary color of the theme, for the icon of the notification when it is opened. */
+private const val BRAND_COLOR = 0xFF3C6847.toInt()

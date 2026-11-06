@@ -10,6 +10,7 @@ import com.geowoof.core.location.LocationPermissionException
 import com.geowoof.core.location.LocationPermissionLevel
 import com.geowoof.core.model.ActiveWalk
 import com.geowoof.core.model.ActiveWalkStatus
+import com.geowoof.core.model.GeoPoint
 import com.geowoof.core.model.LocationFix
 import com.geowoof.core.model.NewWalk
 import com.geowoof.core.model.Outcome
@@ -30,6 +31,7 @@ class FakeLocationDataSource : LocationDataSource {
     private val positions = MutableSharedFlow<LocationFix>(extraBufferCapacity = 64)
 
     var hasPermission = true
+    var lastKnownPosition: GeoPoint? = null
     var subscriptions = 0
         private set
 
@@ -41,6 +43,8 @@ class FakeLocationDataSource : LocationDataSource {
         subscriptions++
         positions.collect { emit(it) }
     }
+
+    override suspend fun lastKnown(): GeoPoint? = lastKnownPosition
 
     suspend fun send(fix: LocationFix) = positions.emit(fix)
 }

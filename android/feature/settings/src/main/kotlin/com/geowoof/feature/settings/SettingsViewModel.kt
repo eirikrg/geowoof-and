@@ -4,13 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.geowoof.core.data.repository.AccountRepository
 import com.geowoof.core.data.repository.ActiveWalkRepository
+import com.geowoof.core.data.repository.AppearanceRepository
 import com.geowoof.core.data.repository.AuthRepository
 import com.geowoof.core.data.repository.SettingsRepository
 import com.geowoof.core.data.repository.WalksRepository
 import com.geowoof.core.model.AppError
+import com.geowoof.core.model.Appearance
 import com.geowoof.core.model.LiveVisibility
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.SessionState
+import com.geowoof.core.model.ThemeMode
 import com.geowoof.core.model.User
 import com.geowoof.core.model.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,6 +34,7 @@ data class SettingsUiState(
     val isChangingPrivacy: Boolean = false,
     /** Room keeps the answer of the server, so a choice only shows once it has been made. */
     val settings: UserSettings = UserSettings(),
+    val appearance: Appearance = Appearance(),
     val error: AppError? = null,
 )
 
@@ -41,6 +45,7 @@ class SettingsViewModel @Inject constructor(
     private val activeWalks: ActiveWalkRepository,
     private val accounts: AccountRepository,
     private val settings: SettingsRepository,
+    private val appearance: AppearanceRepository,
 ) : ViewModel() {
     private val isSigningOut = MutableStateFlow(false)
     private val isConfirmingSignOut = MutableStateFlow(false)
@@ -62,7 +67,11 @@ class SettingsViewModel @Inject constructor(
                 isChangingPrivacy = changingPrivacy,
                 error = failure,
             )
-        }.combine(settings.settings) { state, current -> state.copy(settings = current) }.stateIn(
+        }.combine(settings.settings) { state, current ->
+            state.copy(settings = current)
+        }.combine(appearance.appearance) { state, current ->
+            state.copy(appearance = current)
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             initialValue = SettingsUiState(user = auth.sessionState.value.userOrNull()),
@@ -88,6 +97,14 @@ class SettingsViewModel @Inject constructor(
 
     fun onHideStartChange(meters: Int) {
         viewModelScope.launch { error.value = (settings.setHideStartDistance(meters) as? Outcome.Failure)?.error }
+    }
+
+    fun onThemeModeChange(mode: ThemeMode) {
+        viewModelScope.launch { appearance.setThemeMode(mode) }
+    }
+
+    fun onWallpaperColorsChange(use: Boolean) {
+        viewModelScope.launch { appearance.setUseWallpaperColors(use) }
     }
 
     fun onErrorShown() {

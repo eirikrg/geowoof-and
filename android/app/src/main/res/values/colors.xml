@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Brand seed color (docs/architecture.md, section 4.6). -->
-    <color name="ic_launcher_background">#FFF28C38</color>
-    <color name="splash_background">#FFFFF8F5</color>
+    <!-- The icon is drawn on white, and the splash uses the surface of the theme (docs/design/README.md). -->
+    <color name="ic_launcher_background">#FFFFFFFF</color>
+    <color name="splash_background">#FFF9FAF4</color>
 </resources>

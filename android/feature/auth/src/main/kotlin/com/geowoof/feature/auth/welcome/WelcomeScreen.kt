@@ -1,6 +1,9 @@
 package com.geowoof.feature.auth.welcome
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,12 +11,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -22,17 +24,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.geowoof.core.designsystem.icon.GeoWoofIcons
+import com.geowoof.core.designsystem.component.GeoWoofLogo
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.ui.FormError
 import com.geowoof.core.ui.GoogleSignInButton
@@ -72,67 +75,90 @@ internal fun WelcomeContent(
 ) {
     val spacing = GeoWoofTheme.spacing
     Scaffold(modifier = modifier) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.extraLarge, vertical = spacing.huge),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(spacing.medium),
-        ) {
-            Spacer(Modifier.height(spacing.huge))
-            Icon(
-                painter = painterResource(GeoWoofIcons.Pets),
-                contentDescription = null,
-                modifier = Modifier.size(LogoSize),
-                tint = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = stringResource(R.string.feature_auth_welcome_title),
-                modifier = Modifier.semantics { heading() },
-                style = MaterialTheme.typography.displaySmall,
-            )
-            Text(
-                text = stringResource(R.string.feature_auth_welcome_message),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(spacing.large))
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            // A large part of the screen for the brand, without leaving the buttons out with a big font.
+            val heroHeight = (maxHeight * HERO_SHARE).coerceAtLeast(MinHeroHeight)
             Column(
-                modifier = Modifier.widthIn(max = MaxFormWidth),
-                verticalArrangement = Arrangement.spacedBy(spacing.medium),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = innerPadding.calculateBottomPadding() + spacing.large),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Button(
-                    onClick = onSignUp,
-                    enabled = !uiState.isSigningInWithGoogle,
+                Hero(topPadding = innerPadding.calculateTopPadding(), modifier = Modifier.height(heroHeight))
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = ButtonHeight),
+                        .widthIn(max = MaxFormWidth)
+                        .padding(horizontal = spacing.extraLarge, vertical = spacing.extraLarge),
+                    verticalArrangement = Arrangement.spacedBy(spacing.medium),
                 ) {
-                    Text(stringResource(R.string.feature_auth_create_account))
+                    Button(
+                        onClick = onSignUp,
+                        enabled = !uiState.isSigningInWithGoogle,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = ButtonHeight),
+                    ) {
+                        Text(stringResource(R.string.feature_auth_create_account))
+                    }
+                    OutlinedButton(
+                        onClick = onSignIn,
+                        enabled = !uiState.isSigningInWithGoogle,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = ButtonHeight),
+                    ) {
+                        Text(stringResource(R.string.feature_auth_sign_in))
+                    }
+                    if (onContinueWithGoogle != null) {
+                        GoogleSignInButton(onClick = onContinueWithGoogle, loading = uiState.isSigningInWithGoogle)
+                    }
+                    FormError(uiState.error)
                 }
-                OutlinedButton(
-                    onClick = onSignIn,
-                    enabled = !uiState.isSigningInWithGoogle,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = ButtonHeight),
-                ) {
-                    Text(stringResource(R.string.feature_auth_sign_in))
-                }
-                if (onContinueWithGoogle != null) {
-                    GoogleSignInButton(onClick = onContinueWithGoogle, loading = uiState.isSigningInWithGoogle)
-                }
-                FormError(uiState.error)
             }
         }
     }
 }
 
-private val LogoSize = 72.dp
-private val ButtonHeight = 48.dp
+/** The logo and what the app is for, on the color of the brand and reaching the top of the screen. */
+@Composable
+private fun Hero(topPadding: Dp, modifier: Modifier = Modifier) {
+    val spacing = GeoWoofTheme.spacing
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(HeroShape)
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .padding(top = topPadding, start = spacing.extraLarge, end = spacing.extraLarge),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(spacing.small),
+        ) {
+            GeoWoofLogo(contentDescription = null, modifier = Modifier.height(LogoHeight))
+            Spacer(Modifier.height(spacing.small))
+            Text(
+                text = stringResource(R.string.feature_auth_welcome_title),
+                modifier = Modifier.semantics { heading() },
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+            Text(
+                text = stringResource(R.string.feature_auth_welcome_message),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+private val LogoHeight = 150.dp
+private val ButtonHeight = 52.dp
+private val MinHeroHeight = 340.dp
+private const val HERO_SHARE = 0.6f
+private val HeroShape = RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp)
 
 @PreviewLightDark
 @PreviewFontScale

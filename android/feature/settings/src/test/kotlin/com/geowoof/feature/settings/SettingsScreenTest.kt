@@ -39,6 +39,8 @@ class SettingsScreenTest {
                     onPrivateChange = { actions += "private:$it" },
                     onLiveVisibilityChange = { actions += "live:$it" },
                     onHideStartChange = { actions += "hide:$it" },
+                    onThemeModeChange = { actions += "theme:$it" },
+                    onWallpaperColorsChange = { actions += "wallpaper:$it" },
                     onDismissError = {},
                     onSignOut = { actions += "signOut" },
                     onConfirmSignOut = { actions += "confirmSignOut" },

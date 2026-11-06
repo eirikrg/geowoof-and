@@ -4,10 +4,12 @@ import com.geowoof.core.domain.walks.ComputeWalkStatsUseCase
 import com.geowoof.core.location.LocationPermissionLevel
 import com.geowoof.core.model.ActiveWalkStatus
 import com.geowoof.core.model.AppError
+import com.geowoof.core.model.GeoPoint
 import com.geowoof.core.model.LiveVisibility
 import com.geowoof.core.model.UserSettings
 import com.geowoof.core.testing.FakeActiveWalkRepository
 import com.geowoof.core.testing.FakeLocationAccess
+import com.geowoof.core.testing.FakeLocationDataSource
 import com.geowoof.core.testing.FakePetsRepository
 import com.geowoof.core.testing.FakeSettingsRepository
 import com.geowoof.core.testing.MainDispatcherRule
@@ -33,7 +35,42 @@ class MapViewModelTest {
     private val access = FakeLocationAccess()
     private val tracking = FakeController()
     private val settings = FakeSettingsRepository(UserSettings(LiveVisibility.FriendsOnly))
-    private val viewModel by lazy { MapViewModel(walks, pets, access, tracking, ComputeWalkStatsUseCase(), settings) }
+    private val location = FakeLocationDataSource()
+    private val viewModel by lazy {
+        MapViewModel(walks, pets, access, tracking, ComputeWalkStatsUseCase(), settings, location)
+    }
+
+    @Test
+    fun the_map_opens_where_the_person_is_once() = runTest {
+        subscribe()
+        location.lastKnownPosition = GeoPoint(39.54, -0.57)
+
+        viewModel.onScreenResumed()
+        assertEquals(CameraTarget(GeoPoint(39.54, -0.57), isJump = true), state.cameraTarget)
+
+        viewModel.onCameraTargetReached()
+        viewModel.onScreenResumed()
+        assertEquals(null, state.cameraTarget)
+    }
+
+    @Test
+    fun my_location_flies_there_when_asked() = runTest {
+        subscribe()
+        location.lastKnownPosition = GeoPoint(39.54, -0.57)
+
+        viewModel.onMyLocationClick()
+
+        assertEquals(CameraTarget(GeoPoint(39.54, -0.57), isJump = false), state.cameraTarget)
+    }
+
+    @Test
+    fun without_knowing_where_the_person_is_the_map_stays_where_it_is() = runTest {
+        subscribe()
+
+        viewModel.onMyLocationClick()
+
+        assertEquals(null, state.cameraTarget)
+    }
 
     private fun kotlinx.coroutines.test.TestScope.subscribe() {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }

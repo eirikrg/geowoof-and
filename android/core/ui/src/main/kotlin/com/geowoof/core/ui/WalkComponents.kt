@@ -1,17 +1,17 @@
 package com.geowoof.core.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
@@ -37,24 +38,40 @@ import com.geowoof.core.model.WalkSyncStatus
 import com.geowoof.core.model.WalkTotals
 import java.io.File
 
-private val ThumbnailSize = 64.dp
-private val ThumbnailShape = RoundedCornerShape(12.dp)
+private val ThumbnailSize = 72.dp
+private val MinStatSize = 12.sp
+private val MaxStatSize = 22.sp
 private const val STATS_PER_ROW = 2
 
 /** A value with its label. TalkBack reads both as one element. */
 @Composable
 fun WalkStat(value: String, label: String, modifier: Modifier = Modifier) {
-    Column(
+    val spacing = GeoWoofTheme.spacing
+    Surface(
         modifier = modifier.semantics(mergeDescendants = true) {},
-        horizontalAlignment = Alignment.CenterHorizontally,
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        Text(text = value, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
+        Column(
+            modifier = Modifier.padding(horizontal = spacing.small, vertical = spacing.medium),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = value,
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                autoSize = TextAutoSize.StepBased(minFontSize = MinStatSize, maxFontSize = MaxStatSize),
+            )
+            Text(
+                text = label,
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
@@ -92,12 +109,10 @@ fun WalkTotalsGrid(totals: WalkTotals, modifier: Modifier = Modifier) {
  */
 @Composable
 private fun StatGrid(stats: List<Pair<String, String>>, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.medium),
-    ) {
+    val gap = GeoWoofTheme.spacing.small
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(gap)) {
         stats.chunked(STATS_PER_ROW).forEach { row ->
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
                 row.forEach { (value, label) -> WalkStat(value, label, Modifier.weight(1f)) }
             }
         }
@@ -113,27 +128,46 @@ fun WalkCard(walk: Walk, petNames: String?, onClick: () -> Unit, modifier: Modif
         distanceText(walk.stats.distanceM),
         formatDuration(walk.stats.durationS),
     )
-    ListItem(
-        modifier = modifier.clickable(onClick = onClick),
-        headlineContent = { Text(walk.startedAt.formattedIn(walk.timeZone)) },
-        supportingContent = {
-            Column {
-                Text(numbers)
-                petNames?.takeIf(String::isNotEmpty)?.let { Text(it) }
-            }
-        },
-        leadingContent = {
+    val spacing = GeoWoofTheme.spacing
+    Surface(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.large, vertical = spacing.extraSmall),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Row(
+            modifier = Modifier.padding(spacing.medium),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.large),
+        ) {
             Box(
                 modifier = Modifier
                     .size(ThumbnailSize)
-                    .clip(ThumbnailShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
             ) {
                 RouteCanvas(lines = lines, contentDescription = null, modifier = Modifier.size(ThumbnailSize))
             }
-        },
-        trailingContent = { WalkSyncIcon(walk.syncStatus) },
-    )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(walk.startedAt.formattedIn(walk.timeZone), style = MaterialTheme.typography.titleSmall)
+                Text(
+                    text = numbers,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                petNames?.takeIf(String::isNotEmpty)?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            WalkSyncIcon(walk.syncStatus)
+        }
+    }
 }
 
 @Composable
@@ -179,7 +213,7 @@ fun WalkPhotoImage(photo: WalkPhoto, modifier: Modifier = Modifier) {
         model = model,
         contentDescription = stringResource(R.string.core_ui_walk_photo),
         modifier = modifier
-            .clip(ThumbnailShape)
+            .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest),
         contentScale = ContentScale.Crop,
     )
@@ -192,7 +226,7 @@ fun PickedPhotoImage(contentUri: String, modifier: Modifier = Modifier) {
         model = contentUri,
         contentDescription = stringResource(R.string.core_ui_walk_photo),
         modifier = modifier
-            .clip(ThumbnailShape)
+            .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest),
         contentScale = ContentScale.Crop,
     )
