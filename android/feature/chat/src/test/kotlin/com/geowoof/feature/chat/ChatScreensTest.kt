@@ -1,14 +1,20 @@
 package com.geowoof.feature.chat
 
+import android.os.Looper
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,7 +41,11 @@ import kotlinx.serialization.Serializable
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestRule
+import org.junit.runner.Description
 import org.junit.runner.RunWith
+import org.junit.runners.model.Statement
+import org.robolectric.Shadows.shadowOf
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -45,6 +55,9 @@ import java.time.format.FormatStyle
 
 @RunWith(AndroidJUnit4::class)
 class ConversationsScreenTest {
+    @get:Rule(order = -2)
+    val drainMainLooper = DrainMainLooperRule()
+
     @get:Rule
     val composeRule = createComposeRule()
 
@@ -108,6 +121,9 @@ class ConversationsScreenTest {
 
 @RunWith(AndroidJUnit4::class)
 class NewConversationScreenTest {
+    @get:Rule(order = -2)
+    val drainMainLooper = DrainMainLooperRule()
+
     @get:Rule
     val composeRule = createComposeRule()
 
@@ -151,6 +167,9 @@ class NewConversationScreenTest {
 
 @RunWith(AndroidJUnit4::class)
 class ConversationScreenTest {
+    @get:Rule(order = -2)
+    val drainMainLooper = DrainMainLooperRule()
+
     @get:Rule
     val composeRule = createComposeRule()
 
@@ -243,6 +262,40 @@ class ConversationScreenTest {
         composeRule.onNodeWithText("Bea is writing…").assertIsDisplayed()
     }
 
+    private fun received(name: String) = TestChat.message(clientMessageId = name, id = name, body = name)
+
+    private fun history() = (LONG_HISTORY downTo 1).map { received("Old $it") }.toTypedArray()
+
+    /** Shows the history, lets [before] do something with it and then several messages arrive together. */
+    private fun whenSeveralArrive(before: () -> Unit = {}) {
+        var uiState by mutableStateOf(loaded(*history()))
+        composeRule.setContent {
+            GeoWoofTheme(dynamicColor = false) {
+                ConversationContent(uiState = uiState, input = TextFieldState(), actions = actions)
+            }
+        }
+        composeRule.waitForIdle()
+        before()
+        composeRule.waitForIdle()
+        uiState = loaded(received("New 3"), received("New 2"), received("New 1"), *history())
+        composeRule.waitForIdle()
+    }
+
+    @Test
+    fun several_messages_arriving_together_do_not_leave_the_newest_out_of_sight() {
+        whenSeveralArrive()
+
+        composeRule.onNodeWithText("New 3").assertIsDisplayed()
+    }
+
+    @Test
+    fun someone_reading_further_up_stays_there_when_several_arrive() {
+        whenSeveralArrive(before = { composeRule.onNode(hasScrollToIndexAction()).performScrollToIndex(READING_AT) })
+
+        composeRule.onNodeWithText("Old ${LONG_HISTORY - READING_AT}").assertIsDisplayed()
+        composeRule.onNodeWithText("New 3").assertDoesNotExist()
+    }
+
     @Test
     fun a_photo_that_is_not_ready_keeps_its_place_instead_of_an_empty_bubble() {
         show(loaded(TestChat.message().copy(image = RemoteImage("a1", null, null), body = null)))
@@ -303,6 +356,9 @@ class ConversationScreenTest {
 /** The ViewModel reads the arguments by name: this checks, with real navigation, that they get there. */
 @RunWith(AndroidJUnit4::class)
 class ChatRouteArgumentsTest {
+    @get:Rule(order = -2)
+    val drainMainLooper = DrainMainLooperRule()
+
     @get:Rule
     val composeRule = createComposeRule()
 
@@ -377,4 +433,23 @@ class ChatTimeTest {
     }
 }
 
+/**
+ * Robolectric empties the main looper between tests, and AndroidUiDispatcher, which is one for the whole JVM,
+ * believes for ever that what it had just posted is on its way: it runs nothing else, and LazyPagingItems needs it.
+ * The screen stays in Loading, in about half of the runs, depending on how the previous test ended.
+ */
+class DrainMainLooperRule : TestRule {
+    override fun apply(base: Statement, description: Description): Statement = object : Statement() {
+        override fun evaluate() {
+            try {
+                base.evaluate()
+            } finally {
+                shadowOf(Looper.getMainLooper()).idle()
+            }
+        }
+    }
+}
+
 private const val WAIT_MILLIS = 10_000L
+private const val LONG_HISTORY = 40
+private const val READING_AT = 25

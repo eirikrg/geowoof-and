@@ -30,6 +30,8 @@ data class AppUiState(
     val pendingRequests: Int = 0,
     val unreadMessages: Int = 0,
     val unreadNotifications: Int = 0,
+    /** A tapped notification, until there is a navigation to open it in. */
+    val pendingLink: String? = null,
 )
 
 @HiltViewModel
@@ -102,6 +104,10 @@ class MainActivityViewModel @Inject constructor(
     }
 
     fun onFirstPetStepDone() = _uiState.update { it.copy(offerFirstPet = false) }
+
+    fun onLink(link: String) = _uiState.update { it.copy(pendingLink = link) }
+
+    fun onLinkOpened() = _uiState.update { it.copy(pendingLink = null) }
 
     private fun SessionState.onboardedUserId(): String? =
         (this as? SessionState.SignedIn)?.user?.takeUnless { it.needsOnboarding }?.id

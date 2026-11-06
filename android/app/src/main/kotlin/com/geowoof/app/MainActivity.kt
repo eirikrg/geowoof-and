@@ -1,5 +1,6 @@
 package com.geowoof.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -34,6 +35,10 @@ class MainActivity : ComponentActivity() {
         splashScreen.setKeepOnScreenCondition { viewModel.uiState.value.sessionState == SessionState.Loading }
         enableEdgeToEdge()
 
+        // Coming back from its saved state, the activity gets the same intent, and that link was already opened.
+        val link = intent.takeLink()
+        if (savedInstanceState == null) link?.let(viewModel::onLink)
+
         // Credential Manager needs an activity, and the form that asked for the save is already gone.
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -52,8 +57,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             GeoWoofTheme {
-                GeoWoofApp(uiState = uiState, onFinishFirstPetStep = viewModel::onFirstPetStepDone)
+                GeoWoofApp(
+                    uiState = uiState,
+                    onFinishFirstPetStep = viewModel::onFirstPetStepDone,
+                    onConsumeLink = viewModel::onLinkOpened,
+                )
             }
         }
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.takeLink()?.let(viewModel::onLink)
+    }
+
+    /** The NavController would also open it by itself, restarting the activity for the NEW_TASK of a notification. */
+    private fun Intent.takeLink(): String? = dataString.also { data = null }
 }

@@ -40,6 +40,17 @@ class MainActivityViewModelTest {
     )
 
     @Test
+    fun a_tapped_notification_waits_until_it_has_been_opened() {
+        val viewModel = create(FakeAuthRepository(SessionState.Loading))
+
+        viewModel.onLink("geowoof://notifications")
+        assertEquals("geowoof://notifications", viewModel.uiState.value.pendingLink)
+
+        viewModel.onLinkOpened()
+        assertEquals(null, viewModel.uiState.value.pendingLink)
+    }
+
+    @Test
     fun exposes_the_session_of_the_repository() {
         val auth = FakeAuthRepository(SessionState.SignedOut)
 

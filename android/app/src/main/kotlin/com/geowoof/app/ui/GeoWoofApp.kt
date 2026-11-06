@@ -1,8 +1,5 @@
 package com.geowoof.app.ui
 
-import android.content.Intent
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -14,14 +11,16 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.core.util.Consumer
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import com.geowoof.app.AppUiState
 import com.geowoof.app.R
@@ -38,7 +37,12 @@ import com.geowoof.feature.notifications.navigation.navigateToNotifications
 
 /** Root of the UI: the session decides between the signed-out flow, the onboarding and the main shell. */
 @Composable
-fun GeoWoofApp(uiState: AppUiState, onFinishFirstPetStep: () -> Unit, modifier: Modifier = Modifier) {
+fun GeoWoofApp(
+    uiState: AppUiState,
+    onFinishFirstPetStep: () -> Unit,
+    onConsumeLink: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     SessionGate(
         uiState = uiState,
         signedOut = { AuthNavHost() },
@@ -54,6 +58,8 @@ fun GeoWoofApp(uiState: AppUiState, onFinishFirstPetStep: () -> Unit, modifier: 
                 pendingRequests = uiState.pendingRequests,
                 unreadMessages = uiState.unreadMessages,
                 unreadNotifications = uiState.unreadNotifications,
+                pendingLink = uiState.pendingLink,
+                onConsumeLink = onConsumeLink,
             )
         },
         modifier = modifier,
@@ -97,11 +103,12 @@ fun MainShell(
     unreadMessages: Int,
     unreadNotifications: Int,
     modifier: Modifier = Modifier,
+    pendingLink: String? = null,
+    onConsumeLink: () -> Unit = {},
     appState: GeoWoofAppState = rememberGeoWoofAppState(),
     navHost: @Composable (NavHostController) -> Unit = { GeoWoofNavHost(navController = it) },
 ) {
     val currentDestination = appState.currentDestination
-    HandleNotificationLinks(appState.navController)
     val inbox = Inbox(
         unreadMessages = unreadMessages,
         unreadNotifications = unreadNotifications,
@@ -147,24 +154,23 @@ fun MainShell(
     ) {
         CompositionLocalProvider(LocalInbox provides inbox) {
             navHost(appState.navController)
+            OpenPendingLink(pendingLink, appState.navController, onConsumeLink)
         }
     }
 }
 
 /**
- * A notification tapped while the app is already open arrives here, and opens on top of what was
- * there. The NavController only reads by itself the link that started the activity, and
- * handleDeepLink would restart the activity because of the NEW_TASK of every notification.
+ * Opens a tapped notification on top of what was there. It goes after the NavHost, which is what sets the graph:
+ * the link may be waiting since before the first composition, if the activity has just been created again.
  */
 @Composable
-private fun HandleNotificationLinks(navController: NavHostController) {
-    val activity = LocalActivity.current as? ComponentActivity ?: return
-    DisposableEffect(activity, navController) {
-        val listener = Consumer<Intent> { intent ->
-            intent.data?.takeIf(navController.graph::hasDeepLink)?.let(navController::navigate)
+private fun OpenPendingLink(link: String?, navController: NavHostController, onConsume: () -> Unit) {
+    val currentOnConsume by rememberUpdatedState(onConsume)
+    LaunchedEffect(link, navController) {
+        if (link != null) {
+            link.toUri().takeIf(navController.graph::hasDeepLink)?.let(navController::navigate)
+            currentOnConsume()
         }
-        activity.addOnNewIntentListener(listener)
-        onDispose { activity.removeOnNewIntentListener(listener) }
     }
 }
 

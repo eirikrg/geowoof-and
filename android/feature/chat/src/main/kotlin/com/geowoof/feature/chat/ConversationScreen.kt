@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -195,10 +196,13 @@ private fun Messages(uiState: ConversationUiState, actions: ConversationActions,
 
     // Upside down: what comes next is always at the bottom. It only follows it if it was already
     // there or if it is what this person has just sent: someone reading further up stays there.
+    // It has to be read while composing: once it lays them out, the list keeps in place what was on
+    // screen, as many positions up as messages have arrived.
+    val isAtTheBottom by remember(listState) { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     val newest = uiState.messages.first()
-    val isMine = newest.senderId == uiState.myUserId
+    val shouldFollow = isAtTheBottom || newest.senderId == uiState.myUserId
     LaunchedEffect(newest.clientMessageId) {
-        if (isMine || listState.firstVisibleItemIndex <= 1) listState.animateScrollToItem(0)
+        if (shouldFollow) listState.animateScrollToItem(0)
     }
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
