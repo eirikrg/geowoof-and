@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.geowoof.core.designsystem.component.GeoWoofLogoHead
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ActiveWalk
@@ -302,13 +304,7 @@ private fun LiveStatus(live: LiveWalkersUiState, actions: LiveWalkersActions, mo
             onClick = actions.onOpenList,
             modifier = modifier,
             shape = CircleShape,
-            leadingIcon = {
-                Icon(
-                    painter = painterResource(GeoWoofIcons.Pets),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary,
-                )
-            },
+            leadingIcon = { GeoWoofLogoHead(contentDescription = null, Modifier.height(LiveStatusLogoHeight)) },
             label = {
                 Text(pluralStringResource(R.plurals.feature_map_live_walkers, live.walkers.size, live.walkers.size))
             },
@@ -422,4 +418,5 @@ private const val PERSON_ZOOM = 15f
 private const val ROUTE_WIDTH = 14f
 private const val CLUSTER_ZOOM_STEP = 2f
 private val StatusElevation = 3.dp
+private val LiveStatusLogoHeight = 22.dp
 private val RoutePattern = listOf(Dash(ROUTE_WIDTH * 2.4f), Gap(ROUTE_WIDTH * 1.8f))
