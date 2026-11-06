@@ -173,27 +173,25 @@ class CommunityScreenTest {
     }
 
     @Test
-    fun touching_a_photo_enlarges_it_without_leaving_the_feed() {
+    fun in_the_feed_touching_a_photo_opens_the_post() {
         showFeed(TestSocial.pages(listOf(TestPosts.item())))
 
         waitForText("Bea")
         composeRule.onNodeWithContentDescription("Photo by Bea").performClick()
 
-        composeRule.onNodeWithContentDescription("Close").assertIsDisplayed().performClick()
-
+        assertEquals(listOf("open:post-1"), calls)
         composeRule.onNodeWithContentDescription("Close").assertDoesNotExist()
-        assertEquals(emptyList<String>(), calls)
     }
 
     @Test
-    fun a_photo_that_is_still_being_processed_does_not_open() {
+    fun in_the_feed_a_photo_that_is_still_being_processed_also_opens_the_post() {
         val processing = TestPosts.post(media = listOf(RemoteImage("asset-1", null, null)))
         showFeed(TestSocial.pages(listOf(TestPosts.item(processing))))
 
         waitForText("Bea")
         composeRule.onNodeWithContentDescription("Photo by Bea").performClick()
 
-        composeRule.onNodeWithContentDescription("Close").assertDoesNotExist()
+        assertEquals(listOf("open:post-1"), calls)
     }
 
     @Test
@@ -350,6 +348,27 @@ class CommunityScreenTest {
     }
 
     private fun detail() = PostDetailUiState(isLoading = false, post = TestPosts.post())
+
+    @Test
+    fun in_the_post_touching_a_photo_enlarges_it() {
+        showDetail(detail())
+
+        composeRule.onNodeWithContentDescription("Photo by Bea").performClick()
+
+        composeRule.onNodeWithContentDescription("Close").assertIsDisplayed().performClick()
+        composeRule.onNodeWithContentDescription("Close").assertDoesNotExist()
+        assertEquals(emptyList<String>(), calls.filter { it.startsWith("open:") })
+    }
+
+    @Test
+    fun in_the_post_a_photo_that_is_still_being_processed_does_not_open() {
+        val processing = TestPosts.post(media = listOf(RemoteImage("asset-1", null, null)))
+        showDetail(PostDetailUiState(isLoading = false, post = processing))
+
+        composeRule.onNodeWithContentDescription("Photo by Bea").performClick()
+
+        composeRule.onNodeWithContentDescription("Close").assertDoesNotExist()
+    }
 
     @Test
     fun a_post_that_is_gone_does_not_say_why() {

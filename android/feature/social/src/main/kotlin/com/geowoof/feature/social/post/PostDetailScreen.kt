@@ -214,7 +214,9 @@ private fun PostAndComments(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
-        item(key = "post") { PostCard(post, repostedBy = null, myUserId = myUserId, actions = actions) }
+        item(key = "post") {
+            PostCard(post, repostedBy = null, myUserId = myUserId, actions = actions, enlargesPhotos = true)
+        }
         if (comments.itemCount == 0 && comments.loadState.refresh !is LoadState.Loading) {
             item(key = "empty") {
                 Text(

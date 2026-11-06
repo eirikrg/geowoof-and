@@ -64,7 +64,11 @@ import com.geowoof.feature.social.R
 import kotlinx.coroutines.launch
 import java.time.Instant
 
-/** A post, with who published it and what can be done with it. A repost always shows its original author. */
+/**
+ * A post, with who published it and what can be done with it. A repost always shows its original author.
+ *
+ * @param enlargesPhotos In the post itself, touching a photo enlarges it. In a list, it opens the post.
+ */
 @Composable
 internal fun PostCard(
     post: Post,
@@ -72,6 +76,7 @@ internal fun PostCard(
     myUserId: String?,
     actions: PostCardActions,
     modifier: Modifier = Modifier,
+    enlargesPhotos: Boolean = false,
 ) {
     val spacing = GeoWoofTheme.spacing
     Surface(
@@ -84,7 +89,7 @@ internal fun PostCard(
         Column(modifier = Modifier.padding(vertical = spacing.small)) {
             repostedBy?.let { RepostLine(it, actions.onOpenUser) }
             PostHeader(post, post.author.id == myUserId, actions)
-            PostImages(post)
+            PostImages(post, onOpenPost = if (enlargesPhotos) null else ({ actions.onOpenPost(post) }))
             PostButtons(post, actions)
             post.text?.let { text ->
                 MentionText(
@@ -202,12 +207,18 @@ private fun PostMenu(post: Post, isMine: Boolean, onShowDialog: (PostDialog) -> 
 }
 
 @Composable
-private fun PostImages(post: Post, modifier: Modifier = Modifier) {
+private fun PostImages(post: Post, onOpenPost: (() -> Unit)?, modifier: Modifier = Modifier) {
     val pager = rememberPagerState { post.media.size }
     val scope = rememberCoroutineScope()
     var isViewerOpen by rememberSaveable { mutableStateOf(false) }
     val description = stringResource(R.string.feature_social_photo_of, post.author.displayName)
-    val enlarge = stringResource(com.geowoof.core.ui.R.string.core_ui_enlarge_photo)
+    val clickLabel = stringResource(
+        if (onOpenPost != null) {
+            com.geowoof.core.ui.R.string.core_ui_open_post
+        } else {
+            com.geowoof.core.ui.R.string.core_ui_enlarge_photo
+        },
+    )
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -222,8 +233,11 @@ private fun PostImages(post: Post, modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .clickable(enabled = ViewerPhoto(post.media[page]).canOpen, onClickLabel = enlarge) {
-                        isViewerOpen = true
+                    .clickable(
+                        enabled = onOpenPost != null || ViewerPhoto(post.media[page]).canOpen,
+                        onClickLabel = clickLabel,
+                    ) {
+                        if (onOpenPost != null) onOpenPost() else isViewerOpen = true
                     },
             )
         }
