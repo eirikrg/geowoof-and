@@ -7,7 +7,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavOptions
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
@@ -33,6 +35,7 @@ import com.geowoof.feature.pets.navigation.petScreens
 import com.geowoof.feature.profile.navigation.navigateToFollowRequests
 import com.geowoof.feature.profile.navigation.navigateToUserProfile
 import com.geowoof.feature.profile.navigation.profileScreens
+import com.geowoof.feature.search.navigation.navigateToSearch
 import com.geowoof.feature.search.navigation.searchScreen
 import com.geowoof.feature.settings.navigation.navigateToSettings
 import com.geowoof.feature.settings.navigation.settingsScreens
@@ -45,6 +48,16 @@ import com.geowoof.feature.walks.navigation.navigateToWalks
 import com.geowoof.feature.walks.navigation.walkScreens
 
 // Wires the feature graphs together; features never reference each other directly.
+
+/**
+ * Each top-level destination keeps its own back stack: switching tabs saves the current stack and
+ * restores the target one, and the start destination stays at the bottom.
+ */
+internal fun NavController.topLevelNavOptions(): NavOptions = navOptions {
+    popUpTo(graph.findStartDestination().id) { saveState = true }
+    launchSingleTop = true
+    restoreState = true
+}
 
 /** Main shell graph: the four top-level destinations plus the screens opened from them. */
 @Composable
@@ -63,7 +76,11 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
             onAddPet = { navController.navigateToPetEditor() },
             onOpenUser = { userId -> navController.navigateToUserProfile(userId) },
         )
-        socialScreens(navController, onOpenUser = { userId -> navController.navigateToUserProfile(userId) })
+        socialScreens(
+            navController = navController,
+            onOpenUser = { userId -> navController.navigateToUserProfile(userId) },
+            onFindPeople = { navController.navigateToSearch(navController.topLevelNavOptions()) },
+        )
         searchScreen(
             onOpenUser = { userId -> navController.navigateToUserProfile(userId) },
             onOpenPost = { postId -> navController.navigateToPost(postId) },

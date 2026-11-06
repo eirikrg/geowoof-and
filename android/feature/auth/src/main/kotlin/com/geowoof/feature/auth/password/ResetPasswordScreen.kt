@@ -2,7 +2,6 @@ package com.geowoof.feature.auth.password
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -19,10 +18,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geowoof.core.designsystem.component.PasswordField
 import com.geowoof.core.designsystem.component.ProgressButton
+import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.ui.FormError
+import com.geowoof.core.ui.FormIntroIcon
 import com.geowoof.core.ui.FormNotice
-import com.geowoof.core.ui.FormScaffold
+import com.geowoof.core.ui.IntroFormScaffold
 import com.geowoof.core.ui.PasswordRulesHint
 import com.geowoof.core.ui.VerificationCodeField
 import com.geowoof.core.ui.messageRes
@@ -62,11 +63,14 @@ internal fun ResetPasswordContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FormScaffold(title = stringResource(R.string.feature_auth_reset_title), modifier = modifier, onBack = onBack) {
-        Text(
-            stringResource(R.string.feature_auth_reset_message, uiState.email),
-            style = MaterialTheme.typography.bodyLarge,
-        )
+    IntroFormScaffold(
+        title = stringResource(R.string.feature_auth_reset_title),
+        modifier = modifier,
+        message = stringResource(R.string.feature_auth_reset_message, uiState.email),
+        emphasis = uiState.email,
+        onBack = onBack,
+        lead = { FormIntroIcon(GeoWoofIcons.Mail) },
+    ) {
         VerificationCodeField(
             state = code,
             supportingText = uiState.codeIssue?.let { stringResource(it.messageRes()) },

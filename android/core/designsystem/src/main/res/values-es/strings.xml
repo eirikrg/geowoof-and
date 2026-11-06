@@ -3,4 +3,5 @@
     <string name="core_designsystem_show_password">Mostrar contraseña</string>
     <string name="core_designsystem_hide_password">Ocultar contraseña</string>
     <string name="core_designsystem_loading">Cargando</string>
+    <string name="core_designsystem_step_of">Paso %1$d de %2$d</string>
 </resources>

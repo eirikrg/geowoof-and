@@ -6,12 +6,11 @@ import androidx.compose.runtime.remember
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navOptions
 import com.geowoof.app.navigation.TopLevelDestination
+import com.geowoof.app.navigation.topLevelNavOptions
 import com.geowoof.feature.map.navigation.navigateToMap
 import com.geowoof.feature.profile.navigation.navigateToProfile
 import com.geowoof.feature.search.navigation.navigateToSearch
@@ -27,16 +26,8 @@ class GeoWoofAppState(val navController: NavHostController) {
     val currentDestination: NavDestination?
         @Composable get() = navController.currentBackStackEntryAsState().value?.destination
 
-    /**
-     * Each top-level destination keeps its own back stack: switching tabs saves the current
-     * stack and restores the target one, and the start destination stays at the bottom.
-     */
     fun navigateToTopLevelDestination(destination: TopLevelDestination) {
-        val options = navOptions {
-            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-            launchSingleTop = true
-            restoreState = true
-        }
+        val options = navController.topLevelNavOptions()
         when (destination) {
             TopLevelDestination.Map -> navController.navigateToMap(options)
             TopLevelDestination.Community -> navController.navigateToCommunity(options)

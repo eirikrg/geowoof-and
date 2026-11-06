@@ -3,8 +3,6 @@ package com.geowoof.feature.auth.password
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -19,9 +17,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geowoof.core.designsystem.component.FormTextField
 import com.geowoof.core.designsystem.component.ProgressButton
+import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.ui.FormError
-import com.geowoof.core.ui.FormScaffold
+import com.geowoof.core.ui.FormIntroIcon
+import com.geowoof.core.ui.IntroFormScaffold
 import com.geowoof.core.ui.messageRes
 import com.geowoof.feature.auth.R
 
@@ -57,8 +57,13 @@ internal fun ForgotPasswordContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FormScaffold(title = stringResource(R.string.feature_auth_forgot_title), modifier = modifier, onBack = onBack) {
-        Text(stringResource(R.string.feature_auth_forgot_message), style = MaterialTheme.typography.bodyLarge)
+    IntroFormScaffold(
+        title = stringResource(R.string.feature_auth_forgot_title),
+        modifier = modifier,
+        message = stringResource(R.string.feature_auth_forgot_message),
+        onBack = onBack,
+        lead = { FormIntroIcon(GeoWoofIcons.Lock) },
+    ) {
         FormTextField(
             state = email,
             label = stringResource(R.string.feature_auth_email_label),

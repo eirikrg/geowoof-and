@@ -45,7 +45,7 @@
     <string name="feature_profile_photos_failed">The photos could not be loaded.</string>
     <string name="feature_profile_no_saved">The posts you save will appear here. Only you can see them.</string>
     <string name="feature_profile_saved_failed">The saved posts could not be loaded.</string>
-    <string name="feature_profile_no_own_walks">Your walks will appear here.</string>
+    <string name="feature_profile_no_own_walks">Start a walk from the map and it will appear here.</string>
     <string name="feature_profile_no_walks">No walks you can see.</string>
     <string name="feature_profile_walks_failed">The walks could not be loaded.</string>
     <string name="feature_profile_no_pets_of_person">No pets yet.</string>

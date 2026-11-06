@@ -1,7 +1,9 @@
 package com.geowoof.feature.pets.editor
 
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -13,12 +15,10 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -50,9 +50,13 @@ import com.geowoof.core.model.PetSize
 import com.geowoof.core.model.PetSpecies
 import com.geowoof.core.model.SpeciesOtherIssue
 import com.geowoof.core.model.TextIssue
+import com.geowoof.core.ui.EditablePhoto
 import com.geowoof.core.ui.FormError
 import com.geowoof.core.ui.FormScaffold
 import com.geowoof.core.ui.ImageVariant
+import com.geowoof.core.ui.IntroFormScaffold
+import com.geowoof.core.ui.OnboardingProgress
+import com.geowoof.core.ui.OnboardingStep
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.formatted
 import com.geowoof.core.ui.labelRes
@@ -133,66 +137,121 @@ internal fun PetEditorContent(
     onSkip: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val title = stringResource(
-        when {
-            uiState.isEditing -> R.string.feature_pets_edit_title
-            onSkip != null -> R.string.feature_pets_first_title
-            else -> R.string.feature_pets_add_title
-        },
+    val form: @Composable ColumnScope.() -> Unit = {
+        PetForm(
+            uiState = uiState,
+            fields = fields,
+            actions = actions,
+            onPickPhoto = onPickPhoto,
+            startsWithTheBasics = onSkip != null,
+        )
+    }
+    if (onSkip != null) {
+        IntroFormScaffold(
+            title = stringResource(R.string.feature_pets_first_title),
+            modifier = modifier,
+            message = stringResource(R.string.feature_pets_first_message),
+            actions = { TextButton(onClick = onSkip) { Text(stringResource(R.string.feature_pets_skip)) } },
+            lead = { OnboardingProgress(OnboardingStep.FirstPet) },
+            content = form,
+        )
+    } else {
+        FormScaffold(
+            title = stringResource(
+                if (uiState.isEditing) R.string.feature_pets_edit_title else R.string.feature_pets_add_title,
+            ),
+            modifier = modifier,
+            onBack = onBack,
+            content = form,
+        )
+    }
+}
+
+@Composable
+private fun ColumnScope.PetForm(
+    uiState: PetEditorUiState,
+    fields: PetEditorFields,
+    actions: PetEditorActions,
+    onPickPhoto: () -> Unit,
+    startsWithTheBasics: Boolean,
+) {
+    if (uiState.isLoading) {
+        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+        return
+    }
+    var showsDetails by rememberSaveable { mutableStateOf(!startsWithTheBasics) }
+    EditablePhoto(
+        image = uiState.avatar,
+        localUri = uiState.pickedImageUri,
+        fallbackIcon = GeoWoofIcons.Pets,
+        contentDescription = stringResource(R.string.feature_pets_photo),
+        chooseLabel = stringResource(R.string.feature_pets_choose_photo),
+        removeLabel = stringResource(R.string.feature_pets_remove_photo).takeIf { uiState.hasPhoto },
+        onChoose = onPickPhoto,
+        onRemove = actions.onRemovePhoto,
     )
-    FormScaffold(
-        title = title,
-        modifier = modifier,
-        onBack = onBack,
-        actions = {
-            if (onSkip != null) {
-                TextButton(onClick = onSkip) { Text(stringResource(R.string.feature_pets_skip)) }
-            }
-        },
-    ) {
-        if (uiState.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-            return@FormScaffold
-        }
-        PhotoPicker(uiState = uiState, onPickPhoto = onPickPhoto, onRemovePhoto = actions.onRemovePhoto)
+    FormTextField(
+        state = fields.name,
+        label = stringResource(R.string.feature_pets_name_label),
+        supportingText = uiState.issues.name?.let { nameMessage(it) },
+        isError = uiState.issues.name != null,
+        keyboardOptions = WordsKeyboard,
+    )
+    SpeciesSelector(selected = uiState.species, onSelect = actions.onSpeciesChange)
+    if (uiState.species == PetSpecies.Other) {
         FormTextField(
-            state = fields.name,
-            label = stringResource(R.string.feature_pets_name_label),
-            supportingText = uiState.issues.name?.let { nameMessage(it) },
-            isError = uiState.issues.name != null,
+            state = fields.speciesOther,
+            label = stringResource(R.string.feature_pets_species_other_label),
+            supportingText = uiState.issues.speciesOther?.let { speciesOtherMessage(it) },
+            isError = uiState.issues.speciesOther != null,
             keyboardOptions = WordsKeyboard,
         )
-        SpeciesSelector(selected = uiState.species, onSelect = actions.onSpeciesChange)
-        if (uiState.species == PetSpecies.Other) {
-            FormTextField(
-                state = fields.speciesOther,
-                label = stringResource(R.string.feature_pets_species_other_label),
-                supportingText = uiState.issues.speciesOther?.let { speciesOtherMessage(it) },
-                isError = uiState.issues.speciesOther != null,
-                keyboardOptions = WordsKeyboard,
-            )
+    }
+    FormTextField(
+        state = fields.breed,
+        label = stringResource(R.string.feature_pets_breed_label),
+        supportingText = uiState.issues.breed?.let { tooLongMessage(it) },
+        isError = uiState.issues.breed != null,
+        keyboardOptions = WordsKeyboard,
+    )
+    AnimatedVisibility(visible = showsDetails) {
+        PetDetailsFields(uiState = uiState, fields = fields, actions = actions)
+    }
+    if (!showsDetails) {
+        TextButton(onClick = { showsDetails = true }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+            Text(stringResource(R.string.feature_pets_more_details))
         }
-        FormTextField(
-            state = fields.breed,
-            label = stringResource(R.string.feature_pets_breed_label),
-            supportingText = uiState.issues.breed?.let { tooLongMessage(it) },
-            isError = uiState.issues.breed != null,
-            keyboardOptions = WordsKeyboard,
-        )
-        BirthDateRow(uiState = uiState, onChange = actions.onBirthDateChange)
-        SexSelector(selected = uiState.sex, onSelect = actions.onSexChange)
-        SizeSelector(selected = uiState.size, onSelect = actions.onSizeChange)
+    }
+    FormError(uiState.error)
+    ProgressButton(
+        text = stringResource(R.string.feature_pets_save),
+        loading = uiState.isSaving,
+        onClick = actions.onSave,
+    )
+}
+
+/** What can wait: nobody needs the microchip number at hand to start walking. */
+@Composable
+private fun PetDetailsFields(
+    uiState: PetEditorUiState,
+    fields: PetEditorFields,
+    actions: PetEditorActions,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.medium)) {
+        BirthDateAndNeutered(uiState = uiState, actions = actions)
+        LabeledChoice(stringResource(R.string.feature_pets_sex_label)) {
+            SexSelector(selected = uiState.sex, onSelect = actions.onSexChange)
+        }
+        LabeledChoice(stringResource(R.string.feature_pets_size_label)) {
+            SizeSelector(selected = uiState.size, onSelect = actions.onSizeChange)
+        }
         FormTextField(
             state = fields.color,
             label = stringResource(R.string.feature_pets_color_label),
             supportingText = uiState.issues.color?.let { tooLongMessage(it) },
             isError = uiState.issues.color != null,
             keyboardOptions = WordsKeyboard,
-        )
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.feature_pets_neutered_label)) },
-            trailingContent = { Switch(checked = uiState.neutered, onCheckedChange = null) },
-            modifier = Modifier.clickable { actions.onNeuteredChange(!uiState.neutered) },
         )
         FormTextField(
             state = fields.microchip,
@@ -209,12 +268,6 @@ internal fun PetEditorContent(
             isError = uiState.issues.bio != null,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = 3),
-        )
-        FormError(uiState.error)
-        ProgressButton(
-            text = stringResource(R.string.feature_pets_save),
-            loading = uiState.isSaving,
-            onClick = actions.onSave,
         )
     }
 }

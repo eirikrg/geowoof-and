@@ -4,7 +4,7 @@
     <string name="feature_auth_welcome_message">Walk with your dog, see who is out right now and share it with your friends.</string>
     <string name="feature_auth_create_account">Create account</string>
     <string name="feature_auth_sign_in">Sign in</string>
-    <string name="feature_auth_sign_in_title">Sign in</string>
+    <string name="feature_auth_sign_in_title">Welcome back</string>
     <string name="feature_auth_sign_up_title">Create your account</string>
     <string name="feature_auth_email_label">Email</string>
     <string name="feature_auth_password_label">Password</string>
@@ -42,4 +42,6 @@
     <string name="feature_auth_username_invalid">Not a valid username</string>
     <string name="feature_auth_username_check_failed">Could not check availability. You can still continue.</string>
     <string name="feature_auth_continue">Continue</string>
+    <string name="feature_auth_sign_in_message">Sign in to see who is out walking right now.</string>
+    <string name="feature_auth_sign_up_message">Your walks, your pets and your friends, all in one place.</string>
 </resources>

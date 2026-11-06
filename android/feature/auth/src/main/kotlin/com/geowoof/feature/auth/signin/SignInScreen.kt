@@ -23,8 +23,9 @@ import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.EmailIssue
 import com.geowoof.core.ui.FormError
 import com.geowoof.core.ui.FormNotice
-import com.geowoof.core.ui.FormScaffold
+import com.geowoof.core.ui.FormOrDivider
 import com.geowoof.core.ui.GoogleSignInButton
+import com.geowoof.core.ui.IntroFormScaffold
 import com.geowoof.core.ui.PasswordRequired
 import com.geowoof.core.ui.messageRes
 import com.geowoof.core.ui.rememberCredentialSubmit
@@ -70,7 +71,12 @@ internal fun SignInContent(
     onContinueWithGoogle: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    FormScaffold(title = stringResource(R.string.feature_auth_sign_in_title), modifier = modifier, onBack = onBack) {
+    IntroFormScaffold(
+        title = stringResource(R.string.feature_auth_sign_in_title),
+        modifier = modifier,
+        message = stringResource(R.string.feature_auth_sign_in_message),
+        onBack = onBack,
+    ) {
         if (uiState.passwordWasReset) {
             FormNotice(stringResource(R.string.feature_auth_password_reset_done))
         }
@@ -100,6 +106,7 @@ internal fun SignInContent(
             enabled = !uiState.isSigningInWithGoogle,
         )
         if (onContinueWithGoogle != null) {
+            FormOrDivider()
             GoogleSignInButton(
                 onClick = onContinueWithGoogle,
                 loading = uiState.isSigningInWithGoogle,

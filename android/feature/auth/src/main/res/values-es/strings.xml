@@ -4,7 +4,7 @@
     <string name="feature_auth_welcome_message">Pasea con tu perro, mira quién está fuera ahora mismo y compártelo con tus amigos.</string>
     <string name="feature_auth_create_account">Crear cuenta</string>
     <string name="feature_auth_sign_in">Iniciar sesión</string>
-    <string name="feature_auth_sign_in_title">Inicia sesión</string>
+    <string name="feature_auth_sign_in_title">Hola de nuevo</string>
     <string name="feature_auth_sign_up_title">Crea tu cuenta</string>
     <string name="feature_auth_email_label">Email</string>
     <string name="feature_auth_password_label">Contraseña</string>
@@ -42,4 +42,6 @@
     <string name="feature_auth_username_invalid">No es un nombre de usuario válido</string>
     <string name="feature_auth_username_check_failed">No se ha podido comprobar la disponibilidad. Puedes continuar igualmente.</string>
     <string name="feature_auth_continue">Continuar</string>
+    <string name="feature_auth_sign_in_message">Entra para ver quién está paseando ahora mismo.</string>
+    <string name="feature_auth_sign_up_message">Tus paseos, tus mascotas y tus amigos, todo en un mismo sitio.</string>
 </resources>

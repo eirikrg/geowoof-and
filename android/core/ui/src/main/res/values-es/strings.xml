@@ -125,4 +125,5 @@
     </plurals>
     <string name="core_ui_error_chat_not_friends">Solo los amigos pueden escribirse.</string>
     <string name="core_ui_error_chat_gone">Esta conversación ya no está disponible.</string>
+    <string name="core_ui_or">o</string>
 </resources>

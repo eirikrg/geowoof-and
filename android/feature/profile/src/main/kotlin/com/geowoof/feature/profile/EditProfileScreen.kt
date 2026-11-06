@@ -29,10 +29,9 @@ import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ProfileIssues
 import com.geowoof.core.model.TextIssue
+import com.geowoof.core.ui.EditablePhoto
 import com.geowoof.core.ui.FormError
 import com.geowoof.core.ui.FormScaffold
-import com.geowoof.core.ui.ImageVariant
-import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.messageRes
 import com.geowoof.core.ui.rememberPhotoPicker
 
@@ -78,21 +77,16 @@ internal fun EditProfileContent(
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             return@FormScaffold
         }
-        RemoteAvatar(
+        EditablePhoto(
             image = uiState.avatar,
+            localUri = uiState.pickedImageUri,
             fallbackIcon = GeoWoofIcons.Person,
             contentDescription = stringResource(R.string.feature_profile_photo),
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            size = 96.dp,
-            variant = ImageVariant.Medium,
-            localUri = uiState.pickedImageUri,
+            chooseLabel = stringResource(R.string.feature_profile_choose_photo),
+            removeLabel = stringResource(R.string.feature_profile_remove_photo).takeIf { uiState.hasPhoto },
+            onChoose = onPickPhoto,
+            onRemove = onRemovePhoto,
         )
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            TextButton(onClick = onPickPhoto) { Text(stringResource(R.string.feature_profile_choose_photo)) }
-            if (uiState.hasPhoto) {
-                TextButton(onClick = onRemovePhoto) { Text(stringResource(R.string.feature_profile_remove_photo)) }
-            }
-        }
         FormTextField(
             state = displayName,
             label = stringResource(R.string.feature_profile_name_label),

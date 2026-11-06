@@ -45,7 +45,7 @@
     <string name="feature_profile_photos_failed">No se han podido cargar las fotos.</string>
     <string name="feature_profile_no_saved">Aquí aparecerán las publicaciones que guardes. Solo las ves tú.</string>
     <string name="feature_profile_saved_failed">No se han podido cargar las guardadas.</string>
-    <string name="feature_profile_no_own_walks">Aquí aparecerán tus paseos.</string>
+    <string name="feature_profile_no_own_walks">Empieza un paseo desde el mapa y aparecerá aquí.</string>
     <string name="feature_profile_no_walks">No hay paseos que puedas ver.</string>
     <string name="feature_profile_walks_failed">No se han podido cargar los paseos.</string>
     <string name="feature_profile_no_pets_of_person">Aún no tiene mascotas.</string>

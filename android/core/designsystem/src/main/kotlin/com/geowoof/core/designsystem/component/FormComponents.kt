@@ -155,7 +155,8 @@ fun ProgressButton(
 /** Keyboard options for email fields. */
 val EmailKeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
 
-private val MinButtonHeight = 52.dp
+/** The height of the big buttons of a form, so that they are all the same. */
+val MinButtonHeight = 52.dp
 private val ProgressSize = 20.dp
 
 @PreviewLightDark

@@ -31,10 +31,15 @@ fun NavController.navigateToCreatePost(navOptions: NavOptions? = null) =
     navigate(CreatePostRoute, navOptions ?: navOptions { launchSingleTop = true })
 
 /** The profile of a person is another feature: the app provides how to reach it. */
-fun NavGraphBuilder.socialScreens(navController: NavController, onOpenUser: (userId: String) -> Unit) {
+fun NavGraphBuilder.socialScreens(
+    navController: NavController,
+    onOpenUser: (userId: String) -> Unit,
+    onFindPeople: () -> Unit,
+) {
     composable<CommunityRoute> {
         CommunityScreen(
             onCreatePost = { navController.navigateToCreatePost() },
+            onFindPeople = onFindPeople,
             onOpenPost = { navController.navigateToPost(it) },
             onOpenUser = onOpenUser,
         )

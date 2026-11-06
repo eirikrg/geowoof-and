@@ -20,7 +20,7 @@ import com.geowoof.core.designsystem.component.ProgressButton
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.PasswordIssue
 import com.geowoof.core.ui.FormError
-import com.geowoof.core.ui.FormScaffold
+import com.geowoof.core.ui.IntroFormScaffold
 import com.geowoof.core.ui.PasswordRulesHint
 import com.geowoof.core.ui.messageRes
 import com.geowoof.core.ui.rememberCredentialSubmit
@@ -58,7 +58,12 @@ internal fun SignUpContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FormScaffold(title = stringResource(R.string.feature_auth_sign_up_title), modifier = modifier, onBack = onBack) {
+    IntroFormScaffold(
+        title = stringResource(R.string.feature_auth_sign_up_title),
+        modifier = modifier,
+        message = stringResource(R.string.feature_auth_sign_up_message),
+        onBack = onBack,
+    ) {
         FormTextField(
             state = displayName,
             label = stringResource(R.string.feature_auth_name_label),

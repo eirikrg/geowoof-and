@@ -25,17 +25,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geowoof.core.designsystem.component.GeoWoofLogo
+import com.geowoof.core.designsystem.component.MinButtonHeight
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.ui.FormError
 import com.geowoof.core.ui.GoogleSignInButton
@@ -76,46 +79,73 @@ internal fun WelcomeContent(
     val spacing = GeoWoofTheme.spacing
     Scaffold(modifier = modifier) { innerPadding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            // A large part of the screen for the brand, without leaving the buttons out with a big font.
-            val heroHeight = (maxHeight * HERO_SHARE).coerceAtLeast(MinHeroHeight)
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = innerPadding.calculateBottomPadding() + spacing.large),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Hero(topPadding = innerPadding.calculateTopPadding(), modifier = Modifier.height(heroHeight))
-                Column(
-                    modifier = Modifier
-                        .widthIn(max = MaxFormWidth)
-                        .padding(horizontal = spacing.extraLarge, vertical = spacing.extraLarge),
-                    verticalArrangement = Arrangement.spacedBy(spacing.medium),
-                ) {
-                    Button(
-                        onClick = onSignUp,
-                        enabled = !uiState.isSigningInWithGoogle,
+            HeroOverActions(
+                screenHeight = maxHeight,
+                hero = { Hero(topPadding = innerPadding.calculateTopPadding()) },
+                actions = {
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = ButtonHeight),
+                            .widthIn(max = MaxFormWidth)
+                            .padding(horizontal = spacing.extraLarge)
+                            .padding(
+                                top = spacing.extraLarge,
+                                bottom = innerPadding.calculateBottomPadding() + spacing.large,
+                            ),
+                        verticalArrangement = Arrangement.spacedBy(spacing.medium),
                     ) {
-                        Text(stringResource(R.string.feature_auth_create_account))
+                        Button(
+                            onClick = onSignUp,
+                            enabled = !uiState.isSigningInWithGoogle,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = MinButtonHeight),
+                        ) {
+                            Text(stringResource(R.string.feature_auth_create_account))
+                        }
+                        OutlinedButton(
+                            onClick = onSignIn,
+                            enabled = !uiState.isSigningInWithGoogle,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = MinButtonHeight),
+                        ) {
+                            Text(stringResource(R.string.feature_auth_sign_in))
+                        }
+                        if (onContinueWithGoogle != null) {
+                            GoogleSignInButton(onClick = onContinueWithGoogle, loading = uiState.isSigningInWithGoogle)
+                        }
+                        FormError(uiState.error)
                     }
-                    OutlinedButton(
-                        onClick = onSignIn,
-                        enabled = !uiState.isSigningInWithGoogle,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = ButtonHeight),
-                    ) {
-                        Text(stringResource(R.string.feature_auth_sign_in))
-                    }
-                    if (onContinueWithGoogle != null) {
-                        GoogleSignInButton(onClick = onContinueWithGoogle, loading = uiState.isSigningInWithGoogle)
-                    }
-                    FormError(uiState.error)
-                }
-            }
+                },
+            )
+        }
+    }
+}
+
+/**
+ * The actions take what they need at the bottom and the hero the rest of the screen, without going
+ * below [MinHeroHeight]: with a big font on a small screen, it all scrolls.
+ */
+@Composable
+private fun HeroOverActions(
+    screenHeight: Dp,
+    hero: @Composable () -> Unit,
+    actions: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Layout(
+        contents = listOf(hero, actions),
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
+    ) { (heroParts, actionParts), constraints ->
+        val free = constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity)
+        val actionsPlaced = actionParts.first().measure(free.copy(minWidth = 0))
+        val heroHeight = maxOf(screenHeight.roundToPx() - actionsPlaced.height, MinHeroHeight.roundToPx())
+        val heroPlaced = heroParts.first().measure(Constraints.fixed(constraints.maxWidth, heroHeight))
+        layout(constraints.maxWidth, heroHeight + actionsPlaced.height) {
+            heroPlaced.place(0, 0)
+            actionsPlaced.place((constraints.maxWidth - actionsPlaced.width) / 2, heroHeight)
         }
     }
 }
@@ -154,10 +184,8 @@ private fun Hero(topPadding: Dp, modifier: Modifier = Modifier) {
     }
 }
 
-private val LogoHeight = 150.dp
-private val ButtonHeight = 52.dp
+private val LogoHeight = 176.dp
 private val MinHeroHeight = 340.dp
-private const val HERO_SHARE = 0.6f
 private val HeroShape = RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp)
 
 @PreviewLightDark

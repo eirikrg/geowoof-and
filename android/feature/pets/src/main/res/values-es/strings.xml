@@ -45,4 +45,6 @@
     <string name="feature_pets_chart_description">Gráfica de peso: de %1$s kg a %2$s kg</string>
     <string name="feature_pets_walks_title">Paseos</string>
     <string name="feature_pets_see_walks">Ver paseos</string>
+    <string name="feature_pets_first_message">Con un nombre y una foto ya podéis salir a pasear. El resto, cuando quieras.</string>
+    <string name="feature_pets_more_details">Añadir más detalles</string>
 </resources>

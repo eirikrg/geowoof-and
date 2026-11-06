@@ -45,4 +45,6 @@
     <string name="feature_pets_chart_description">Weight chart: from %1$s kg to %2$s kg</string>
     <string name="feature_pets_walks_title">Walks</string>
     <string name="feature_pets_see_walks">See walks</string>
+    <string name="feature_pets_first_message">A name and a photo are enough to go for a walk. You can add the rest whenever you like.</string>
+    <string name="feature_pets_more_details">Add more details</string>
 </resources>

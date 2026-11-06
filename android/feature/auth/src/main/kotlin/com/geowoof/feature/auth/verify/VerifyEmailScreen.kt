@@ -2,7 +2,6 @@ package com.geowoof.feature.auth.verify
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -16,10 +15,14 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geowoof.core.designsystem.component.ProgressButton
+import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.ui.FormError
+import com.geowoof.core.ui.FormIntroIcon
 import com.geowoof.core.ui.FormNotice
-import com.geowoof.core.ui.FormScaffold
+import com.geowoof.core.ui.IntroFormScaffold
+import com.geowoof.core.ui.OnboardingProgress
+import com.geowoof.core.ui.OnboardingStep
 import com.geowoof.core.ui.VerificationCodeField
 import com.geowoof.core.ui.messageRes
 import com.geowoof.feature.auth.R
@@ -61,20 +64,25 @@ internal fun VerifyEmailContent(
     onSignOut: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    FormScaffold(
+    IntroFormScaffold(
         title = stringResource(R.string.feature_auth_verify_title),
         modifier = modifier,
+        message = stringResource(R.string.feature_auth_verify_message, uiState.email),
+        emphasis = uiState.email,
         onBack = onBack,
         actions = {
+            if (onSkip != null) {
+                TextButton(onClick = onSkip) { Text(stringResource(R.string.feature_auth_skip)) }
+            }
+        },
+        lead = {
             if (onSignOut != null) {
-                TextButton(onClick = onSignOut) { Text(stringResource(R.string.feature_auth_sign_out)) }
+                OnboardingProgress(OnboardingStep.VerifyEmail)
+            } else {
+                FormIntroIcon(GeoWoofIcons.Mail)
             }
         },
     ) {
-        Text(
-            stringResource(R.string.feature_auth_verify_message, uiState.email),
-            style = MaterialTheme.typography.bodyLarge,
-        )
         VerificationCodeField(
             state = code,
             supportingText = uiState.codeIssue?.let { stringResource(it.messageRes()) },
@@ -103,9 +111,9 @@ internal fun VerifyEmailContent(
                 },
             )
         }
-        if (onSkip != null) {
-            TextButton(onClick = onSkip, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                Text(stringResource(R.string.feature_auth_skip))
+        if (onSignOut != null) {
+            TextButton(onClick = onSignOut, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                Text(stringResource(R.string.feature_auth_sign_out))
             }
         }
     }

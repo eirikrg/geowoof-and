@@ -2,10 +2,17 @@ package com.geowoof.core.ui
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,14 +22,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import com.geowoof.core.designsystem.component.MinButtonHeight
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -113,24 +127,55 @@ fun rememberGoogleSignInLauncher(
 }
 
 /**
- * "Continue with Google" button. It follows Material 3; the official Google-branded button is
- * in docs/backlog.md.
+ * The "Continue with Google" button, with the colors, the padding and the logo that Google's branding
+ * guidelines ask for in each theme. The font is the system one (docs/backlog.md).
  */
 @Composable
 fun GoogleSignInButton(onClick: () -> Unit, loading: Boolean, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    val isDark = isThemeDark()
     OutlinedButton(
         onClick = onClick,
         enabled = enabled && !loading,
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 48.dp),
+            .heightIn(min = MinButtonHeight),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (isDark) GoogleDarkFill else Color.White,
+            contentColor = if (isDark) GoogleDarkText else GoogleLightText,
+        ),
+        border = BorderStroke(1.dp, if (isDark) GoogleDarkStroke else GoogleLightStroke),
+        contentPadding = PaddingValues(horizontal = 12.dp),
     ) {
         if (loading) {
-            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = LocalContentColor.current,
+                strokeWidth = 2.dp,
+            )
         } else {
-            Text(stringResource(R.string.core_ui_continue_with_google))
+            Image(
+                painter = painterResource(
+                    if (isDark) R.drawable.core_ui_google_g_dark else R.drawable.core_ui_google_g_light,
+                ),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(stringResource(R.string.core_ui_continue_with_google), style = GoogleLabel)
         }
     }
 }
+
+private val GoogleDarkFill = Color(0xFF131314)
+private val GoogleDarkText = Color(0xFFE3E3E3)
+private val GoogleDarkStroke = Color(0xFF8E918F)
+private val GoogleLightText = Color(0xFF1F1F1F)
+private val GoogleLightStroke = Color(0xFF747775)
+private val GoogleLabel = TextStyle(
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = FontWeight.Medium,
+    fontSize = 14.sp,
+    lineHeight = 20.sp,
+)
 
 private const val TAG = "GoogleSignIn"

@@ -5,7 +5,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -21,16 +20,21 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geowoof.core.designsystem.component.FormTextField
+import com.geowoof.core.designsystem.component.ListGroup
+import com.geowoof.core.designsystem.component.ListGroupItem
 import com.geowoof.core.designsystem.component.ProgressButton
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.domain.UsernameStatus
 import com.geowoof.core.model.UsernameUnavailableReason
 import com.geowoof.core.ui.FormError
-import com.geowoof.core.ui.FormScaffold
+import com.geowoof.core.ui.IntroFormScaffold
+import com.geowoof.core.ui.OnboardingProgress
+import com.geowoof.core.ui.OnboardingStep
 import com.geowoof.core.ui.messageRes
 import com.geowoof.feature.auth.R
 
@@ -59,14 +63,15 @@ internal fun ChooseUsernameContent(
     modifier: Modifier = Modifier,
 ) {
     val status = uiState.usernameStatus
-    FormScaffold(
+    IntroFormScaffold(
         title = stringResource(R.string.feature_auth_username_title),
         modifier = modifier,
+        message = stringResource(R.string.feature_auth_username_message),
         actions = {
             TextButton(onClick = onSignOut) { Text(stringResource(R.string.feature_auth_sign_out)) }
         },
+        lead = { OnboardingProgress(OnboardingStep.ChooseUsername) },
     ) {
-        Text(stringResource(R.string.feature_auth_username_message), style = MaterialTheme.typography.bodyLarge)
         FormTextField(
             state = username,
             label = stringResource(R.string.feature_auth_username_label),
@@ -104,27 +109,26 @@ internal fun ChooseUsernameContent(
             contentType = ContentType.PersonFullName,
             onKeyboardAction = { onSubmit() },
         )
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.feature_auth_private_profile)) },
-            supportingContent = {
-                Text(
-                    stringResource(
-                        if (uiState.isPrivate) {
-                            R.string.feature_auth_private_on
-                        } else {
-                            R.string.feature_auth_private_off
-                        },
-                    ),
-                )
-            },
-            // The whole row is the switch, for TalkBack too.
-            trailingContent = { Switch(checked = uiState.isPrivate, onCheckedChange = null) },
-            modifier = Modifier.toggleable(
-                value = uiState.isPrivate,
-                role = Role.Switch,
-                onValueChange = onPrivateChange,
-            ),
-        )
+        ListGroup(inset = 0.dp) {
+            ListGroupItem(
+                headline = stringResource(R.string.feature_auth_private_profile),
+                // The whole row is the switch, for TalkBack too.
+                modifier = Modifier.toggleable(
+                    value = uiState.isPrivate,
+                    role = Role.Switch,
+                    onValueChange = onPrivateChange,
+                ),
+                supporting = stringResource(
+                    if (uiState.isPrivate) {
+                        R.string.feature_auth_private_on
+                    } else {
+                        R.string.feature_auth_private_off
+                    },
+                ),
+                icon = GeoWoofIcons.Lock,
+                trailing = { Switch(checked = uiState.isPrivate, onCheckedChange = null) },
+            )
+        }
         FormError(uiState.error)
         ProgressButton(
             text = stringResource(R.string.feature_auth_continue),

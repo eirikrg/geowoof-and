@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 
 /** The title of a part of a screen. TalkBack can jump between them. */
@@ -33,13 +34,17 @@ fun SectionHeader(text: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** Rows that belong together, on a card. */
+/** Rows that belong together, on a card. [inset] is 0 where the screen already has its margins, like a form. */
 @Composable
-fun ListGroup(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+fun ListGroup(
+    modifier: Modifier = Modifier,
+    inset: Dp = GeoWoofTheme.spacing.large,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = GeoWoofTheme.spacing.large),
+            .padding(horizontal = inset),
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {

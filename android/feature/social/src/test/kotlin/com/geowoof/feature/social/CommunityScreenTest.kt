@@ -95,6 +95,7 @@ class CommunityScreenTest {
                     reportDetails = TextFieldState(),
                     actions = cardActions,
                     onCreatePost = { calls += "create" },
+                    onFindPeople = { calls += "people" },
                     onSelectReportReason = { calls += "reason:$it" },
                     onConfirmDialog = { calls += "confirm" },
                     onDismissDialog = { calls += "dismiss" },

@@ -45,4 +45,5 @@
     <string name="feature_social_send_comment">Send comment</string>
     <string name="feature_social_community_error_title">The community could not be loaded</string>
     <string name="feature_social_post_error_title">The post could not be loaded</string>
+    <string name="feature_social_find_people">Find people</string>
 </resources>

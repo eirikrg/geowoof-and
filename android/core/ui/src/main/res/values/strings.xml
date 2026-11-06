@@ -123,4 +123,5 @@
     </plurals>
     <string name="core_ui_error_chat_not_friends">Only friends can write to each other.</string>
     <string name="core_ui_error_chat_gone">This conversation is no longer available.</string>
+    <string name="core_ui_or">or</string>
 </resources>

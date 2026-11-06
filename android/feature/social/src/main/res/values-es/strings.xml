@@ -45,4 +45,5 @@
     <string name="feature_social_send_comment">Enviar comentario</string>
     <string name="feature_social_community_error_title">No se ha podido cargar la comunidad</string>
     <string name="feature_social_post_error_title">No se ha podido cargar la publicación</string>
+    <string name="feature_social_find_people">Buscar personas</string>
 </resources>

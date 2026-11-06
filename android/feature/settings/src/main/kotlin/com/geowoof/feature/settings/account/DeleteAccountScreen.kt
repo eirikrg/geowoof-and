@@ -21,7 +21,8 @@ import com.geowoof.core.designsystem.component.ProgressButton
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.ui.FormError
-import com.geowoof.core.ui.FormScaffold
+import com.geowoof.core.ui.FormIntroIcon
+import com.geowoof.core.ui.IntroFormScaffold
 import com.geowoof.core.ui.PasswordRequired
 import com.geowoof.core.ui.rememberCredentialSubmit
 import com.geowoof.core.ui.rememberGoogleSignInLauncher
@@ -71,12 +72,19 @@ internal fun DeleteAccountContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FormScaffold(
+    IntroFormScaffold(
         title = stringResource(R.string.feature_settings_delete_account),
         modifier = modifier,
+        message = stringResource(R.string.feature_settings_delete_message),
         onBack = onBack,
+        lead = {
+            FormIntroIcon(
+                icon = GeoWoofIcons.Delete,
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            )
+        },
     ) {
-        Text(stringResource(R.string.feature_settings_delete_message), style = MaterialTheme.typography.bodyLarge)
         Text(
             stringResource(
                 if (uiState.hasPassword) {

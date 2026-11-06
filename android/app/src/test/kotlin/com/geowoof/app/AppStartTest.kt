@@ -11,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 
 /**
  * Starts the real activity with the real Hilt graph. Checks the wiring that unit tests replace with
@@ -21,6 +22,7 @@ import org.junit.runner.RunWith
  * nothing here can depend on that button; SignInFlowTest and GetGoogleClientIdUseCaseTest cover it.
  */
 @RunWith(AndroidJUnit4::class)
+@Config(qualifiers = "w412dp-h915dp")
 class AppStartTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()

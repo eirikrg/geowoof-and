@@ -1,5 +1,6 @@
 package com.geowoof.feature.profile
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +46,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemKey
 import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.IconBadge
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Pet
@@ -195,7 +197,12 @@ private fun LazyListScope.photosTab(
     if (posts.itemCount == 0 && posts.loadState.refresh !is LoadState.Loading) {
         item {
             EmptyLine(
-                stringResource(
+                icon = if (posts.loadState.refresh is LoadState.Error) {
+                    GeoWoofIcons.Error
+                } else {
+                    GeoWoofIcons.PhotoLibrary
+                },
+                text = stringResource(
                     when {
                         posts.loadState.refresh is LoadState.Error -> R.string.feature_profile_photos_failed
                         uiState.isOwn -> R.string.feature_profile_no_own_photos
@@ -234,7 +241,8 @@ private fun LazyListScope.savedTab(saved: LazyPagingItems<Post>, actions: Profil
     if (saved.itemCount == 0 && saved.loadState.refresh !is LoadState.Loading) {
         item {
             EmptyLine(
-                stringResource(
+                icon = if (saved.loadState.refresh is LoadState.Error) GeoWoofIcons.Error else GeoWoofIcons.Bookmark,
+                text = stringResource(
                     if (saved.loadState.refresh is LoadState.Error) {
                         R.string.feature_profile_saved_failed
                     } else {
@@ -267,7 +275,8 @@ private fun LazyListScope.walksTab(uiState: ProfileUiState, walks: LazyPagingIte
     if (walks.itemCount == 0 && walks.loadState.refresh !is LoadState.Loading) {
         item {
             EmptyLine(
-                stringResource(
+                icon = if (walks.loadState.refresh is LoadState.Error) GeoWoofIcons.Error else GeoWoofIcons.Route,
+                text = stringResource(
                     when {
                         walks.loadState.refresh is LoadState.Error -> R.string.feature_profile_walks_failed
                         uiState.isOwn -> R.string.feature_profile_no_own_walks
@@ -315,7 +324,7 @@ private fun LazyListScope.petsTab(uiState: ProfileUiState, actions: ProfileActio
                     message = stringResource(R.string.feature_profile_no_pets_message),
                 )
             } else {
-                EmptyLine(stringResource(R.string.feature_profile_no_pets_of_person))
+                EmptyLine(GeoWoofIcons.Pets, stringResource(R.string.feature_profile_no_pets_of_person))
             }
         }
     }
@@ -324,14 +333,25 @@ private fun LazyListScope.petsTab(uiState: ProfileUiState, actions: ProfileActio
     }
 }
 
+/** A tab with nothing to show: smaller than an [EmptyState], because the profile is still above it. */
 @Composable
-private fun EmptyLine(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        modifier = modifier.padding(GeoWoofTheme.spacing.large),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+private fun EmptyLine(@DrawableRes icon: Int, text: String, modifier: Modifier = Modifier) {
+    val spacing = GeoWoofTheme.spacing
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.extraLarge, vertical = spacing.extraLarge),
+        verticalArrangement = Arrangement.spacedBy(spacing.medium),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        IconBadge(icon = icon, size = EmptyLineIconSize, iconSize = EmptyLineGlyphSize)
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
 }
 
 /** Only your own pets open: those of other people have no screen yet. */
@@ -364,3 +384,5 @@ private fun PetRow(pet: Pet, onClick: (() -> Unit)?, modifier: Modifier = Modifi
 private const val GRID_COLUMNS = 3
 private const val LARGE_FONT_SCALE = 1.3f
 private val GridSpacing = 4.dp
+private val EmptyLineIconSize = 56.dp
+private val EmptyLineGlyphSize = 28.dp

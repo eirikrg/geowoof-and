@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -57,6 +58,7 @@ import kotlinx.coroutines.flow.flowOf
 @Composable
 fun CommunityScreen(
     onCreatePost: () -> Unit,
+    onFindPeople: () -> Unit,
     onOpenPost: (postId: String) -> Unit,
     onOpenUser: (userId: String) -> Unit,
     modifier: Modifier = Modifier,
@@ -78,6 +80,7 @@ fun CommunityScreen(
             onShowDialog = interactions::onShowDialog,
         ),
         onCreatePost = onCreatePost,
+        onFindPeople = onFindPeople,
         onSelectReportReason = interactions::onSelectReportReason,
         onConfirmDialog = interactions::onConfirmDialog,
         onDismissDialog = interactions::onDismissDialog,
@@ -96,6 +99,7 @@ internal fun CommunityContent(
     reportDetails: TextFieldState,
     actions: PostCardActions,
     onCreatePost: () -> Unit,
+    onFindPeople: () -> Unit,
     onSelectReportReason: (ReportReason) -> Unit,
     onConfirmDialog: () -> Unit,
     onDismissDialog: () -> Unit,
@@ -140,7 +144,7 @@ internal fun CommunityContent(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            FeedList(feed, myUserId, actions)
+            FeedList(feed, myUserId, actions, onFindPeople)
         }
     }
     PostDialogs(state, reportDetails, onSelectReportReason, onConfirmDialog, onDismissDialog)
@@ -151,6 +155,7 @@ private fun FeedList(
     feed: LazyPagingItems<TimelineItem>,
     myUserId: String?,
     actions: PostCardActions,
+    onFindPeople: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val refresh = feed.loadState.refresh
@@ -182,6 +187,11 @@ private fun FeedList(
                     title = stringResource(R.string.feature_social_community_empty_title),
                     message = stringResource(R.string.feature_social_community_empty_message),
                     modifier = Modifier.fillParentMaxSize(),
+                    action = {
+                        FilledTonalButton(onClick = onFindPeople) {
+                            Text(stringResource(R.string.feature_social_find_people))
+                        }
+                    },
                 )
             }
 
@@ -231,6 +241,7 @@ private fun CommunityPreview() {
             reportDetails = TextFieldState(),
             actions = PostCardActions(),
             onCreatePost = {},
+            onFindPeople = {},
             onSelectReportReason = {},
             onConfirmDialog = {},
             onDismissDialog = {},
