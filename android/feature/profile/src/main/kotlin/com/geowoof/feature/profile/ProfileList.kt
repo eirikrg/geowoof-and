@@ -46,6 +46,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemKey
 import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.FittedText
 import com.geowoof.core.designsystem.component.IconBadge
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
@@ -142,7 +143,7 @@ private fun ProfileTabs(
             Tab(
                 selected = selected == tab,
                 onClick = { onSelect(tab) },
-                text = { Text(stringResource(tab.label), style = MaterialTheme.typography.titleSmall) },
+                text = { FittedText(stringResource(tab.label), style = MaterialTheme.typography.titleSmall) },
             )
         }
     }

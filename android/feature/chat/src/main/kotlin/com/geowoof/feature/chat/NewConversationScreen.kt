@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +24,8 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.geowoof.core.designsystem.component.SkeletonList
+import com.geowoof.core.designsystem.component.SkeletonRow
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Person
@@ -93,9 +94,7 @@ internal fun NewConversationContent(
             }
 
             friends.loadState.refresh is LoadState.Loading ->
-                Box(modifier = Modifier.padding(innerPadding).fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                SkeletonList(modifier = Modifier.padding(innerPadding)) { SkeletonRow() }
 
             else -> Box(
                 modifier = Modifier.padding(innerPadding).padding(GeoWoofTheme.spacing.large).fillMaxSize(),
