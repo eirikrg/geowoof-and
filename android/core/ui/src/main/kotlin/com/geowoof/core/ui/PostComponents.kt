@@ -21,6 +21,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -58,7 +60,17 @@ fun PostImage(
     val model = remember(context, url, cacheKey) {
         url?.let { ImageRequest.Builder(context).data(it).memoryCacheKey(cacheKey).diskCacheKey(cacheKey).build() }
     }
-    Box(modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
+    Box(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+            .semantics {
+                if (model == null &&
+                    contentDescription != null
+                ) {
+                    this.contentDescription = contentDescription
+                }
+            },
+    ) {
         // Without a URL the server is still processing it, and there is only the background.
         if (model != null) {
             AsyncImage(

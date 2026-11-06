@@ -130,4 +130,9 @@
     <string name="core_ui_notifications_message">GeoWoof te avisa de los mensajes nuevos, de quién te sigue y de lo que pasa con tus publicaciones. Puedes cambiarlo cuando quieras en los ajustes del móvil.</string>
     <string name="core_ui_notifications_turn_on">Activar</string>
     <string name="core_ui_notifications_not_now">Ahora no</string>
+    <string name="core_ui_close">Cerrar</string>
+    <string name="core_ui_enlarge_photo">Ampliar foto</string>
+    <string name="core_ui_photo_position">%1$d/%2$d</string>
+    <string name="core_ui_photo_position_description">Foto %1$d de %2$d</string>
+    <string name="core_ui_photo_failed">No se ha podido cargar la foto.</string>
 </resources>

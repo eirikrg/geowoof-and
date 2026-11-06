@@ -1,6 +1,7 @@
 package com.geowoof.core.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,13 +9,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -192,7 +200,7 @@ private fun WalkSyncIcon(status: WalkSyncStatus, modifier: Modifier = Modifier) 
 
 /** A photo of a walk: the copy on the device until it is uploaded, and then the one on the server. */
 @Composable
-fun WalkPhotoImage(photo: WalkPhoto, modifier: Modifier = Modifier) {
+fun WalkPhotoImage(photo: WalkPhoto, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     val context = LocalContext.current
     val image = photo.image
     val model = remember(context, photo) {
@@ -209,14 +217,35 @@ fun WalkPhotoImage(photo: WalkPhoto, modifier: Modifier = Modifier) {
             else -> null
         }
     }
+    val enlarge = stringResource(R.string.core_ui_enlarge_photo)
     AsyncImage(
         model = model,
         contentDescription = stringResource(R.string.core_ui_walk_photo),
         modifier = modifier
             .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+            .then(if (onClick != null) Modifier.clickable(onClickLabel = enlarge, onClick = onClick) else Modifier),
         contentScale = ContentScale.Crop,
     )
+}
+
+/** The photos of a walk in a row. Touching one enlarges it. */
+@Composable
+fun WalkPhotosRow(photos: List<WalkPhoto>, photoSize: Dp, modifier: Modifier = Modifier) {
+    var openPage by rememberSaveable { mutableStateOf<Int?>(null) }
+    LazyRow(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.small)) {
+        itemsIndexed(photos) { index, photo ->
+            WalkPhotoImage(photo, modifier = Modifier.size(photoSize), onClick = { openPage = index })
+        }
+    }
+    openPage?.let { page ->
+        PhotoViewer(
+            photos = remember(photos) { photos.map { ViewerPhoto(it.image, it.localPath) } },
+            initialPage = page,
+            contentDescription = stringResource(R.string.core_ui_walk_photo),
+            onDismiss = { openPage = null },
+        )
+    }
 }
 
 /** A picture just picked, before it is saved. */

@@ -128,4 +128,9 @@
     <string name="core_ui_notifications_message">GeoWoof lets you know about new messages, who follows you and what happens with your posts. You can change it at any time in the settings of your phone.</string>
     <string name="core_ui_notifications_turn_on">Turn on</string>
     <string name="core_ui_notifications_not_now">Not now</string>
+    <string name="core_ui_close">Close</string>
+    <string name="core_ui_enlarge_photo">Enlarge photo</string>
+    <string name="core_ui_photo_position">%1$d/%2$d</string>
+    <string name="core_ui_photo_position_description">Photo %1$d of %2$d</string>
+    <string name="core_ui_photo_failed">The photo could not be loaded.</string>
 </resources>

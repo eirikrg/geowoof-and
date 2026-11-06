@@ -55,7 +55,7 @@ import com.geowoof.core.model.WalkStats
 import com.geowoof.core.model.WalkSyncStatus
 import com.geowoof.core.model.WalkVisibility
 import com.geowoof.core.ui.RouteCanvas
-import com.geowoof.core.ui.WalkPhotoImage
+import com.geowoof.core.ui.WalkPhotosRow
 import com.geowoof.core.ui.WalkStatsGrid
 import com.geowoof.core.ui.decodeRoute
 import com.geowoof.core.ui.formattedIn
@@ -267,9 +267,7 @@ private fun WalkDetails(
         )
         walk.note?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
         if (walk.photos.isNotEmpty()) {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(spacing.small)) {
-                items(walk.photos) { photo -> WalkPhotoImage(photo, modifier = Modifier.size(PhotoSize)) }
-            }
+            WalkPhotosRow(walk.photos, photoSize = PhotoSize)
         }
         if (uiState.route == null && !uiState.isRefreshing) {
             Text(

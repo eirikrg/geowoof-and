@@ -35,6 +35,7 @@ import com.geowoof.core.model.AppError
 import com.geowoof.core.model.Comment
 import com.geowoof.core.model.Mention
 import com.geowoof.core.model.PostVisibility
+import com.geowoof.core.model.RemoteImage
 import com.geowoof.core.model.ReportReason
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.model.TimelineItem
@@ -169,6 +170,30 @@ class CommunityScreenTest {
         composeRule.onNodeWithText("Bea").performClick()
 
         assertEquals(listOf("user:bea-id"), calls)
+    }
+
+    @Test
+    fun touching_a_photo_enlarges_it_without_leaving_the_feed() {
+        showFeed(TestSocial.pages(listOf(TestPosts.item())))
+
+        waitForText("Bea")
+        composeRule.onNodeWithContentDescription("Photo by Bea").performClick()
+
+        composeRule.onNodeWithContentDescription("Close").assertIsDisplayed().performClick()
+
+        composeRule.onNodeWithContentDescription("Close").assertDoesNotExist()
+        assertEquals(emptyList<String>(), calls)
+    }
+
+    @Test
+    fun a_photo_that_is_still_being_processed_does_not_open() {
+        val processing = TestPosts.post(media = listOf(RemoteImage("asset-1", null, null)))
+        showFeed(TestSocial.pages(listOf(TestPosts.item(processing))))
+
+        waitForText("Bea")
+        composeRule.onNodeWithContentDescription("Photo by Bea").performClick()
+
+        composeRule.onNodeWithContentDescription("Close").assertDoesNotExist()
     }
 
     @Test

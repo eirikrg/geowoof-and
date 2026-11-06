@@ -32,6 +32,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,10 +55,13 @@ import com.geowoof.core.model.PostVisibility
 import com.geowoof.core.model.RemoteImage
 import com.geowoof.core.model.UserSummary
 import com.geowoof.core.ui.MentionText
+import com.geowoof.core.ui.PhotoViewer
 import com.geowoof.core.ui.PostImage
 import com.geowoof.core.ui.RemoteAvatar
+import com.geowoof.core.ui.ViewerPhoto
 import com.geowoof.core.ui.relativeToNow
 import com.geowoof.feature.social.R
+import kotlinx.coroutines.launch
 import java.time.Instant
 
 /** A post, with who published it and what can be done with it. A repost always shows its original author. */
@@ -79,7 +84,7 @@ internal fun PostCard(
         Column(modifier = Modifier.padding(vertical = spacing.small)) {
             repostedBy?.let { RepostLine(it, actions.onOpenUser) }
             PostHeader(post, post.author.id == myUserId, actions)
-            PostImages(post, onClick = { actions.onOpenPost(post) })
+            PostImages(post)
             PostButtons(post, actions)
             post.text?.let { text ->
                 MentionText(
@@ -197,8 +202,12 @@ private fun PostMenu(post: Post, isMine: Boolean, onShowDialog: (PostDialog) -> 
 }
 
 @Composable
-private fun PostImages(post: Post, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun PostImages(post: Post, modifier: Modifier = Modifier) {
     val pager = rememberPagerState { post.media.size }
+    val scope = rememberCoroutineScope()
+    var isViewerOpen by rememberSaveable { mutableStateOf(false) }
+    val description = stringResource(R.string.feature_social_photo_of, post.author.displayName)
+    val enlarge = stringResource(com.geowoof.core.ui.R.string.core_ui_enlarge_photo)
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -209,11 +218,13 @@ private fun PostImages(post: Post, onClick: () -> Unit, modifier: Modifier = Mod
         HorizontalPager(state = pager) { page ->
             PostImage(
                 image = post.media[page],
-                contentDescription = stringResource(R.string.feature_social_photo_of, post.author.displayName),
+                contentDescription = description,
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .clickable(onClick = onClick),
+                    .clickable(enabled = ViewerPhoto(post.media[page]).canOpen, onClickLabel = enlarge) {
+                        isViewerOpen = true
+                    },
             )
         }
         if (post.media.size > 1) {
@@ -228,6 +239,17 @@ private fun PostImages(post: Post, onClick: () -> Unit, modifier: Modifier = Mod
                 color = Color.White,
             )
         }
+    }
+    if (isViewerOpen) {
+        PhotoViewer(
+            photos = remember(post.media) { post.media.map { ViewerPhoto(it) } },
+            initialPage = pager.currentPage,
+            contentDescription = description,
+            onDismiss = { lastPage ->
+                isViewerOpen = false
+                scope.launch { pager.scrollToPage(lastPage) }
+            },
+        )
     }
 }
 

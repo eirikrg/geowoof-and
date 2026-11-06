@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasScrollToIndexAction
@@ -15,6 +16,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -295,6 +297,37 @@ class ConversationScreenTest {
 
         composeRule.onNodeWithText("Old ${LONG_HISTORY - READING_AT}").assertIsDisplayed()
         composeRule.onNodeWithText("New 3").assertDoesNotExist()
+    }
+
+    @Test
+    fun touching_a_photo_enlarges_it() {
+        show(loaded(TestChat.message().copy(image = RemoteImage("a1", "https://t", "https://m"), body = null)))
+
+        // Without the image, which does not load in these tests, it has no size that can be touched.
+        composeRule.onNodeWithContentDescription("Photo", useUnmergedTree = true)
+            .performSemanticsAction(SemanticsActions.OnClick)
+
+        composeRule.onNodeWithContentDescription("Close").assertIsDisplayed()
+    }
+
+    @Test
+    fun a_photo_that_is_not_ready_cannot_be_enlarged() {
+        show(loaded(TestChat.message().copy(image = RemoteImage("a1", null, null), body = null)))
+
+        composeRule.onNodeWithContentDescription("Photo", useUnmergedTree = true).performClick()
+
+        composeRule.onNodeWithContentDescription("Close").assertDoesNotExist()
+    }
+
+    @Test
+    fun a_photo_that_failed_is_sent_again_instead_of_enlarged() {
+        val photo = RemoteImage("a1", "https://t", "https://m")
+        show(loaded(TestChat.message(status = MessageStatus.Failed).copy(image = photo, body = null)))
+
+        composeRule.onNodeWithContentDescription("Photo").performClick()
+
+        composeRule.onNodeWithContentDescription("Close").assertDoesNotExist()
+        assertEquals(listOf("retry:client-1"), calls.filter { it.startsWith("retry") })
     }
 
     @Test

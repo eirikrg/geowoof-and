@@ -38,8 +38,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,8 +59,10 @@ import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ChatMessage
 import com.geowoof.core.model.MessageStatus
 import com.geowoof.core.model.UserSummary
+import com.geowoof.core.ui.PhotoViewer
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.RemotePhoto
+import com.geowoof.core.ui.ViewerPhoto
 import com.geowoof.core.ui.rememberPhotoPicker
 import com.geowoof.core.ui.userMessage
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -305,12 +310,7 @@ private fun Bubble(
                 verticalArrangement = Arrangement.spacedBy(spacing.extraSmall),
             ) {
                 if (message.image != null || message.localImagePath != null) {
-                    RemotePhoto(
-                        image = message.image,
-                        localPath = message.localImagePath,
-                        contentDescription = stringResource(R.string.feature_chat_photo),
-                        modifier = Modifier.widthIn(max = BubbleMaxWidth),
-                    )
+                    MessagePhoto(message)
                 }
                 message.body?.let {
                     Text(
@@ -419,6 +419,33 @@ private fun Footer(
 }
 
 private val TopBarAvatarSize = 36.dp
+
+/** It can be enlarged, unless it failed: touching the bubble then tries to send it again. */
+@Composable
+private fun MessagePhoto(message: ChatMessage, modifier: Modifier = Modifier) {
+    val photo = remember(message.image, message.localImagePath) { ViewerPhoto(message.image, message.localImagePath) }
+    val description = stringResource(R.string.feature_chat_photo)
+    val enlarge = stringResource(com.geowoof.core.ui.R.string.core_ui_enlarge_photo)
+    var isViewerOpen by rememberSaveable { mutableStateOf(false) }
+    val canOpen = photo.canOpen && message.status != MessageStatus.Failed
+    RemotePhoto(
+        image = message.image,
+        localPath = message.localImagePath,
+        contentDescription = description,
+        modifier = modifier
+            .widthIn(max = BubbleMaxWidth)
+            .then(if (canOpen) Modifier.clickable(onClickLabel = enlarge) { isViewerOpen = true } else Modifier),
+    )
+    if (isViewerOpen) {
+        PhotoViewer(
+            photos = listOf(photo),
+            initialPage = 0,
+            contentDescription = description,
+            onDismiss = { isViewerOpen = false },
+        )
+    }
+}
+
 private val BubbleMaxWidth = 280.dp
 private val ProgressSize = 24.dp
 private val StatusIconSize = 14.dp
