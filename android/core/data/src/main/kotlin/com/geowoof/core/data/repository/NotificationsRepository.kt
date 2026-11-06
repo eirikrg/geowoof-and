@@ -4,6 +4,7 @@ import androidx.paging.PagingData
 import com.geowoof.core.data.mapper.toModel
 import com.geowoof.core.database.ChatDao
 import com.geowoof.core.database.InboxCountersEntity
+import com.geowoof.core.datastore.PromptsStorage
 import com.geowoof.core.model.AppNotification
 import com.geowoof.core.model.NotificationType
 import com.geowoof.core.model.Outcome
@@ -44,11 +45,17 @@ interface NotificationsRepository {
 
     /** So that pushes reach this person on this device. */
     suspend fun registerDevice(token: String): Outcome<Unit>
+
+    /** So that this device is asked only once to allow them. It stays when the session ends, like the permission. */
+    val wasAskedForPermission: Flow<Boolean>
+
+    suspend fun markAskedForPermission()
 }
 
 internal class DefaultNotificationsRepository @Inject constructor(
     private val network: NotificationsNetworkDataSource,
     private val dao: ChatDao,
+    private val prompts: PromptsStorage,
 ) : NotificationsRepository {
     override val unreadCount: Flow<Int> = dao.observeUnreadNotifications().map { it ?: 0 }.distinctUntilChanged()
 
@@ -63,6 +70,10 @@ internal class DefaultNotificationsRepository @Inject constructor(
     override suspend fun markAllRead(): Outcome<Unit> = network.readAll().map { store(0) }
 
     override suspend fun registerDevice(token: String): Outcome<Unit> = network.registerDevice(token)
+
+    override val wasAskedForPermission: Flow<Boolean> = prompts.prompts.map { it.askedForNotifications }
+
+    override suspend fun markAskedForPermission() = prompts.update { it.copy(askedForNotifications = true) }
 
     private suspend fun store(count: Int) = dao.upsertCounters(InboxCountersEntity(unreadNotifications = count))
 }

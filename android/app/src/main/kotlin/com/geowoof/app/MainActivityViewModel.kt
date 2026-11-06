@@ -35,6 +35,8 @@ data class AppUiState(
     val unreadNotifications: Int = 0,
     /** A tapped notification, until there is a navigation to open it in. */
     val pendingLink: String? = null,
+    /** This device has not been asked yet whether it wants notifications. Until that is known, it is not asked. */
+    val asksForNotifications: Boolean = false,
 )
 
 @HiltViewModel
@@ -64,6 +66,12 @@ class MainActivityViewModel @Inject constructor(
 
         viewModelScope.launch {
             appearance.appearance.collect { current -> _uiState.update { it.copy(appearance = current) } }
+        }
+
+        viewModelScope.launch {
+            notifications.wasAskedForPermission.collect { asked ->
+                _uiState.update { it.copy(asksForNotifications = !asked) }
+            }
         }
 
         viewModelScope.launch {
@@ -112,6 +120,11 @@ class MainActivityViewModel @Inject constructor(
     }
 
     fun onFirstPetStepDone() = _uiState.update { it.copy(offerFirstPet = false) }
+
+    fun onAskedForNotifications() {
+        _uiState.update { it.copy(asksForNotifications = false) }
+        viewModelScope.launch { notifications.markAskedForPermission() }
+    }
 
     fun onLink(link: String) = _uiState.update { it.copy(pendingLink = link) }
 

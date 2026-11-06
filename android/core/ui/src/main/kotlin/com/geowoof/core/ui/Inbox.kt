@@ -15,7 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,6 +23,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.geowoof.core.designsystem.component.GeoWoofIllustrations
+import com.geowoof.core.designsystem.component.IllustratedDialog
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 
@@ -36,6 +37,9 @@ data class Inbox(
     val unreadNotifications: Int,
     val onOpenMessages: () -> Unit,
     val onOpenNotifications: () -> Unit,
+    /** This device has not been asked yet whether it wants notifications. */
+    val asksForNotifications: Boolean = false,
+    val onAskedForNotifications: () -> Unit = {},
 )
 
 /** Without one, as in the tests of a screen, nothing is shown. */
@@ -115,18 +119,31 @@ private fun CountedIcon(icon: Int, count: Int, description: String, modifier: Mo
 }
 
 /**
- * Asks for the permission the first time it is useful. From Android 13 on, without it there are no
- * pushes, and the system itself stops asking if the person says no twice.
+ * Says what notifications are for the first time they are useful, and only then the system asks. From
+ * Android 13 on, without the permission there are no pushes. It asks once, whatever the answer: someone
+ * who says no is not asked again on each visit.
  */
 @Composable
 fun RequestNotificationPermission() {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-    val context = LocalContext.current
+    val inbox = LocalInbox.current ?: return
+    // Before returning, so that it stays registered while the system is asking.
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
-    LaunchedEffect(Unit) {
-        val permission = Manifest.permission.POST_NOTIFICATIONS
-        val state = ContextCompat.checkSelfPermission(context, permission)
-        if (state != PackageManager.PERMISSION_GRANTED) launcher.launch(permission)
+    val permission = Manifest.permission.POST_NOTIFICATIONS
+    val state = ContextCompat.checkSelfPermission(LocalContext.current, permission)
+    if (inbox.asksForNotifications && state != PackageManager.PERMISSION_GRANTED) {
+        IllustratedDialog(
+            illustration = GeoWoofIllustrations.PermissionNotifications,
+            title = stringResource(R.string.core_ui_notifications_title),
+            message = stringResource(R.string.core_ui_notifications_message),
+            confirmLabel = stringResource(R.string.core_ui_notifications_turn_on),
+            onConfirm = {
+                inbox.onAskedForNotifications()
+                launcher.launch(permission)
+            },
+            dismissLabel = stringResource(R.string.core_ui_notifications_not_now),
+            onDismiss = inbox.onAskedForNotifications,
+        )
     }
 }
 

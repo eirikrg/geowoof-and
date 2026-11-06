@@ -80,6 +80,7 @@ class MainActivity : ComponentActivity() {
                     uiState = uiState,
                     onFinishFirstPetStep = viewModel::onFirstPetStepDone,
                     onConsumeLink = viewModel::onLinkOpened,
+                    onAskedForNotifications = viewModel::onAskedForNotifications,
                 )
             }
         }

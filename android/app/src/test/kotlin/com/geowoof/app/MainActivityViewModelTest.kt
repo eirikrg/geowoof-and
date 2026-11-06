@@ -42,6 +42,17 @@ class MainActivityViewModelTest {
     )
 
     @Test
+    fun it_asks_for_notifications_only_once_even_if_the_app_starts_again() {
+        val viewModel = create(FakeAuthRepository(SessionState.SignedOut))
+        assertTrue(viewModel.uiState.value.asksForNotifications)
+
+        viewModel.onAskedForNotifications()
+
+        assertFalse(viewModel.uiState.value.asksForNotifications)
+        assertFalse(create(FakeAuthRepository(SessionState.SignedOut)).uiState.value.asksForNotifications)
+    }
+
+    @Test
     fun a_tapped_notification_waits_until_it_has_been_opened() {
         val viewModel = create(FakeAuthRepository(SessionState.Loading))
 

@@ -43,6 +43,7 @@ fun GeoWoofApp(
     uiState: AppUiState,
     onFinishFirstPetStep: () -> Unit,
     onConsumeLink: () -> Unit,
+    onAskedForNotifications: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SessionGate(
@@ -62,6 +63,8 @@ fun GeoWoofApp(
                 unreadNotifications = uiState.unreadNotifications,
                 pendingLink = uiState.pendingLink,
                 onConsumeLink = onConsumeLink,
+                asksForNotifications = uiState.asksForNotifications,
+                onAskedForNotifications = onAskedForNotifications,
             )
         },
         modifier = modifier,
@@ -107,6 +110,8 @@ fun MainShell(
     modifier: Modifier = Modifier,
     pendingLink: String? = null,
     onConsumeLink: () -> Unit = {},
+    asksForNotifications: Boolean = false,
+    onAskedForNotifications: () -> Unit = {},
     appState: GeoWoofAppState = rememberGeoWoofAppState(),
     navHost: @Composable (NavHostController) -> Unit = { GeoWoofNavHost(navController = it) },
 ) {
@@ -116,6 +121,8 @@ fun MainShell(
         unreadNotifications = unreadNotifications,
         onOpenMessages = { appState.navController.navigateToConversations() },
         onOpenNotifications = { appState.navController.navigateToNotifications() },
+        asksForNotifications = asksForNotifications,
+        onAskedForNotifications = onAskedForNotifications,
     )
     val showNavigation = currentDestination == null ||
         TopLevelDestination.entries.any { currentDestination.isInHierarchyOf(it) }

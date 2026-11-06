@@ -147,6 +147,12 @@ class FakeNotificationsRepository : NotificationsRepository {
 
     override val unreadCount: Flow<Int> = unread
 
+    override val wasAskedForPermission = MutableStateFlow(false)
+
+    override suspend fun markAskedForPermission() {
+        wasAskedForPermission.value = true
+    }
+
     override fun notifications(): Flow<PagingData<AppNotification>> = pages
 
     override suspend fun refreshUnreadCount(): Outcome<Unit> {

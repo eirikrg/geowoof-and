@@ -12,12 +12,16 @@ import com.geowoof.core.datastore.AeadSessionCipher
 import com.geowoof.core.datastore.AppearanceSerializer
 import com.geowoof.core.datastore.AppearanceStorage
 import com.geowoof.core.datastore.DataStoreAppearanceStorage
+import com.geowoof.core.datastore.DataStorePromptsStorage
 import com.geowoof.core.datastore.EncryptedSessionStorage
+import com.geowoof.core.datastore.PromptsSerializer
+import com.geowoof.core.datastore.PromptsStorage
 import com.geowoof.core.datastore.SessionCipher
 import com.geowoof.core.datastore.SessionFile
 import com.geowoof.core.datastore.SessionFileSerializer
 import com.geowoof.core.datastore.SessionStorage
 import com.geowoof.core.datastore.StoredAppearance
+import com.geowoof.core.datastore.StoredPrompts
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -57,6 +61,19 @@ internal object DataStoreModule {
         scope = scope + ioDispatcher,
         produceFile = { context.dataStoreFile("appearance.json") },
     )
+
+    @Provides
+    @Singleton
+    fun providesPromptsDataStore(
+        @ApplicationContext context: Context,
+        @Dispatcher(GeoWoofDispatchers.IO) ioDispatcher: CoroutineDispatcher,
+        @ApplicationScope scope: CoroutineScope,
+    ): DataStore<StoredPrompts> = DataStoreFactory.create(
+        serializer = PromptsSerializer,
+        corruptionHandler = ReplaceFileCorruptionHandler { StoredPrompts() },
+        scope = scope + ioDispatcher,
+        produceFile = { context.dataStoreFile("prompts.json") },
+    )
 }
 
 @Module
@@ -67,6 +84,9 @@ internal interface DataStoreBindings {
 
     @Binds
     fun bindsAppearanceStorage(storage: DataStoreAppearanceStorage): AppearanceStorage
+
+    @Binds
+    fun bindsPromptsStorage(storage: DataStorePromptsStorage): PromptsStorage
 }
 
 /** Creates the Keystore-backed cipher on first use, on the DataStore's IO dispatcher. */

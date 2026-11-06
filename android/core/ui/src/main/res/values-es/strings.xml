@@ -126,4 +126,8 @@
     <string name="core_ui_error_chat_not_friends">Solo los amigos pueden escribirse.</string>
     <string name="core_ui_error_chat_gone">Esta conversación ya no está disponible.</string>
     <string name="core_ui_or">o</string>
+    <string name="core_ui_notifications_title">Entérate cuando alguien te escriba</string>
+    <string name="core_ui_notifications_message">GeoWoof te avisa de los mensajes nuevos, de quién te sigue y de lo que pasa con tus publicaciones. Puedes cambiarlo cuando quieras en los ajustes del móvil.</string>
+    <string name="core_ui_notifications_turn_on">Activar</string>
+    <string name="core_ui_notifications_not_now">Ahora no</string>
 </resources>
