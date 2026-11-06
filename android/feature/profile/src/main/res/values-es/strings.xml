@@ -94,4 +94,21 @@
     <string name="feature_profile_no_own_walks_title">Todavía no hay paseos</string>
     <string name="feature_profile_no_own_photos_title">Todavía no hay fotos</string>
     <string name="feature_profile_no_saved_title">Todavía no has guardado nada</string>
+    <string name="feature_profile_open_post">Abrir publicación</string>
+    <string name="feature_profile_post_pet_and_others">%1$s +%2$d</string>
+    <plurals name="feature_profile_post_photos">
+        <item quantity="one">%1$d foto</item>
+        <item quantity="many">%1$d fotos</item>
+        <item quantity="other">%1$d fotos</item>
+    </plurals>
+    <plurals name="feature_profile_post_likes">
+        <item quantity="one">%1$d me gusta</item>
+        <item quantity="many">%1$d me gusta</item>
+        <item quantity="other">%1$d me gusta</item>
+    </plurals>
+    <plurals name="feature_profile_post_comments">
+        <item quantity="one">%1$d comentario</item>
+        <item quantity="many">%1$d comentarios</item>
+        <item quantity="other">%1$d comentarios</item>
+    </plurals>
 </resources>

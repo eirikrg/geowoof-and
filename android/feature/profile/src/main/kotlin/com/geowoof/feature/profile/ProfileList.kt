@@ -260,27 +260,14 @@ private fun AddPhotoCell(onClick: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 private fun LazyListScope.savedTab(saved: LazyPagingItems<Post>, actions: ProfileActions) {
-    if (saved.itemCount == 0 && saved.loadState.refresh !is LoadState.Loading) {
-        item {
-            if (saved.loadState.refresh is LoadState.Error) {
-                EmptyLine(GeoWoofIcons.Error, stringResource(R.string.feature_profile_saved_failed))
-            } else {
-                EmptyState(
-                    icon = GeoWoofIcons.Bookmark,
-                    title = stringResource(R.string.feature_profile_no_saved_title),
-                    message = stringResource(R.string.feature_profile_no_saved),
-                    illustration = GeoWoofIllustrations.EmptySaved,
-                )
-            }
-        }
+    if (saved.itemCount == 0) {
+        item { SavedPostsPlaceholder(saved.loadState.refresh, onRetry = saved::retry) }
+        return
     }
-    gridRows(saved.itemCount) { index ->
+    item { Spacer(Modifier.height(GeoWoofTheme.spacing.small)) }
+    items(saved.itemCount, key = saved.itemKey(Post::id)) { index ->
         saved[index]?.let { post ->
-            PostGridItem(
-                image = post.media.firstOrNull(),
-                isRepost = false,
-                onClick = { actions.onOpenPost(post.id) },
-            )
+            SavedPostCard(post, onClick = { actions.onOpenPost(post.id) })
         }
     }
 }

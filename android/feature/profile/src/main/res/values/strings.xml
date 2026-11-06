@@ -94,4 +94,18 @@
     <string name="feature_profile_no_own_walks_title">No walks yet</string>
     <string name="feature_profile_no_own_photos_title">No photos yet</string>
     <string name="feature_profile_no_saved_title">Nothing saved yet</string>
+    <string name="feature_profile_open_post">Open post</string>
+    <string name="feature_profile_post_pet_and_others">%1$s +%2$d</string>
+    <plurals name="feature_profile_post_photos">
+        <item quantity="one">%1$d photo</item>
+        <item quantity="other">%1$d photos</item>
+    </plurals>
+    <plurals name="feature_profile_post_likes">
+        <item quantity="one">%1$d like</item>
+        <item quantity="other">%1$d likes</item>
+    </plurals>
+    <plurals name="feature_profile_post_comments">
+        <item quantity="one">%1$d comment</item>
+        <item quantity="other">%1$d comments</item>
+    </plurals>
 </resources>

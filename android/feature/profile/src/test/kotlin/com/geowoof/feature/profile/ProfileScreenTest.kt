@@ -602,10 +602,10 @@ class ProfileScreenTest {
         composeRule.onNodeWithText("Saved").performClick()
         composeRule.waitUntil(WAIT_MILLIS) {
             runCatching {
-                composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasContentDescription("Open post"))
+                composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("En el Retiro"))
             }.isSuccess
         }
-        composeRule.onNodeWithContentDescription("Open post").performClick()
+        composeRule.onNodeWithText("En el Retiro").performClick()
 
         assertEquals(listOf("post:post-3"), calls)
     }
