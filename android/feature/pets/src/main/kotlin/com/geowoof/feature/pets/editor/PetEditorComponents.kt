@@ -39,6 +39,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.geowoof.core.designsystem.component.FittedText
 import com.geowoof.core.designsystem.component.FormTextField
 import com.geowoof.core.designsystem.component.ProgressButton
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
@@ -101,7 +102,7 @@ internal fun SpeciesSelector(selected: PetSpecies, onSelect: (PetSpecies) -> Uni
                 onClick = { onSelect(species) },
                 shape = SegmentedButtonDefaults.itemShape(index, options.size),
             ) {
-                Text(stringResource(species.labelRes()))
+                FittedText(stringResource(species.labelRes()))
             }
         }
     }
@@ -117,7 +118,7 @@ internal fun SexSelector(selected: PetSex, onSelect: (PetSex) -> Unit, modifier:
                 onClick = { onSelect(sex) },
                 shape = SegmentedButtonDefaults.itemShape(index, options.size),
             ) {
-                Text(stringResource(sex.labelRes()))
+                FittedText(stringResource(sex.labelRes()))
             }
         }
     }

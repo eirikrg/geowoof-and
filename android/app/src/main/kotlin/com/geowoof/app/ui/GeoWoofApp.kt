@@ -29,6 +29,7 @@ import com.geowoof.app.navigation.AuthNavHost
 import com.geowoof.app.navigation.GeoWoofNavHost
 import com.geowoof.app.navigation.OnboardingNavHost
 import com.geowoof.app.navigation.TopLevelDestination
+import com.geowoof.core.designsystem.component.FittedText
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.model.User
 import com.geowoof.core.ui.Inbox
@@ -148,7 +149,7 @@ fun MainShell(
                             )
                         }
                     },
-                    label = { Text(stringResource(destination.label)) },
+                    label = { FittedText(stringResource(destination.label)) },
                 )
             }
         },

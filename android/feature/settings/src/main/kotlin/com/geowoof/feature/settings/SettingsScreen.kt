@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.geowoof.core.designsystem.component.FittedText
 import com.geowoof.core.designsystem.component.ListGroup
 import com.geowoof.core.designsystem.component.ListGroupDivider
 import com.geowoof.core.designsystem.component.ListGroupItem
@@ -257,7 +258,7 @@ private fun AppearanceSection(
                             onClick = { onThemeModeChange(mode) },
                             shape = SegmentedButtonDefaults.itemShape(index, ThemeMode.entries.size),
                         ) {
-                            Text(stringResource(mode.labelRes()))
+                            FittedText(stringResource(mode.labelRes()))
                         }
                     }
                 }

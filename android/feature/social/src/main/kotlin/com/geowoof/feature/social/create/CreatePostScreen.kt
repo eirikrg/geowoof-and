@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -34,6 +36,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -153,7 +156,9 @@ internal fun CreatePostContent(
             Button(
                 onClick = actions.onPublish,
                 enabled = uiState.canPublish,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = PublishHeight),
             ) {
                 Text(
                     stringResource(
@@ -173,11 +178,36 @@ internal fun CreatePostContent(
 private fun PhotosSection(uiState: CreatePostUiState, actions: CreatePostActions, modifier: Modifier = Modifier) {
     val spacing = GeoWoofTheme.spacing
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(spacing.small)) {
-        if (uiState.photos.isNotEmpty()) {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(spacing.small)) {
-                items(uiState.photos, key = ChosenPhoto::contentUri) { photo ->
-                    ChosenPhotoItem(photo, enabled = !uiState.isPublishing, onRemove = actions.onRemovePhoto)
+        if (uiState.photos.isEmpty()) {
+            Surface(
+                onClick = actions.onPickPhotos,
+                enabled = uiState.canAddPhotos,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(EMPTY_PHOTOS_RATIO),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.secondaryContainer,
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(spacing.small, Alignment.CenterVertically),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Icon(
+                        painter = painterResource(GeoWoofIcons.AddAPhoto),
+                        contentDescription = null,
+                        modifier = Modifier.size(EmptyPhotosIconSize),
+                    )
+                    Text(
+                        stringResource(R.string.feature_social_add_photos),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
                 }
+            }
+            return@Column
+        }
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(spacing.small)) {
+            items(uiState.photos, key = ChosenPhoto::contentUri) { photo ->
+                ChosenPhotoItem(photo, enabled = !uiState.isPublishing, onRemove = actions.onRemovePhoto)
             }
         }
         FilledTonalButton(onClick = actions.onPickPhotos, enabled = uiState.canAddPhotos) {
@@ -298,3 +328,7 @@ private fun CreatePostPreview() {
         )
     }
 }
+
+private val EmptyPhotosIconSize = 40.dp
+private val PublishHeight = 52.dp
+private const val EMPTY_PHOTOS_RATIO = 1.8f

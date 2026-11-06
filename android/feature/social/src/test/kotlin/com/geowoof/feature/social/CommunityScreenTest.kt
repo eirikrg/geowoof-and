@@ -452,8 +452,8 @@ class CommunityScreenTest {
     fun it_says_who_can_see_it_and_which_pets_appear() {
         showCreate(CreatePostUiState(pets = listOf(TestPets.pet())))
 
-        composeRule.onNodeWithText("Friends").performClick()
-        composeRule.onNodeWithText("Luna").performClick()
+        composeRule.onNodeWithText("Friends").performScrollTo().performClick()
+        composeRule.onNodeWithText("Luna").performScrollTo().performClick()
 
         assertEquals(listOf("visibility:${PostVisibility.Friends}", "pet:luna"), calls)
     }

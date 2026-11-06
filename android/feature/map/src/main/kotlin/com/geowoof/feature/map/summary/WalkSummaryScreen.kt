@@ -49,6 +49,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.geowoof.core.designsystem.component.FittedText
 import com.geowoof.core.designsystem.component.FormTextField
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
@@ -309,7 +310,7 @@ private fun ColumnScope.WalkDetailsForm(
                     onClick = { actions.onVisibilityChange(visibility) },
                     shape = SegmentedButtonDefaults.itemShape(index, options.size),
                 ) {
-                    Text(stringResource(visibility.labelRes()))
+                    FittedText(stringResource(visibility.labelRes()))
                 }
             }
         }

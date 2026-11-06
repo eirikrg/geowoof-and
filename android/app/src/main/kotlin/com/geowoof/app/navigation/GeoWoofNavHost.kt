@@ -53,6 +53,10 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
         navController = navController,
         startDestination = MapRoute,
         modifier = modifier,
+        enterTransition = screenEnter,
+        exitTransition = screenExit,
+        popEnterTransition = screenEnter,
+        popExitTransition = screenExit,
     ) {
         mapScreens(
             navController = navController,
@@ -98,7 +102,15 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
 /** Signed out: welcome, sign in, sign up and password recovery. */
 @Composable
 fun AuthNavHost(modifier: Modifier = Modifier, navController: NavHostController = rememberNavController()) {
-    NavHost(navController = navController, startDestination = WelcomeRoute, modifier = modifier) {
+    NavHost(
+        navController = navController,
+        startDestination = WelcomeRoute,
+        modifier = modifier,
+        enterTransition = screenEnter,
+        exitTransition = screenExit,
+        popEnterTransition = screenEnter,
+        popExitTransition = screenExit,
+    ) {
         authScreens(navController)
     }
 }
@@ -115,7 +127,15 @@ fun OnboardingNavHost(
     // Chosen once: verifying the email later must not rebuild the graph and reset the back stack.
     val startDestination: Any = remember { if (emailVerified) ChooseUsernameRoute else VerifyEmailRoute }
     val currentOnFinish by rememberUpdatedState(onFinishFirstPetStep)
-    NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+        modifier = modifier,
+        enterTransition = screenEnter,
+        exitTransition = screenExit,
+        popEnterTransition = screenEnter,
+        popExitTransition = screenExit,
+    ) {
         verifyEmailScreen(
             onDone = { navController.continueToUsername() },
             onSkip = { navController.continueToUsername() },
