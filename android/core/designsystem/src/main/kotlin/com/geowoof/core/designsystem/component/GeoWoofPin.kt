@@ -1,6 +1,6 @@
 package com.geowoof.core.designsystem.component
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,13 +19,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.geowoof.core.designsystem.R
 
-/** Proportions of the head of the logo, measured on the traced icon. */
-private const val HEIGHT_PER_WIDTH = 655f / 701f
-private const val FACE_CENTER_Y = 0.403f
-private const val FACE_SIZE = 0.456f
+/** Proportions of the silhouette. The ring is what fits in the head, leaving a margin of the silhouette around it. */
+private const val HEIGHT_PER_WIDTH = 917f / 911f
+private const val RING_CENTER_Y = 0.47f
+private const val RING_SIZE = 0.575f
+private const val FACE_SIZE = 0.5f
 
 /**
- * The head of the logo as a marker: its point is the bottom center, and [face] goes where its face is.
+ * The marker of the map: a dog's head whose point is the bottom center, with [face] in a white circle.
  * Decorative: what it means has to be said by whoever uses it.
  */
 @Composable
@@ -36,15 +37,11 @@ fun GeoWoofPin(
     face: @Composable BoxScope.(faceSize: Dp) -> Unit,
 ) {
     val height = width * HEIGHT_PER_WIDTH
+    val ringSize = width * RING_SIZE
     val faceSize = width * FACE_SIZE
     Box(modifier = modifier.size(width, height)) {
-        Image(
-            painter = painterResource(R.drawable.core_designsystem_logo_pin_face),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-        )
         Icon(
-            painter = painterResource(R.drawable.core_designsystem_logo_pin),
+            painter = painterResource(R.drawable.core_designsystem_pin),
             contentDescription = null,
             tint = color,
             modifier = Modifier.fillMaxSize(),
@@ -52,12 +49,14 @@ fun GeoWoofPin(
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset(y = height * FACE_CENTER_Y - faceSize / 2)
-                .size(faceSize)
-                .clip(CircleShape),
+                .offset(y = height * RING_CENTER_Y - ringSize / 2)
+                .size(ringSize)
+                .background(Color.White, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            face(faceSize)
+            Box(modifier = Modifier.size(faceSize).clip(CircleShape), contentAlignment = Alignment.Center) {
+                face(faceSize)
+            }
         }
     }
 }

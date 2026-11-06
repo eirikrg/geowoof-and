@@ -82,7 +82,7 @@ internal fun LiveWalkersLayer(
     }
 }
 
-/** The head of the logo with the pet in its face. It is drawn on a bitmap, which cannot hold a hardware image. */
+/** The marker with the photo of the pet. It is drawn on a bitmap, which cannot hold a hardware image. */
 @Composable
 private fun WalkerMarker(walker: LiveWalker) {
     GeoWoofPin(width = MarkerWidth) { faceSize ->
