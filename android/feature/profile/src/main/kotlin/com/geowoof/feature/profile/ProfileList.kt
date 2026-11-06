@@ -155,13 +155,16 @@ private fun ProfileTabs(
     }
 }
 
-/** A grid inside the list of the profile, which already scrolls: each row is an element of that list. */
+/**
+ * A grid inside the list of the profile, which already scrolls: each row is an element of that list. It has the
+ * margin of the cards of the other tabs.
+ */
 private fun LazyListScope.gridRows(count: Int, cell: @Composable (index: Int) -> Unit) {
     items((count + GRID_COLUMNS - 1) / GRID_COLUMNS) { row ->
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = GridSpacing),
+                .padding(horizontal = GeoWoofTheme.spacing.large),
             horizontalArrangement = Arrangement.spacedBy(GridSpacing),
         ) {
             repeat(GRID_COLUMNS) { column ->
@@ -200,7 +203,7 @@ private fun LazyListScope.photosTab(
         }
         return
     }
-    item { Spacer(Modifier.height(GridSpacing)) }
+    item { Spacer(Modifier.height(GeoWoofTheme.spacing.medium)) }
     // The first cell of your own photos is the way to add another.
     val first = if (onCreatePost != null) 1 else 0
     gridRows(posts.itemCount + first) { index ->
@@ -399,6 +402,6 @@ private fun PetRow(pet: Pet, onClick: (() -> Unit)?, modifier: Modifier = Modifi
 
 private const val GRID_COLUMNS = 3
 private const val LARGE_FONT_SCALE = 1.3f
-private val GridSpacing = 4.dp
+private val GridSpacing = 8.dp
 private val EmptyLineIconSize = 56.dp
 private val EmptyLineGlyphSize = 28.dp
