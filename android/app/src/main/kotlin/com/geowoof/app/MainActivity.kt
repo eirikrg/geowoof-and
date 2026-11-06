@@ -1,12 +1,16 @@
 package com.geowoof.app
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.DisposableEffect
@@ -30,6 +34,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: MainActivityViewModel by viewModels()
+    private val localNetworkPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
 
     @Inject
     lateinit var passwordSaveRequests: PasswordSaveRequests
@@ -45,7 +50,10 @@ class MainActivity : ComponentActivity() {
 
         // Coming back from its saved state, the activity gets the same intent, and that link was already opened.
         val link = intent.takeLink()
-        if (savedInstanceState == null) link?.let(viewModel::onLink)
+        if (savedInstanceState == null) {
+            link?.let(viewModel::onLink)
+            askForLocalNetwork()
+        }
 
         // Credential Manager needs an activity, and the form that asked for the save is already gone.
         lifecycleScope.launch {
@@ -93,4 +101,13 @@ class MainActivity : ComponentActivity() {
 
     /** The NavController would also open it by itself, restarting the activity for the NEW_TASK of a notification. */
     private fun Intent.takeLink(): String? = dataString.also { data = null }
+
+    /** Debug builds reach the backend at the IP of the computer, which Android 17 only allows with this permission. */
+    private fun askForLocalNetwork() {
+        if (!BuildConfig.DEBUG || Build.VERSION.SDK_INT < Build.VERSION_CODES.CINNAMON_BUN) return
+        val permission = Manifest.permission.ACCESS_LOCAL_NETWORK
+        if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+            localNetworkPermission.launch(permission)
+        }
+    }
 }
