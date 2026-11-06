@@ -4,13 +4,17 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -42,10 +46,38 @@ fun EmptyState(
     action: (@Composable () -> Unit)? = null,
 ) {
     val spacing = GeoWoofTheme.spacing
+    // Inside a list there is no limit of height, and that is where it must not scroll.
+    BoxWithConstraints(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        val scrolling = if (constraints.hasBoundedHeight) {
+            Modifier
+                .heightIn(min = maxHeight)
+                .verticalScroll(rememberScrollState())
+        } else {
+            Modifier
+        }
+        EmptyStateContent(
+            icon,
+            title,
+            message,
+            illustration,
+            action,
+            scrolling.padding(horizontal = spacing.extraLarge),
+        )
+    }
+}
+
+@Composable
+private fun EmptyStateContent(
+    @DrawableRes icon: Int,
+    title: String,
+    message: String,
+    @DrawableRes illustration: Int?,
+    action: (@Composable () -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    val spacing = GeoWoofTheme.spacing
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = spacing.extraLarge, vertical = spacing.huge),
+        modifier = modifier.padding(vertical = spacing.large),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -72,14 +104,16 @@ fun EmptyState(
                 style = MaterialTheme.typography.titleLarge,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(spacing.small))
-            Text(
-                text = message,
-                modifier = Modifier.widthIn(max = MaxTextWidth),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
+            if (message.isNotEmpty()) {
+                Spacer(Modifier.height(spacing.small))
+                Text(
+                    text = message,
+                    modifier = Modifier.widthIn(max = MaxTextWidth),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
         if (action != null) {
             Spacer(Modifier.height(spacing.extraLarge))
@@ -110,9 +144,9 @@ fun ErrorState(
 }
 
 private val IllustrationSize = 220.dp
-private val IconAreaSize = 168.dp
-private val IconCircleSize = 104.dp
-private val IconSize = 48.dp
+private val IconAreaSize = 132.dp
+private val IconCircleSize = 88.dp
+private val IconSize = 40.dp
 private val MaxTextWidth = 360.dp
 
 @PreviewLightDark

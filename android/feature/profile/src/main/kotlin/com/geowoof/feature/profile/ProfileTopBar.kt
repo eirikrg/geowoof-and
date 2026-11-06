@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.geowoof.core.designsystem.component.heroTopBarColors
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.model.RelationshipStatus
 import com.geowoof.core.ui.InboxActions
@@ -25,6 +26,7 @@ import com.geowoof.core.ui.InboxActions
 internal fun ProfileTopBar(uiState: ProfileUiState, actions: ProfileActions, modifier: Modifier = Modifier) {
     TopAppBar(
         modifier = modifier,
+        colors = heroTopBarColors(),
         title = {
             Text(
                 uiState.profile?.username?.let { stringResource(R.string.feature_profile_username, it) }

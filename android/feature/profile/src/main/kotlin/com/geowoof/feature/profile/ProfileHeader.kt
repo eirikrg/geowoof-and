@@ -18,10 +18,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -29,6 +31,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.geowoof.core.designsystem.component.HeroBand
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.PeopleListKind
@@ -43,20 +46,28 @@ import com.geowoof.core.ui.RemoteAvatar
 @Composable
 internal fun ProfileHeader(uiState: ProfileUiState, profile: Profile, modifier: Modifier = Modifier) {
     val spacing = GeoWoofTheme.spacing
+    Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        HeroBand(photoSize = AvatarSize) { photoModifier ->
+            RemoteAvatar(
+                image = profile.avatar,
+                fallbackIcon = GeoWoofIcons.Person,
+                contentDescription = stringResource(R.string.feature_profile_photo),
+                size = AvatarSize,
+                variant = ImageVariant.Medium,
+                modifier = photoModifier,
+            )
+        }
+        ProfileDetails(uiState, profile, Modifier.padding(horizontal = spacing.large, vertical = spacing.small))
+    }
+}
+
+@Composable
+private fun ProfileDetails(uiState: ProfileUiState, profile: Profile, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.large, vertical = spacing.medium),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(spacing.extraSmall),
+        verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.extraSmall),
     ) {
-        RemoteAvatar(
-            image = profile.avatar,
-            fallbackIcon = GeoWoofIcons.Person,
-            contentDescription = stringResource(R.string.feature_profile_photo),
-            size = AvatarSize,
-            variant = ImageVariant.Medium,
-        )
         if (!uiState.isRestricted) {
             Text(
                 text = profile.displayName,
@@ -119,21 +130,24 @@ internal fun ProfileCounters(
     onOpen: (PeopleListKind) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FlowRow(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = GeoWoofTheme.spacing.medium),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+            .padding(horizontal = GeoWoofTheme.spacing.large, vertical = GeoWoofTheme.spacing.small),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        Counter(counts?.followers, R.string.feature_profile_followers, canOpenLists, {
-            onOpen(PeopleListKind.Followers)
-        })
-        Counter(counts?.following, R.string.feature_profile_following, canOpenLists, {
-            onOpen(PeopleListKind.Following)
-        })
-        Counter(counts?.friends, R.string.feature_profile_friends, canOpenLists, {
-            onOpen(PeopleListKind.Friends)
-        })
+        FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Counter(counts?.followers, R.string.feature_profile_followers, canOpenLists, {
+                onOpen(PeopleListKind.Followers)
+            })
+            Counter(counts?.following, R.string.feature_profile_following, canOpenLists, {
+                onOpen(PeopleListKind.Following)
+            })
+            Counter(counts?.friends, R.string.feature_profile_friends, canOpenLists, {
+                onOpen(PeopleListKind.Friends)
+            })
+        }
     }
 }
 
@@ -148,8 +162,9 @@ private fun Counter(
     val spacing = GeoWoofTheme.spacing
     Column(
         modifier = modifier
+            .clip(MaterialTheme.shapes.medium)
             .clickable(enabled = canOpen, role = Role.Button, onClick = onClick)
-            .padding(horizontal = spacing.medium, vertical = spacing.small),
+            .padding(horizontal = spacing.large, vertical = spacing.medium),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -158,7 +173,7 @@ private fun Counter(
         )
         Text(
             text = stringResource(label),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
@@ -282,12 +297,19 @@ internal fun RequestsRow(received: Int, onClick: () -> Unit, modifier: Modifier 
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.small),
             ) {
-                if (received > 0) Badge { Text(received.toString()) }
+                if (received > 0) {
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary,
+                    ) {
+                        Text(received.toString())
+                    }
+                }
                 Icon(painterResource(GeoWoofIcons.ChevronRight), contentDescription = null)
             }
         },
     )
 }
 
-private val AvatarSize = 96.dp
+private val AvatarSize = 104.dp
 private val SmallIconSize = 16.dp

@@ -15,6 +15,7 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.lifecycle.createSavedStateHandle
@@ -253,7 +254,7 @@ class CommunityScreenTest {
         showFeed(PagingData.empty(failed))
 
         waitForText("Try again")
-        composeRule.onNodeWithText("Try again").assertIsDisplayed()
+        composeRule.onNodeWithText("Try again").performScrollTo().assertIsDisplayed()
     }
 
     @Test

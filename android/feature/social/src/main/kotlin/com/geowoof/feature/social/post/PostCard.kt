@@ -1,5 +1,9 @@
 package com.geowoof.feature.social.post
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,13 +19,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AssistChip
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +35,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewFontScale
@@ -45,10 +55,9 @@ import com.geowoof.core.model.UserSummary
 import com.geowoof.core.ui.MentionText
 import com.geowoof.core.ui.PostImage
 import com.geowoof.core.ui.RemoteAvatar
-import com.geowoof.core.ui.formattedIn
+import com.geowoof.core.ui.relativeToNow
 import com.geowoof.feature.social.R
 import java.time.Instant
-import java.time.ZoneId
 
 /** A post, with who published it and what can be done with it. A repost always shows its original author. */
 @Composable
@@ -60,24 +69,28 @@ internal fun PostCard(
     modifier: Modifier = Modifier,
 ) {
     val spacing = GeoWoofTheme.spacing
-    Column(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = spacing.medium),
+            .padding(horizontal = spacing.medium, vertical = spacing.small),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        repostedBy?.let { RepostLine(it, actions.onOpenUser) }
-        PostHeader(post, post.author.id == myUserId, actions)
-        PostImages(post, onClick = { actions.onOpenPost(post) })
-        PostButtons(post, actions)
-        post.text?.let { text ->
-            MentionText(
-                text = text,
-                mentions = post.mentions,
-                onOpenUser = actions.onOpenUser,
-                modifier = Modifier.padding(horizontal = spacing.medium, vertical = spacing.extraSmall),
-            )
+        Column(modifier = Modifier.padding(vertical = spacing.small)) {
+            repostedBy?.let { RepostLine(it, actions.onOpenUser) }
+            PostHeader(post, post.author.id == myUserId, actions)
+            PostImages(post, onClick = { actions.onOpenPost(post) })
+            PostButtons(post, actions)
+            post.text?.let { text ->
+                MentionText(
+                    text = text,
+                    mentions = post.mentions,
+                    onOpenUser = actions.onOpenUser,
+                    modifier = Modifier.padding(horizontal = spacing.medium, vertical = spacing.extraSmall),
+                )
+            }
+            PetChips(post)
         }
-        PetChips(post)
     }
 }
 
@@ -131,8 +144,8 @@ private fun PostHeader(post: Post, isMine: Boolean, actions: PostCardActions, mo
             Column {
                 Text(post.author.displayName, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    text = post.createdAt.formattedIn(ZoneId.systemDefault().id),
-                    style = MaterialTheme.typography.labelSmall,
+                    text = post.createdAt.relativeToNow(),
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -189,7 +202,9 @@ private fun PostImages(post: Post, onClick: () -> Unit, modifier: Modifier = Mod
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(1f),
+            .padding(horizontal = GeoWoofTheme.spacing.small)
+            .aspectRatio(1f)
+            .clip(MaterialTheme.shapes.medium),
     ) {
         HorizontalPager(state = pager) { page ->
             PostImage(
@@ -207,10 +222,10 @@ private fun PostImages(post: Post, onClick: () -> Unit, modifier: Modifier = Mod
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(GeoWoofTheme.spacing.small)
-                    .background(MaterialTheme.colorScheme.inverseSurface, RoundedCornerShape(PositionCorner))
-                    .padding(horizontal = GeoWoofTheme.spacing.small),
+                    .background(Color.Black.copy(alpha = SCRIM_ALPHA), CircleShape)
+                    .padding(horizontal = GeoWoofTheme.spacing.small, vertical = 2.dp),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.inverseOnSurface,
+                color = Color.White,
             )
         }
     }
@@ -224,6 +239,7 @@ private fun PostButtons(post: Post, actions: PostCardActions, modifier: Modifier
             .padding(horizontal = GeoWoofTheme.spacing.extraSmall),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val haptics = LocalHapticFeedback.current
         CountedButton(
             icon = if (post.likedByMe) GeoWoofIcons.FavoriteFilled else GeoWoofIcons.Favorite,
             description = stringResource(
@@ -231,7 +247,10 @@ private fun PostButtons(post: Post, actions: PostCardActions, modifier: Modifier
             ),
             count = post.likeCount,
             isActive = post.likedByMe,
-            onClick = { actions.onToggleLike(post) },
+            onClick = {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                actions.onToggleLike(post)
+            },
         )
         CountedButton(
             icon = GeoWoofIcons.ChatBubble,
@@ -258,6 +277,7 @@ private fun PostButtons(post: Post, actions: PostCardActions, modifier: Modifier
                 contentDescription = stringResource(
                     if (post.savedByMe) R.string.feature_social_unsave else R.string.feature_social_save,
                 ),
+                tint = if (post.savedByMe) MaterialTheme.colorScheme.tertiary else LocalContentColor.current,
             )
         }
     }
@@ -272,15 +292,26 @@ private fun CountedButton(
     modifier: Modifier = Modifier,
     isActive: Boolean = false,
 ) {
+    // A small jump when it is turned on, so that it answers to the finger.
+    val scale by animateFloatAsState(
+        targetValue = if (isActive) ACTIVE_SCALE else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "button scale",
+    )
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onClick) {
             Icon(
                 painter = painterResource(icon),
                 contentDescription = description,
-                tint = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.scale(scale),
+                tint = if (isActive) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
             )
         }
-        if (count > 0) Text(count.toString(), style = MaterialTheme.typography.labelMedium)
+        if (count > 0) {
+            AnimatedContent(targetState = count, label = "button count") { current ->
+                Text(current.toString(), style = MaterialTheme.typography.labelLarge)
+            }
+        }
     }
 }
 
@@ -290,30 +321,44 @@ private fun PetChips(post: Post, modifier: Modifier = Modifier) {
     if (post.pets.isEmpty()) return
     val spacing = GeoWoofTheme.spacing
     FlowRow(
-        modifier = modifier.padding(horizontal = spacing.medium),
+        modifier = modifier.padding(horizontal = spacing.medium, vertical = spacing.extraSmall),
         horizontalArrangement = Arrangement.spacedBy(spacing.small),
+        verticalArrangement = Arrangement.spacedBy(spacing.extraSmall),
     ) {
         post.pets.forEach { pet ->
-            AssistChip(
-                onClick = {},
-                enabled = false,
-                label = { Text(pet.name) },
-                leadingIcon = {
-                    RemoteAvatar(
-                        image = pet.avatar,
-                        fallbackIcon = GeoWoofIcons.Pets,
-                        contentDescription = null,
-                        size = SmallIconSize,
-                    )
-                },
-            )
+            Row(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape)
+                    .padding(
+                        start = spacing.extraSmall,
+                        end = spacing.medium,
+                        top = spacing.extraSmall,
+                        bottom = spacing.extraSmall,
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(spacing.small),
+            ) {
+                RemoteAvatar(
+                    image = pet.avatar,
+                    fallbackIcon = GeoWoofIcons.Pets,
+                    contentDescription = null,
+                    size = PetTagAvatar,
+                )
+                Text(
+                    text = pet.name,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
         }
     }
 }
 
-private val AvatarSize = 40.dp
+private val AvatarSize = 44.dp
 private val SmallIconSize = 18.dp
-private val PositionCorner = 8.dp
+private val PetTagAvatar = 24.dp
+private const val SCRIM_ALPHA = 0.55f
+private const val ACTIVE_SCALE = 1.15f
 
 @PreviewLightDark
 @PreviewFontScale

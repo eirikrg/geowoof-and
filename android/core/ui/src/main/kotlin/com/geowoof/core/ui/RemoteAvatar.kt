@@ -69,6 +69,7 @@ fun RemoteAvatar(
             Icon(
                 painter = painterResource(fallbackIcon),
                 contentDescription = contentDescription,
+                modifier = Modifier.size(size * FALLBACK_SHARE),
                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
             )
         } else {
@@ -132,3 +133,4 @@ private fun PhotoNotReady(description: String?, modifier: Modifier = Modifier) {
 }
 
 private const val PHOTO_NOT_READY_RATIO = 4f / 3f
+private const val FALLBACK_SHARE = 0.52f

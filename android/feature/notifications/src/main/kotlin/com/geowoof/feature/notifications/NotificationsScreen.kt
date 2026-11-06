@@ -4,16 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -22,10 +22,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -37,12 +39,19 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.geowoof.core.data.repository.NotificationsRepository
+import com.geowoof.core.data.repository.RemoteLoadException
+import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.ErrorState
+import com.geowoof.core.designsystem.component.IconBadge
+import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppNotification
 import com.geowoof.core.model.NotificationType
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.RequestNotificationPermission
+import com.geowoof.core.ui.relativeToNow
+import com.geowoof.core.ui.userMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -111,49 +120,78 @@ internal fun NotificationsContent(
                 }
             }
 
-            refresh is LoadState.Loading -> Centered(Modifier.padding(innerPadding)) { CircularProgressIndicator() }
+            refresh is LoadState.Loading -> SkeletonList(Modifier.padding(innerPadding))
 
-            refresh is LoadState.Error -> Centered(Modifier.padding(innerPadding)) {
-                Button(onClick = items::retry) { Text(stringResource(R.string.feature_notifications_retry)) }
-            }
+            refresh is LoadState.Error -> ErrorState(
+                title = stringResource(R.string.feature_notifications_error_title),
+                message = (refresh.error as? RemoteLoadException)?.error?.userMessage().orEmpty(),
+                retryLabel = stringResource(R.string.feature_notifications_retry),
+                onRetry = items::retry,
+                modifier = Modifier.padding(innerPadding),
+            )
 
-            else -> Centered(Modifier.padding(innerPadding)) {
-                Text(stringResource(R.string.feature_notifications_empty), style = MaterialTheme.typography.bodyLarge)
-            }
+            else -> EmptyState(
+                icon = GeoWoofIcons.Notifications,
+                title = stringResource(R.string.feature_notifications_empty_title),
+                message = stringResource(R.string.feature_notifications_empty),
+                modifier = Modifier.padding(innerPadding),
+            )
         }
     }
 }
 
 @Composable
-private fun Centered(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Box(
-        modifier = modifier.fillMaxSize().padding(GeoWoofTheme.spacing.large),
-        contentAlignment = Alignment.Center,
-    ) {
-        content()
-    }
-}
-
-@Composable
 private fun NotificationRow(notification: AppNotification, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    // What is new stands out, also for someone who cannot tell the dot apart.
+    val colors = MaterialTheme.colorScheme
     ListItem(
         modifier = modifier.clickable(onClick = onClick),
+        colors = ListItemDefaults.colors(
+            containerColor = if (notification.isRead) {
+                Color.Transparent
+            } else {
+                colors.secondaryContainer.copy(
+                    alpha = NEW_ALPHA,
+                )
+            },
+        ),
         leadingContent = {
-            RemoteAvatar(
-                image = notification.actor.avatar,
-                fallbackIcon = GeoWoofIcons.Person,
-                contentDescription = null,
-                size = AvatarSize,
+            Box {
+                RemoteAvatar(
+                    image = notification.actor.avatar,
+                    fallbackIcon = GeoWoofIcons.Person,
+                    contentDescription = null,
+                    size = AvatarSize,
+                )
+                IconBadge(
+                    icon = notification.type.iconRes(),
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .offset(x = BadgeOffset, y = BadgeOffset),
+                    size = BadgeSize,
+                    iconSize = BadgeIconSize,
+                    containerColor = colors.tertiary,
+                    contentColor = colors.onTertiary,
+                )
+            }
+        },
+        headlineContent = {
+            Text(
+                text = stringResource(notification.type.textRes(), notification.actor.displayName),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (notification.isRead) FontWeight.Medium else FontWeight.Bold,
             )
         },
-        headlineContent = { Text(stringResource(notification.type.textRes(), notification.actor.displayName)) },
+        supportingContent = {
+            Text(notification.createdAt.relativeToNow(), style = MaterialTheme.typography.bodySmall)
+        },
         trailingContent = {
             if (!notification.isRead) {
                 val unread = stringResource(R.string.feature_notifications_unread)
                 Box(
                     modifier = Modifier
                         .size(UnreadDotSize)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                        .background(colors.tertiary, CircleShape)
                         .semantics { contentDescription = unread },
                 )
             }
@@ -177,6 +215,21 @@ private fun AppNotification.open(actions: NotificationsActions) {
     }
 }
 
+private fun NotificationType.iconRes(): Int = when (this) {
+    NotificationType.UserFollowed, NotificationType.FollowRequested, NotificationType.FollowRequestAccepted ->
+        GeoWoofIcons.PersonAdd
+
+    NotificationType.FriendshipStarted -> GeoWoofIcons.Groups
+
+    NotificationType.PostLiked -> GeoWoofIcons.FavoriteFilled
+
+    NotificationType.CommentAdded -> GeoWoofIcons.ChatBubble
+
+    NotificationType.PostReposted -> GeoWoofIcons.Repeat
+
+    NotificationType.UserMentioned -> GeoWoofIcons.AlternateEmail
+}
+
 private fun NotificationType.textRes(): Int = when (this) {
     NotificationType.UserFollowed -> R.string.feature_notifications_user_followed
     NotificationType.FollowRequested -> R.string.feature_notifications_follow_requested
@@ -188,5 +241,9 @@ private fun NotificationType.textRes(): Int = when (this) {
     NotificationType.UserMentioned -> R.string.feature_notifications_user_mentioned
 }
 
-private val AvatarSize = 48.dp
+private val AvatarSize = 52.dp
+private val BadgeSize = 22.dp
+private val BadgeIconSize = 13.dp
+private val BadgeOffset = 3.dp
+private const val NEW_ALPHA = 0.45f
 private val UnreadDotSize = 10.dp

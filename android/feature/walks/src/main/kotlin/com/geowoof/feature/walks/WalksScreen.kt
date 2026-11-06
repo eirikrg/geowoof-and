@@ -1,14 +1,10 @@
 package com.geowoof.feature.walks
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -38,6 +33,8 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.geowoof.core.data.repository.WalkLoadException
 import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.ErrorState
+import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Walk
@@ -161,9 +158,7 @@ private fun WalkList(
 
 @Composable
 private fun LoadingWalks(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-    }
+    SkeletonList(modifier = modifier)
 }
 
 @Composable
@@ -182,19 +177,13 @@ private fun NoWalks(modifier: Modifier = Modifier) {
 
 @Composable
 private fun NoWalksWithError(message: String?, onRetry: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        EmptyState(
-            icon = GeoWoofIcons.Error,
-            title = stringResource(R.string.feature_walks_error_title),
-            message = message.orEmpty(),
-            modifier = Modifier.weight(1f, fill = false),
-        )
-        TextButton(onClick = onRetry) { Text(stringResource(R.string.feature_walks_retry)) }
-    }
+    ErrorState(
+        title = stringResource(R.string.feature_walks_error_title),
+        message = message.orEmpty(),
+        retryLabel = stringResource(R.string.feature_walks_retry),
+        onRetry = onRetry,
+        modifier = modifier,
+    )
 }
 
 @PreviewLightDark

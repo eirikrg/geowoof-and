@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,10 +20,12 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -37,17 +40,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geowoof.core.designsystem.component.FormTextField
+import com.geowoof.core.designsystem.component.HeroBand
+import com.geowoof.core.designsystem.component.IconBadge
+import com.geowoof.core.designsystem.component.heroTopBarColors
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Pet
@@ -144,6 +152,7 @@ internal fun PetDetailContent(
         snackbarHost = { SnackbarHost(snackbars) },
         topBar = {
             TopAppBar(
+                colors = heroTopBarColors(),
                 title = { Text(uiState.pet?.name.orEmpty()) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -215,56 +224,98 @@ internal fun PetDetailContent(
 private fun LazyListScope.petDetails(pet: Pet) {
     item {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(GeoWoofTheme.spacing.large),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.extraSmall),
         ) {
-            RemoteAvatar(
-                image = pet.avatar,
-                fallbackIcon = GeoWoofIcons.Pets,
-                contentDescription = stringResource(R.string.feature_pets_photo),
-                size = 120.dp,
-                variant = ImageVariant.Medium,
-            )
-            Text(pet.name, style = MaterialTheme.typography.headlineSmall)
-            Text(
-                text = pet.shortDescription(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            pet.bio?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+            HeroBand(photoSize = PetPhotoSize) { photoModifier ->
+                RemoteAvatar(
+                    image = pet.avatar,
+                    fallbackIcon = GeoWoofIcons.Pets,
+                    contentDescription = stringResource(R.string.feature_pets_photo),
+                    size = PetPhotoSize,
+                    variant = ImageVariant.Medium,
+                    modifier = photoModifier,
+                )
+            }
+            Column(
+                modifier = Modifier.padding(GeoWoofTheme.spacing.large),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.extraSmall),
+            ) {
+                Text(pet.name, style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    text = pet.shortDescription(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                pet.bio?.let { Text(it, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center) }
+            }
         }
     }
-    item { Fact(R.string.feature_pets_sex_label, stringResource(pet.sex.labelRes())) }
-    pet.birthDate?.let { date -> item { Fact(R.string.feature_pets_birth_date_label, date.formatted()) } }
-    pet.size?.let { size -> item { Fact(R.string.feature_pets_size_label, stringResource(size.labelRes())) } }
-    pet.color?.let { color -> item { Fact(R.string.feature_pets_color_label, color) } }
-    item {
-        Fact(
-            R.string.feature_pets_neutered_label,
-            stringResource(if (pet.neutered) R.string.feature_pets_yes else R.string.feature_pets_no),
+    item { PetFacts(pet) }
+}
+
+/** What is known of the pet, in tiles: a long list made you scroll past it to reach the walks. */
+@Composable
+private fun PetFacts(pet: Pet, modifier: Modifier = Modifier) {
+    val spacing = GeoWoofTheme.spacing
+    val facts = buildList {
+        add(R.string.feature_pets_sex_label to stringResource(pet.sex.labelRes()))
+        pet.birthDate?.let { add(R.string.feature_pets_birth_date_label to it.formatted()) }
+        pet.size?.let { add(R.string.feature_pets_size_label to stringResource(it.labelRes())) }
+        pet.color?.let { add(R.string.feature_pets_color_label to it) }
+        add(
+            R.string.feature_pets_neutered_label to
+                stringResource(if (pet.neutered) R.string.feature_pets_yes else R.string.feature_pets_no),
         )
     }
-    pet.microchip?.let { microchip ->
-        item {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.large),
+        verticalArrangement = Arrangement.spacedBy(spacing.small),
+    ) {
+        facts.chunked(FACTS_PER_ROW).forEach { row ->
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.small)) {
+                row.forEach { (label, value) -> Fact(label, value, modifier = Modifier.weight(1f)) }
+                // A row that is not full keeps the width of its tile.
+                if (row.size < FACTS_PER_ROW) Spacer(Modifier.weight(1f))
+            }
+        }
+        pet.microchip?.let { microchip ->
             Fact(
-                R.string.feature_pets_microchip_label,
-                microchip,
-                stringResource(R.string.feature_pets_microchip_private),
+                label = R.string.feature_pets_microchip_label,
+                value = microchip,
+                note = stringResource(R.string.feature_pets_microchip_private),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
 }
 
 @Composable
-private fun Fact(label: Int, value: String, note: String? = null) {
-    ListItem(
-        overlineContent = { Text(stringResource(label)) },
-        headlineContent = { Text(value) },
-        supportingContent = note?.let { { Text(it) } },
-    )
+private fun Fact(label: Int, value: String, modifier: Modifier = Modifier, note: String? = null) {
+    Surface(
+        modifier = modifier.semantics(mergeDescendants = true) {},
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(modifier = Modifier.padding(GeoWoofTheme.spacing.medium)) {
+            Text(
+                text = stringResource(label),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(value, style = MaterialTheme.typography.titleSmall)
+            note?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
 }
 
 private fun LazyListScope.walkSection(totals: WalkTotals?, onOpenWalks: () -> Unit) {
@@ -273,7 +324,7 @@ private fun LazyListScope.walkSection(totals: WalkTotals?, onOpenWalks: () -> Un
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = spacing.large, vertical = spacing.small),
+                .padding(start = spacing.large, end = spacing.large, top = spacing.large, bottom = spacing.small),
             verticalArrangement = Arrangement.spacedBy(spacing.small),
         ) {
             Row(
@@ -298,7 +349,12 @@ private fun LazyListScope.weightSection(weights: List<WeightEntry>, actions: Pet
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = GeoWoofTheme.spacing.large, vertical = GeoWoofTheme.spacing.small),
+                .padding(
+                    start = GeoWoofTheme.spacing.large,
+                    end = GeoWoofTheme.spacing.large,
+                    top = GeoWoofTheme.spacing.large,
+                    bottom = GeoWoofTheme.spacing.small,
+                ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -329,9 +385,15 @@ private fun LazyListScope.weightSection(weights: List<WeightEntry>, actions: Pet
     }
     items(weights.asReversed(), key = WeightEntry::id) { entry ->
         ListItem(
-            headlineContent = { Text(stringResource(R.string.feature_pets_weight_value, entry.weightKg)) },
-            supportingContent = { Text(entry.measuredOn.formatted()) },
-            leadingContent = { Icon(painterResource(GeoWoofIcons.MonitorWeight), contentDescription = null) },
+            headlineContent = {
+                Text(
+                    text = stringResource(R.string.feature_pets_weight_value, entry.weightKg),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+            },
+            supportingContent = { Text(entry.measuredOn.formatted(), style = MaterialTheme.typography.bodySmall) },
+            leadingContent = { IconBadge(GeoWoofIcons.MonitorWeight) },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             modifier = Modifier.clickable { actions.onEditWeight(entry) },
         )
     }
@@ -428,3 +490,6 @@ private fun PetDetailPreview() {
         )
     }
 }
+
+private val PetPhotoSize = 120.dp
+private const val FACTS_PER_ROW = 2

@@ -20,4 +20,6 @@
     <string name="feature_chat_send_photo">Send a photo</string>
     <string name="feature_chat_message_hint">Write a message</string>
     <string name="feature_chat_send">Send</string>
+    <string name="feature_chat_no_conversations_title">Nobody to talk to yet</string>
+    <string name="feature_chat_no_messages_hint">Your first message starts the conversation.</string>
 </resources>

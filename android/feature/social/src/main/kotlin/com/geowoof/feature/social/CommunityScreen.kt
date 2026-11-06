@@ -1,18 +1,15 @@
 package com.geowoof.feature.social
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -24,12 +21,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
@@ -40,6 +37,10 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.geowoof.core.data.repository.RemoteLoadException
 import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.ErrorState
+import com.geowoof.core.designsystem.component.GeoWoofLogoHead
+import com.geowoof.core.designsystem.component.SkeletonList
+import com.geowoof.core.designsystem.component.SkeletonPost
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ReportReason
@@ -106,12 +107,25 @@ internal fun CommunityContent(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbars) },
         topBar = {
-            TopAppBar(title = {
-                Text(stringResource(R.string.feature_social_community_title))
-            }, actions = { InboxActions() })
+            TopAppBar(
+                navigationIcon = {
+                    GeoWoofLogoHead(
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(horizontal = GeoWoofTheme.spacing.medium)
+                            .size(LogoSize),
+                    )
+                },
+                title = { Text(stringResource(R.string.feature_social_community_title)) },
+                actions = { InboxActions() },
+            )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onCreatePost) {
+            FloatingActionButton(
+                onClick = onCreatePost,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ) {
                 Icon(
                     painter = painterResource(GeoWoofIcons.AddAPhoto),
                     contentDescription = stringResource(R.string.feature_social_create_post),
@@ -144,24 +158,22 @@ private fun FeedList(
     // A pull needs something that scrolls, also when the list is empty.
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = GeoWoofTheme.spacing.huge),
+        // Room for the button, which floats over the last post.
+        contentPadding = PaddingValues(bottom = ListBottomPadding),
     ) {
         when {
             isEmpty && refresh is LoadState.Loading -> item {
-                Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                SkeletonList(modifier = Modifier.fillParentMaxSize(), rows = 2) { SkeletonPost() }
             }
 
             isEmpty && refresh is LoadState.Error -> item {
-                Column(
-                    modifier = Modifier
-                        .fillParentMaxSize()
-                        .padding(GeoWoofTheme.spacing.large),
-                    verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.medium, Alignment.CenterVertically),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    (refresh.error as? RemoteLoadException)?.error?.let { Text(it.userMessage()) }
-                    OutlinedButton(onClick = feed::retry) { Text(stringResource(R.string.feature_social_retry)) }
-                }
+                ErrorState(
+                    title = stringResource(R.string.feature_social_community_error_title),
+                    message = (refresh.error as? RemoteLoadException)?.error?.userMessage().orEmpty(),
+                    retryLabel = stringResource(R.string.feature_social_retry),
+                    onRetry = feed::retry,
+                    modifier = Modifier.fillParentMaxSize(),
+                )
             }
 
             isEmpty -> item {
@@ -186,6 +198,9 @@ private fun FeedList(
         }
     }
 }
+
+private val LogoSize = 36.dp
+private val ListBottomPadding = 88.dp
 
 /** What went wrong or has just been done with a post, once. */
 @Composable

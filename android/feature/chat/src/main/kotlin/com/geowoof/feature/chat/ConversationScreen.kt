@@ -1,5 +1,6 @@
 package com.geowoof.feature.chat
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,8 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,6 +25,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -46,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ChatMessage
@@ -127,7 +132,12 @@ internal fun ConversationContent(
                 .imePadding(),
         ) {
             when {
-                uiState.isGone -> Message(stringResource(R.string.feature_chat_conversation_gone), Modifier.weight(1f))
+                uiState.isGone -> EmptyState(
+                    icon = GeoWoofIcons.Forum,
+                    title = stringResource(R.string.feature_chat_conversation_gone),
+                    message = "",
+                    modifier = Modifier.weight(1f),
+                )
 
                 uiState.isLoading -> Box(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -181,7 +191,12 @@ private fun ConversationTopBar(otherUser: UserSummary?, actions: ConversationAct
 @Composable
 private fun Messages(uiState: ConversationUiState, actions: ConversationActions, modifier: Modifier = Modifier) {
     if (uiState.messages.isEmpty()) {
-        Message(stringResource(R.string.feature_chat_no_messages), modifier)
+        EmptyState(
+            icon = GeoWoofIcons.ChatBubble,
+            title = stringResource(R.string.feature_chat_no_messages),
+            message = stringResource(R.string.feature_chat_no_messages_hint),
+            modifier = modifier,
+        )
         return
     }
 
@@ -210,8 +225,13 @@ private fun Messages(uiState: ConversationUiState, actions: ConversationActions,
         reverseLayout = true,
         verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.small),
     ) {
-        items(uiState.messages, key = ChatMessage::clientMessageId) { message ->
-            Bubble(message, uiState, onRetry = actions.onRetry)
+        itemsIndexed(uiState.messages, key = { _, message -> message.clientMessageId }) { index, message ->
+            Column {
+                // Upside down: the day goes before the oldest message of that day, which comes later in the list.
+                val older = uiState.messages.getOrNull(index + 1)
+                if (older == null || !older.sentAt.isSameDayAs(message.sentAt)) DayLabel(message.sentAt)
+                Bubble(message, uiState, onRetry = actions.onRetry)
+            }
         }
         if (uiState.isLoadingOlder) {
             item(key = "older") {
@@ -222,6 +242,27 @@ private fun Messages(uiState: ConversationUiState, actions: ConversationActions,
                     CircularProgressIndicator(modifier = Modifier.size(ProgressSize))
                 }
             }
+        }
+    }
+}
+
+/** The day of the messages that follow, in a chip, so that each message only has to say its time. */
+@Composable
+private fun DayLabel(moment: Instant, modifier: Modifier = Modifier) {
+    val spacing = GeoWoofTheme.spacing
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = spacing.small),
+        contentAlignment = Alignment.Center,
+    ) {
+        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainer) {
+            Text(
+                text = formatChatDay(moment),
+                modifier = Modifier.padding(horizontal = spacing.medium, vertical = spacing.extraSmall),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -242,7 +283,8 @@ private fun Bubble(
         contentAlignment = if (isMine) Alignment.CenterEnd else Alignment.CenterStart,
     ) {
         Surface(
-            shape = MaterialTheme.shapes.large,
+            // The corner that points to who wrote it is less rounded.
+            shape = if (isMine) MyBubbleShape else OtherBubbleShape,
             color = if (isMine) {
                 MaterialTheme.colorScheme.primaryContainer
             } else {
@@ -270,13 +312,25 @@ private fun Bubble(
                         modifier = Modifier.widthIn(max = BubbleMaxWidth),
                     )
                 }
-                message.body?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                message.body?.let {
+                    Text(
+                        text = it,
+                        modifier = Modifier.padding(horizontal = spacing.extraSmall),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
                 Row(
-                    modifier = Modifier.align(Alignment.End),
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(horizontal = spacing.extraSmall),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(spacing.extraSmall),
                 ) {
-                    Text(formatChatTime(message.sentAt), style = MaterialTheme.typography.labelSmall)
+                    Text(
+                        text = formatChatClock(message.sentAt),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = LocalContentColor.current.copy(alpha = TIME_ALPHA),
+                    )
                     if (isMine) StatusIcon(message, uiState.otherLastReadMessageId)
                 }
                 if (message.status == MessageStatus.Failed) {
@@ -319,10 +373,11 @@ private fun Footer(
 ) {
     val spacing = GeoWoofTheme.spacing
     Column(modifier = modifier.fillMaxWidth().navigationBarsPadding()) {
-        if (uiState.isOtherTyping) {
+        AnimatedVisibility(visible = uiState.isOtherTyping) {
             Text(
                 text = stringResource(R.string.feature_chat_typing, uiState.otherUser?.displayName.orEmpty()),
                 style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = spacing.large, vertical = spacing.extraSmall),
             )
         }
@@ -351,8 +406,9 @@ private fun Footer(
                 modifier = Modifier.weight(1f),
                 placeholder = { Text(stringResource(R.string.feature_chat_message_hint)) },
                 lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = MAX_INPUT_LINES),
+                shape = MaterialTheme.shapes.large,
             )
-            FilledIconButton(onClick = actions.onSend) {
+            FilledIconButton(onClick = actions.onSend, modifier = Modifier.size(SendButtonSize)) {
                 Icon(
                     painter = painterResource(GeoWoofIcons.Send),
                     contentDescription = stringResource(R.string.feature_chat_send),
@@ -362,17 +418,15 @@ private fun Footer(
     }
 }
 
-@Composable
-private fun Message(text: String, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxWidth().padding(GeoWoofTheme.spacing.large), contentAlignment = Alignment.Center) {
-        Text(text, style = MaterialTheme.typography.bodyLarge)
-    }
-}
-
 private val TopBarAvatarSize = 36.dp
 private val BubbleMaxWidth = 280.dp
 private val ProgressSize = 24.dp
 private val StatusIconSize = 14.dp
+private val SendButtonSize = 52.dp
+private val MyBubbleShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 20.dp, bottomEnd = 6.dp)
+private val OtherBubbleShape =
+    RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 6.dp, bottomEnd = 20.dp)
+private const val TIME_ALPHA = 0.7f
 private const val OLDER_MARGIN = 5
 private const val MAX_INPUT_LINES = 5
 

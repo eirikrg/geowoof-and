@@ -35,10 +35,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -203,9 +206,11 @@ internal fun WalkDetailContent(
         ) {
             Box(
                 modifier = Modifier
+                    .padding(horizontal = GeoWoofTheme.spacing.large)
                     .fillMaxWidth()
                     .height(MapHeight)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                    .clip(MaterialTheme.shapes.large)
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
             ) {
                 map(Modifier.fillMaxSize())
             }
@@ -240,9 +245,19 @@ private fun WalkDetails(
         verticalArrangement = Arrangement.spacedBy(spacing.medium),
     ) {
         SyncStatusBanner(walk, actions)
-        Text(walk.startedAt.formattedIn(walk.timeZone), style = MaterialTheme.typography.titleLarge)
-        if (uiState.petNames.isNotEmpty()) {
-            Text(uiState.petNames, style = MaterialTheme.typography.bodyLarge)
+        Column {
+            Text(
+                text = walk.startedAt.formattedIn(walk.timeZone),
+                modifier = Modifier.semantics { heading() },
+                style = MaterialTheme.typography.titleLarge,
+            )
+            if (uiState.petNames.isNotEmpty()) {
+                Text(
+                    text = uiState.petNames,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         WalkStatsGrid(walk.stats)
         Text(

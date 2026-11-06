@@ -4,19 +4,27 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,9 +32,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
@@ -102,17 +115,7 @@ internal fun ProfileList(
                 )
             }
         } else {
-            stickyHeader {
-                PrimaryScrollableTabRow(selectedTabIndex = tabs.indexOf(selectedTab), edgePadding = 0.dp) {
-                    tabs.forEach { tab ->
-                        Tab(
-                            selected = selectedTab == tab,
-                            onClick = { selectedTab = tab },
-                            text = { Text(stringResource(tab.label)) },
-                        )
-                    }
-                }
-            }
+            stickyHeader { ProfileTabs(tabs, selectedTab, onSelect = { selectedTab = it }) }
             when (selectedTab) {
                 ProfileTab.Photos -> photosTab(uiState, lists.posts, actions)
                 ProfileTab.Walks -> walksTab(uiState, lists.walks, actions)
@@ -123,10 +126,40 @@ internal fun ProfileList(
     }
 }
 
+/** They share the width, unless a very large font needs them to scroll to fit. */
+@Composable
+private fun ProfileTabs(
+    tabs: List<ProfileTab>,
+    selected: ProfileTab,
+    onSelect: (ProfileTab) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val index = tabs.indexOf(selected)
+    val content: @Composable () -> Unit = {
+        tabs.forEach { tab ->
+            Tab(
+                selected = selected == tab,
+                onClick = { onSelect(tab) },
+                text = { Text(stringResource(tab.label), style = MaterialTheme.typography.titleSmall) },
+            )
+        }
+    }
+    if (LocalDensity.current.fontScale > LARGE_FONT_SCALE) {
+        PrimaryScrollableTabRow(selectedTabIndex = index, edgePadding = 0.dp, modifier = modifier, tabs = content)
+    } else {
+        PrimaryTabRow(selectedTabIndex = index, modifier = modifier, tabs = content)
+    }
+}
+
 /** A grid inside the list of the profile, which already scrolls: each row is an element of that list. */
 private fun LazyListScope.gridRows(count: Int, cell: @Composable (index: Int) -> Unit) {
     items((count + GRID_COLUMNS - 1) / GRID_COLUMNS) { row ->
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(GridSpacing)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = GridSpacing),
+            horizontalArrangement = Arrangement.spacedBy(GridSpacing),
+        ) {
             repeat(GRID_COLUMNS) { column ->
                 val index = row * GRID_COLUMNS + column
                 Box(modifier = Modifier.weight(1f).padding(bottom = GridSpacing)) {
@@ -142,15 +175,20 @@ private fun LazyListScope.photosTab(
     posts: LazyPagingItems<TimelineItem>,
     actions: ProfileActions,
 ) {
-    actions.onCreatePost?.let { onCreatePost ->
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = GeoWoofTheme.spacing.large, vertical = GeoWoofTheme.spacing.small),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                FilledTonalButton(onClick = onCreatePost) { Text(stringResource(R.string.feature_profile_add_photo)) }
+    item { Spacer(Modifier.height(GridSpacing)) }
+    // The first cell of your own photos is the way to add another.
+    val onCreatePost = actions.onCreatePost
+    val first = if (onCreatePost != null) 1 else 0
+    gridRows(posts.itemCount + first) { index ->
+        if (onCreatePost != null && index == 0) {
+            AddPhotoCell(onCreatePost)
+        } else {
+            posts[index - first]?.let { item ->
+                PostGridItem(
+                    image = item.post.media.firstOrNull(),
+                    isRepost = item.repostedBy != null,
+                    onClick = { actions.onOpenPost(item.post.id) },
+                )
             }
         }
     }
@@ -167,12 +205,26 @@ private fun LazyListScope.photosTab(
             )
         }
     }
-    gridRows(posts.itemCount) { index ->
-        posts[index]?.let { item ->
-            PostGridItem(
-                image = item.post.media.firstOrNull(),
-                isRepost = item.repostedBy != null,
-                onClick = { actions.onOpenPost(item.post.id) },
+}
+
+@Composable
+private fun AddPhotoCell(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.aspectRatio(1f),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+    ) {
+        Column(
+            modifier = Modifier.padding(GeoWoofTheme.spacing.small),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(painterResource(GeoWoofIcons.AddAPhoto), contentDescription = null)
+            Text(
+                text = stringResource(R.string.feature_profile_add_photo),
+                style = MaterialTheme.typography.labelMedium,
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -208,7 +260,7 @@ private fun LazyListScope.walksTab(uiState: ProfileUiState, walks: LazyPagingIte
         item {
             WalkTotalsGrid(
                 totals = totals,
-                modifier = Modifier.padding(GeoWoofTheme.spacing.medium),
+                modifier = Modifier.padding(GeoWoofTheme.spacing.large),
             )
         }
     }
@@ -246,7 +298,11 @@ private fun LazyListScope.petsTab(uiState: ProfileUiState, actions: ProfileActio
                     .padding(horizontal = GeoWoofTheme.spacing.large, vertical = GeoWoofTheme.spacing.small),
                 horizontalArrangement = Arrangement.End,
             ) {
-                FilledTonalButton(onClick = onAddPet) { Text(stringResource(R.string.feature_profile_add_pet)) }
+                FilledTonalButton(onClick = onAddPet) {
+                    Icon(painterResource(GeoWoofIcons.Add), contentDescription = null)
+                    Spacer(Modifier.width(GeoWoofTheme.spacing.small))
+                    Text(stringResource(R.string.feature_profile_add_pet))
+                }
             }
         }
     }
@@ -281,18 +337,30 @@ private fun EmptyLine(text: String, modifier: Modifier = Modifier) {
 /** Only your own pets open: those of other people have no screen yet. */
 @Composable
 private fun PetRow(pet: Pet, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
-    ListItem(
-        headlineContent = { Text(pet.name) },
-        supportingContent = { Text(pet.shortDescription()) },
-        leadingContent = {
-            RemoteAvatar(image = pet.avatar, fallbackIcon = GeoWoofIcons.Pets, contentDescription = null)
-        },
-        trailingContent = onClick?.let {
-            { Icon(painterResource(GeoWoofIcons.ChevronRight), contentDescription = null) }
-        },
-        modifier = if (onClick != null) modifier.clickable(onClick = onClick) else modifier,
-    )
+    val spacing = GeoWoofTheme.spacing
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.large, vertical = spacing.extraSmall)
+            .clip(MaterialTheme.shapes.large)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        ListItem(
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            headlineContent = { Text(pet.name, style = MaterialTheme.typography.titleMedium) },
+            supportingContent = { Text(pet.shortDescription(), style = MaterialTheme.typography.bodyMedium) },
+            leadingContent = {
+                RemoteAvatar(image = pet.avatar, fallbackIcon = GeoWoofIcons.Pets, contentDescription = null)
+            },
+            trailingContent = onClick?.let {
+                { Icon(painterResource(GeoWoofIcons.ChevronRight), contentDescription = null) }
+            },
+        )
+    }
 }
 
 private const val GRID_COLUMNS = 3
-private val GridSpacing = 2.dp
+private const val LARGE_FONT_SCALE = 1.3f
+private val GridSpacing = 4.dp

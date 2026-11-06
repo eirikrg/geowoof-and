@@ -2,14 +2,12 @@ package com.geowoof.feature.chat
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Badge
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -37,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Conversation
@@ -107,7 +107,11 @@ internal fun ConversationsContent(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onNewConversation) {
+            FloatingActionButton(
+                onClick = onNewConversation,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ) {
                 Icon(
                     painterResource(GeoWoofIcons.Add),
                     contentDescription = stringResource(R.string.feature_chat_new_conversation),
@@ -122,19 +126,14 @@ internal fun ConversationsContent(
                 }
             }
 
-            uiState.isLoading -> Box(
-                modifier = Modifier.padding(innerPadding).fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
+            uiState.isLoading -> SkeletonList(Modifier.padding(innerPadding))
 
-            else -> Box(
-                modifier = Modifier.padding(innerPadding).padding(GeoWoofTheme.spacing.large).fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(stringResource(R.string.feature_chat_no_conversations), style = MaterialTheme.typography.bodyLarge)
-            }
+            else -> EmptyState(
+                icon = GeoWoofIcons.Forum,
+                title = stringResource(R.string.feature_chat_no_conversations_title),
+                message = stringResource(R.string.feature_chat_no_conversations),
+                modifier = Modifier.padding(innerPadding),
+            )
         }
     }
 }
@@ -158,17 +157,20 @@ private fun ConversationRow(
             )
         },
         headlineContent = {
-            Text(
-                text = conversation.otherUser.displayName,
-                fontWeight = if (hasUnread) FontWeight.Bold else FontWeight.Normal,
-            )
+            Text(text = conversation.otherUser.displayName, style = MaterialTheme.typography.titleSmall)
         },
         supportingContent = {
             Text(
                 text = previewText(conversation.lastMessage, myUserId),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                fontWeight = if (hasUnread) FontWeight.SemiBold else FontWeight.Normal,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (hasUnread) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                fontWeight = if (hasUnread) FontWeight.Bold else FontWeight.Medium,
             )
         },
         trailingContent = {
@@ -176,8 +178,19 @@ private fun ConversationRow(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.small),
             ) {
-                Text(formatChatTime(conversation.updatedAt), style = MaterialTheme.typography.labelSmall)
-                if (hasUnread) Badge { Text(conversation.unreadCount.toString()) }
+                Text(
+                    text = formatChatTime(conversation.updatedAt),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (hasUnread) {
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary,
+                    ) {
+                        Text(conversation.unreadCount.toString())
+                    }
+                }
             }
         },
     )
@@ -190,7 +203,7 @@ private fun previewText(preview: MessagePreview?, myUserId: String?): String {
     return if (preview.senderId == myUserId) stringResource(R.string.feature_chat_you_said, text) else text
 }
 
-private val AvatarSize = 48.dp
+private val AvatarSize = 52.dp
 
 @PreviewLightDark
 @Composable

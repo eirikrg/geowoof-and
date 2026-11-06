@@ -43,4 +43,6 @@
     <string name="feature_social_comments_failed">The comments could not be loaded.</string>
     <string name="feature_social_comment_label">Add a comment</string>
     <string name="feature_social_send_comment">Send comment</string>
+    <string name="feature_social_community_error_title">The community could not be loaded</string>
+    <string name="feature_social_post_error_title">The post could not be loaded</string>
 </resources>

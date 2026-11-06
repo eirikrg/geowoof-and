@@ -13,4 +13,6 @@
     <string name="feature_notifications_comment_added">%1$s commented on your post</string>
     <string name="feature_notifications_post_reposted">%1$s reposted your post</string>
     <string name="feature_notifications_user_mentioned">%1$s mentioned you</string>
+    <string name="feature_notifications_empty_title">All quiet</string>
+    <string name="feature_notifications_error_title">They could not be loaded</string>
 </resources>

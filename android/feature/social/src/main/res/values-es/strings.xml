@@ -43,4 +43,6 @@
     <string name="feature_social_comments_failed">No se han podido cargar los comentarios.</string>
     <string name="feature_social_comment_label">Añade un comentario</string>
     <string name="feature_social_send_comment">Enviar comentario</string>
+    <string name="feature_social_community_error_title">No se ha podido cargar la comunidad</string>
+    <string name="feature_social_post_error_title">No se ha podido cargar la publicación</string>
 </resources>

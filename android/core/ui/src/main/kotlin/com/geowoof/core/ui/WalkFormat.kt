@@ -1,6 +1,7 @@
 package com.geowoof.core.ui
 
 import android.content.Context
+import android.text.format.DateUtils
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -64,3 +65,11 @@ fun WalkVisibility.labelRes(): Int = when (this) {
     WalkVisibility.Friends -> R.string.core_ui_visibility_friends
     WalkVisibility.OnlyMe -> R.string.core_ui_visibility_only_me
 }
+
+/** When something was said or done, as people say it: "5 min ago", "yesterday". The system translates it. */
+fun Instant.relativeToNow(now: Long = System.currentTimeMillis()): String = DateUtils.getRelativeTimeSpanString(
+    toEpochMilli(),
+    now,
+    DateUtils.MINUTE_IN_MILLIS,
+    DateUtils.FORMAT_ABBREV_RELATIVE,
+).toString()

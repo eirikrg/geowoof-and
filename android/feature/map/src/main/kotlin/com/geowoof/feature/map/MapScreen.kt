@@ -37,7 +37,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -52,6 +51,8 @@ import com.geowoof.core.model.ActiveWalk
 import com.geowoof.core.model.LiveWalker
 import com.geowoof.core.model.MapViewport
 import com.geowoof.core.ui.FloatingInboxActions
+import com.geowoof.core.ui.isThemeDark
+import com.geowoof.core.ui.mapStyleResource
 import com.geowoof.core.ui.userMessage
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -370,13 +371,9 @@ private fun WalkMap(
         }
     }
     val context = LocalContext.current
-    val isDark = MaterialTheme.colorScheme.surface.luminance() < DARK_SURFACE
-    val style = remember(context, isDark) {
-        MapStyleOptions.loadRawResourceStyle(
-            context,
-            if (isDark) R.raw.feature_map_style_dark else R.raw.feature_map_style_light,
-        )
-    }
+    val isDark = isThemeDark()
+    val styleResource = mapStyleResource()
+    val style = remember(context, styleResource) { MapStyleOptions.loadRawResourceStyle(context, styleResource) }
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
@@ -424,6 +421,5 @@ private const val WALK_ZOOM = 17f
 private const val PERSON_ZOOM = 15f
 private const val ROUTE_WIDTH = 14f
 private const val CLUSTER_ZOOM_STEP = 2f
-private const val DARK_SURFACE = 0.5f
 private val StatusElevation = 3.dp
 private val RoutePattern = listOf(Dash(ROUTE_WIDTH * 2.4f), Gap(ROUTE_WIDTH * 1.8f))

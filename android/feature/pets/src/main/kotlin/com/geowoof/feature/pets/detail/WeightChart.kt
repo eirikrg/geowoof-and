@@ -21,6 +21,8 @@ import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.compose.cartesian.data.lineModel
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
+import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -47,18 +49,20 @@ internal fun WeightChart(weights: List<WeightEntry>, modifier: Modifier = Modifi
         val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale)
         CartesianValueFormatter { _, value, _ -> LocalDate.ofEpochDay(value.toLong()).format(formatter) }
     }
-    CartesianChartHost(
-        chart = rememberCartesianChart(
-            rememberLineCartesianLayer(),
-            startAxis = VerticalAxis.rememberStart(),
-            bottomAxis = HorizontalAxis.rememberBottom(valueFormatter = dates),
-        ),
-        modelProducer = producer,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(ChartHeight)
-            .semantics { contentDescription = description },
-    )
+    ProvideVicoTheme(rememberM3VicoTheme()) {
+        CartesianChartHost(
+            chart = rememberCartesianChart(
+                rememberLineCartesianLayer(),
+                startAxis = VerticalAxis.rememberStart(),
+                bottomAxis = HorizontalAxis.rememberBottom(valueFormatter = dates),
+            ),
+            modelProducer = producer,
+            modifier = modifier
+                .fillMaxWidth()
+                .height(ChartHeight)
+                .semantics { contentDescription = description },
+        )
+    }
 }
 
 private val ChartHeight = 200.dp

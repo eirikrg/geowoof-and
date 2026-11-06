@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -36,7 +38,8 @@ import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Mention
 import com.geowoof.core.model.RemoteImage
 
-private val RepostBadgeSize = 18.dp
+private val RepostBadgeSize = 16.dp
+private const val SCRIM_ALPHA = 0.5f
 
 /**
  * A photo of a post, cut to fill its space. The cache key uses the asset id and not the URL, because the signature
@@ -86,6 +89,7 @@ fun PostGridItem(image: RemoteImage?, isRepost: Boolean, onClick: () -> Unit, mo
     Box(
         modifier = modifier
             .aspectRatio(1f)
+            .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             .clickable(onClickLabel = description, onClick = onClick),
     ) {
@@ -98,15 +102,21 @@ fun PostGridItem(image: RemoteImage?, isRepost: Boolean, onClick: () -> Unit, mo
             )
         }
         if (isRepost) {
-            Icon(
-                painter = painterResource(GeoWoofIcons.Repeat),
-                contentDescription = null,
+            // On a dark circle, because it can fall on any photo.
+            Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(GeoWoofTheme.spacing.extraSmall)
-                    .size(RepostBadgeSize),
-                tint = MaterialTheme.colorScheme.surface,
-            )
+                    .background(Color.Black.copy(alpha = SCRIM_ALPHA), CircleShape)
+                    .padding(GeoWoofTheme.spacing.extraSmall),
+            ) {
+                Icon(
+                    painter = painterResource(GeoWoofIcons.Repeat),
+                    contentDescription = null,
+                    modifier = Modifier.size(RepostBadgeSize),
+                    tint = Color.White,
+                )
+            }
         }
     }
 }

@@ -2,26 +2,26 @@ package com.geowoof.feature.social.post
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.maxLength
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -49,6 +50,9 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.geowoof.core.designsystem.component.EmptyState
+import com.geowoof.core.designsystem.component.ErrorState
+import com.geowoof.core.designsystem.component.SkeletonList
+import com.geowoof.core.designsystem.component.SkeletonPost
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppError
@@ -157,16 +161,15 @@ internal fun PostDetailContent(
                 modifier = contentModifier,
             )
 
-            post == null && uiState.loadError != null -> Column(
-                modifier = contentModifier.padding(GeoWoofTheme.spacing.large),
-                verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.medium, Alignment.CenterVertically),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(uiState.loadError.userMessage())
-                OutlinedButton(onClick = actions.onRefresh) { Text(stringResource(R.string.feature_social_retry)) }
-            }
+            post == null && uiState.loadError != null -> ErrorState(
+                title = stringResource(R.string.feature_social_post_error_title),
+                message = uiState.loadError.userMessage(),
+                retryLabel = stringResource(R.string.feature_social_retry),
+                onRetry = actions.onRefresh,
+                modifier = contentModifier,
+            )
 
-            post == null -> Box(contentModifier, contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            post == null -> SkeletonList(modifier = contentModifier, rows = 1) { SkeletonPost() }
 
             else -> Column(modifier = contentModifier.imePadding()) {
                 PostAndComments(
@@ -212,7 +215,6 @@ private fun PostAndComments(
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
         item(key = "post") { PostCard(post, repostedBy = null, myUserId = myUserId, actions = actions) }
-        item(key = "divider") { HorizontalDivider() }
         if (comments.itemCount == 0 && comments.loadState.refresh !is LoadState.Loading) {
             item(key = "empty") {
                 Text(
@@ -239,6 +241,7 @@ private fun PostAndComments(
 private fun CommentRow(comment: Comment, myUserId: String?, actions: PostCardActions, modifier: Modifier = Modifier) {
     ListItem(
         modifier = modifier,
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         headlineContent = {
             Text(
                 text = comment.author.displayName,
@@ -297,8 +300,13 @@ private fun CommentField(
                 label = { Text(stringResource(R.string.feature_social_comment_label)) },
                 inputTransformation = InputTransformation.maxLength(MAX_COMMENT_LENGTH),
                 lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = MAX_COMMENT_LINES),
+                shape = MaterialTheme.shapes.large,
             )
-            IconButton(onClick = actions.onSendComment, enabled = !isSending && text.text.isNotBlank()) {
+            FilledIconButton(
+                onClick = actions.onSendComment,
+                enabled = !isSending && text.text.isNotBlank(),
+                modifier = Modifier.size(SendButtonSize),
+            ) {
                 Icon(
                     painter = painterResource(GeoWoofIcons.Send),
                     contentDescription = stringResource(R.string.feature_social_send_comment),
@@ -310,7 +318,8 @@ private fun CommentField(
 
 private const val MAX_COMMENT_LENGTH = 1000
 private const val MAX_COMMENT_LINES = 4
-private val CommentAvatarSize = 36.dp
+private val CommentAvatarSize = 40.dp
+private val SendButtonSize = 52.dp
 
 @PreviewLightDark
 @Composable

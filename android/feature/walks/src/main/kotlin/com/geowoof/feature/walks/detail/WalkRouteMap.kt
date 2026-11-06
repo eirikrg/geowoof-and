@@ -9,16 +9,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.geowoof.core.model.RouteSegment
+import com.geowoof.core.ui.isThemeDark
+import com.geowoof.core.ui.mapStyleResource
 import com.geowoof.feature.walks.R
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.Dash
+import com.google.android.gms.maps.model.Gap
+import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.compose.ComposeMapColorScheme
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapEffect
+import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.Polyline
@@ -41,20 +50,35 @@ internal fun WalkRouteMap(route: List<RouteSegment>?, onMapReady: (GoogleMap) ->
             cameraPositionState.move(CameraUpdateFactory.newLatLngBounds(bounds, FRAME_PADDING))
         }
     }
+    val context = LocalContext.current
+    val styleResource = mapStyleResource()
+    val style = remember(context, styleResource) { MapStyleOptions.loadRawResourceStyle(context, styleResource) }
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
         contentDescription = stringResource(R.string.feature_walks_route),
-        uiSettings = MapUiSettings(zoomControlsEnabled = false),
-        mapColorScheme = ComposeMapColorScheme.FOLLOW_SYSTEM,
+        properties = MapProperties(mapStyleOptions = style),
+        uiSettings = MapUiSettings(zoomControlsEnabled = false, mapToolbarEnabled = false),
+        mapColorScheme = if (isThemeDark()) ComposeMapColorScheme.DARK else ComposeMapColorScheme.LIGHT,
         onMapLoaded = { isLoaded = true },
     ) {
         MapEffect(Unit) { map -> currentOnMapReady(map) }
         lines.forEach { line ->
-            Polyline(points = line, color = MaterialTheme.colorScheme.primary, width = ROUTE_WIDTH)
+            Polyline(
+                points = line,
+                color = MaterialTheme.colorScheme.primary,
+                width = ROUTE_WIDTH,
+                pattern = RoutePattern,
+                jointType = JointType.ROUND,
+                startCap = RoundCap(),
+                endCap = RoundCap(),
+            )
         }
     }
 }
 
 private const val FRAME_PADDING = 96
 private const val ROUTE_WIDTH = 14f
+
+/** The dashed trail of the logo. */
+private val RoutePattern = listOf(Dash(ROUTE_WIDTH * 2.4f), Gap(ROUTE_WIDTH * 1.8f))
