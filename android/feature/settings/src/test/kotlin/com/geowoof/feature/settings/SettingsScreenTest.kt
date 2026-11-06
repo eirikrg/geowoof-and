@@ -27,7 +27,11 @@ class SettingsScreenTest {
 
     private val actions = mutableListOf<String>()
 
-    private fun showSettings(user: User, liveSettings: UserSettings = UserSettings()) {
+    private fun showSettings(
+        user: User,
+        liveSettings: UserSettings = UserSettings(),
+        areNotificationsOn: Boolean = true,
+    ) {
         composeRule.setContent {
             GeoWoofTheme(dynamicColor = false) {
                 SettingsContent(
@@ -46,6 +50,8 @@ class SettingsScreenTest {
                     onConfirmSignOut = { actions += "confirmSignOut" },
                     onDismissSignOut = { actions += "dismissSignOut" },
                     onDeleteAccount = { actions += "delete" },
+                    areNotificationsOn = areNotificationsOn,
+                    onOpenNotificationSettings = { actions += "notifications" },
                 )
             }
         }
@@ -61,6 +67,22 @@ class SettingsScreenTest {
         composeRule.onNodeWithText("Verify").performClick()
 
         assertEquals(listOf("verify"), actions)
+    }
+
+    @Test
+    fun whoever_said_not_now_to_the_notifications_can_turn_them_on_from_here() {
+        showSettings(TestUsers.user(), areNotificationsOn = false)
+
+        composeRule.onNodeWithText("Off", substring = true).performScrollTo().assertIsDisplayed().performClick()
+
+        assertEquals(listOf("notifications"), actions)
+    }
+
+    @Test
+    fun with_the_notifications_on_it_says_so() {
+        showSettings(TestUsers.user(), areNotificationsOn = true)
+
+        composeRule.onNodeWithText("On.", substring = true).performScrollTo().assertIsDisplayed()
     }
 
     @Test

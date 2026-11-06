@@ -28,6 +28,10 @@
     <string name="feature_settings_sign_out_message">Hay paseos que aún no se han subido. Si cierras la sesión, se perderán.</string>
     <string name="feature_settings_stay">Seguir con la sesión</string>
     <string name="feature_settings_blocked_users">Personas bloqueadas</string>
+    <string name="feature_settings_notifications">Notificaciones</string>
+    <string name="feature_settings_allow_notifications">Permitir notificaciones</string>
+    <string name="feature_settings_notifications_on">Activadas. Eliges cuáles en los ajustes de tu móvil.</string>
+    <string name="feature_settings_notifications_off">Desactivadas: no te enterarás de mensajes ni de seguidores nuevos.</string>
     <string name="feature_settings_privacy">Privacidad</string>
     <string name="feature_settings_private_profile">Perfil privado</string>
     <string name="feature_settings_private_on">Solo los seguidores que aceptes ven tus paseos y mascotas. El resto solo ve tu @usuario, foto, bio y contadores. Si lo haces público, quien esté esperando pasará a seguirte.</string>

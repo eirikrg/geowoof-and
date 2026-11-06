@@ -1,6 +1,8 @@
 package com.geowoof.feature.settings
 
+import android.content.Intent
 import android.os.Build
+import android.provider.Settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,14 +30,19 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geowoof.core.designsystem.component.FittedText
 import com.geowoof.core.designsystem.component.ListGroup
@@ -63,6 +70,13 @@ internal fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var areNotificationsOn by remember { mutableStateOf(true) }
+    // It can change in the settings of the phone, and that is where this screen sends the person.
+    LifecycleResumeEffect(context) {
+        areNotificationsOn = NotificationManagerCompat.from(context).areNotificationsEnabled()
+        onPauseOrDispose {}
+    }
     SettingsContent(
         uiState = uiState,
         onBack = onBack,
@@ -80,6 +94,13 @@ internal fun SettingsScreen(
         onDismissSignOut = viewModel::dismissSignOut,
         onDeleteAccount = onDeleteAccount,
         modifier = modifier,
+        areNotificationsOn = areNotificationsOn,
+        onOpenNotificationSettings = {
+            context.startActivity(
+                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+            )
+        },
     )
 }
 
@@ -102,6 +123,8 @@ internal fun SettingsContent(
     onDismissSignOut: () -> Unit,
     onDeleteAccount: () -> Unit,
     modifier: Modifier = Modifier,
+    areNotificationsOn: Boolean = true,
+    onOpenNotificationSettings: () -> Unit = {},
 ) {
     val snackbars = remember { SnackbarHostState() }
     val errorMessage = uiState.error?.userMessage()
@@ -154,6 +177,7 @@ internal fun SettingsContent(
                 AccountSection(user, onVerifyEmail, onChangePassword)
             }
             AppearanceSection(uiState.appearance, onThemeModeChange, onWallpaperColorsChange)
+            NotificationsSection(areNotificationsOn, onOpenNotificationSettings)
             PrivacySection(
                 uiState = uiState,
                 onPrivateChange = onPrivateChange,
@@ -286,6 +310,29 @@ private fun ThemeMode.labelRes(): Int = when (this) {
     ThemeMode.System -> R.string.feature_settings_theme_system
     ThemeMode.Light -> R.string.feature_settings_theme_light
     ThemeMode.Dark -> R.string.feature_settings_theme_dark
+}
+
+/** The system decides, and the app only asks once: this is the way back for whoever answered "Not now". */
+@Composable
+private fun NotificationsSection(isOn: Boolean, onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        SectionHeader(stringResource(R.string.feature_settings_notifications))
+        ListGroup {
+            ListGroupItem(
+                headline = stringResource(R.string.feature_settings_allow_notifications),
+                supporting = stringResource(
+                    if (isOn) {
+                        R.string.feature_settings_notifications_on
+                    } else {
+                        R.string.feature_settings_notifications_off
+                    },
+                ),
+                icon = GeoWoofIcons.Notifications,
+                onClick = onOpenSettings,
+                trailing = { Icon(painterResource(GeoWoofIcons.ChevronRight), contentDescription = null) },
+            )
+        }
+    }
 }
 
 @Composable
