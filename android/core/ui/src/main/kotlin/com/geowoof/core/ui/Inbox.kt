@@ -15,12 +15,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.geowoof.core.designsystem.component.GeoWoofIllustrations
@@ -104,12 +107,20 @@ private fun CountedIcon(icon: Int, count: Int, description: String, modifier: Mo
         modifier = modifier,
         badge = {
             if (count > 0) {
-                val isTooMany = count > MAX_COUNT
-                Badge(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary,
-                ) {
-                    Text(if (isTooMany) stringResource(R.string.core_ui_many_unread, MAX_COUNT) else count.toString())
+                val label = if (count > MAX_COUNT) {
+                    stringResource(R.string.core_ui_many_unread, MAX_COUNT)
+                } else {
+                    count.toString()
+                }
+                // The same size with any font: the button cuts what goes out of its circle, and TalkBack hears the
+                // count in the description of the icon.
+                CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density)) {
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary,
+                    ) {
+                        Text(label)
+                    }
                 }
             }
         },
