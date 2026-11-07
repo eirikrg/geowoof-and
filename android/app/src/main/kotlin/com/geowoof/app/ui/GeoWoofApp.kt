@@ -142,8 +142,8 @@ fun MainShell(
                     icon = {
                         BadgedBox(
                             badge = {
-                                if (destination == TopLevelDestination.Profile && pendingRequests > 0) {
-                                    PendingRequestsBadge(pendingRequests)
+                                if (destination == TopLevelDestination.Profile) {
+                                    ProfileBadge(pendingRequests, unreadNotifications)
                                 }
                             },
                         ) {
@@ -183,14 +183,35 @@ private fun OpenPendingLink(link: String?, navController: NavHostController, onC
     }
 }
 
+/**
+ * What is waiting in the profile, which is where the bell is. It shows the largest number and does not add them up,
+ * because a request to follow you is also a notification and one request would say 2. TalkBack hears each one.
+ */
 @Composable
-private fun PendingRequestsBadge(count: Int, modifier: Modifier = Modifier) {
-    val description = pluralStringResource(R.plurals.pending_follow_requests, count, count)
+internal fun ProfileBadge(pendingRequests: Int, unreadNotifications: Int, modifier: Modifier = Modifier) {
+    val count = maxOf(pendingRequests, unreadNotifications)
+    if (count == 0) return
+    val description = listOfNotNull(
+        pendingRequests.takeIf { it > 0 }?.let {
+            pluralStringResource(R.plurals.pending_follow_requests, it, it)
+        },
+        unreadNotifications.takeIf { it > 0 }?.let {
+            pluralStringResource(com.geowoof.core.ui.R.plurals.core_ui_unread_notifications, it, it)
+        },
+    ).joinToString()
     Badge(
         modifier = modifier.semantics { contentDescription = description },
         containerColor = MaterialTheme.colorScheme.tertiary,
         contentColor = MaterialTheme.colorScheme.onTertiary,
     ) {
-        Text(count.toString())
+        Text(
+            if (count > MAX_BADGE_COUNT) {
+                stringResource(com.geowoof.core.ui.R.string.core_ui_many_unread, MAX_BADGE_COUNT)
+            } else {
+                count.toString()
+            },
+        )
     }
 }
+
+private const val MAX_BADGE_COUNT = 99
