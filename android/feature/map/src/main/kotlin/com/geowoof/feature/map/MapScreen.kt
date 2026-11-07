@@ -378,31 +378,7 @@ private fun WalkMap(
                 cameraPositionState.cameraMoveStartedReason == CameraMoveStartedReason.GESTURE
         }.collect { isByHand -> if (isByHand) currentOnMoveByHand() }
     }
-    val lastPoint = walk?.lastPoint
-    LaunchedEffect(lastPoint) {
-        lastPoint?.let {
-            val target = LatLng(it.position.latitude, it.position.longitude)
-            // A walk in progress can come before there is a map, when CameraUpdateFactory is not initialized yet.
-            if (cameraPositionState.projection == null) {
-                cameraPositionState.position = CameraPosition.fromLatLngZoom(target, WALK_ZOOM)
-            } else {
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(target, WALK_ZOOM))
-            }
-        }
-    }
-    val currentOnReachCameraTarget by rememberUpdatedState(onReachCameraTarget)
-    LaunchedEffect(cameraTarget) {
-        cameraTarget?.let { target ->
-            val position = LatLng(target.position.latitude, target.position.longitude)
-            // The position, and not a movement: it can come before there is a map, which then starts here.
-            if (target.isJump) {
-                cameraPositionState.position = CameraPosition.fromLatLngZoom(position, PERSON_ZOOM)
-            } else {
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(position, PERSON_ZOOM))
-            }
-            currentOnReachCameraTarget()
-        }
-    }
+    MapCameraEffects(cameraPositionState, walk, cameraTarget, onReachCameraTarget)
     if (isLocating) {
         Box(modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainer))
         return
@@ -456,8 +432,6 @@ private val DefaultCenter = LatLng(40.4168, -3.7038)
 
 /** A tall phone at 12 would already need more cells than the live map takes (docs/realtime.md). */
 private const val DEFAULT_ZOOM = 13f
-private const val WALK_ZOOM = 17f
-private const val PERSON_ZOOM = 15f
 private const val ROUTE_WIDTH = 14f
 private const val CLUSTER_ZOOM_STEP = 2f
 private val StatusElevation = 3.dp
