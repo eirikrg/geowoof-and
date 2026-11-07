@@ -2,7 +2,6 @@ package com.geowoof.feature.search
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -18,9 +17,7 @@ import com.geowoof.core.data.repository.RemoteLoadException
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.PetSearchResult
-import com.geowoof.core.model.Post
 import com.geowoof.core.model.UserSummary
-import com.geowoof.core.testing.TestPosts
 import com.geowoof.core.testing.TestSocial
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
@@ -35,12 +32,12 @@ class SearchScreenTest {
 
     private val opened = mutableListOf<String>()
     private val tabs = mutableListOf<SearchTab>()
+    private val calls = mutableListOf<String>()
 
     private fun show(
         uiState: SearchUiState,
         users: PagingData<UserSummary> = TestSocial.pages(emptyList()),
         pets: PagingData<PetSearchResult> = TestSocial.pages(emptyList()),
-        explore: PagingData<Post> = TestSocial.pages(emptyList()),
     ) {
         composeRule.setContent {
             GeoWoofTheme(dynamicColor = false) {
@@ -49,10 +46,11 @@ class SearchScreenTest {
                     query = TextFieldState(),
                     users = flowOf(users).collectAsLazyPagingItems(),
                     pets = flowOf(pets).collectAsLazyPagingItems(),
-                    explore = flowOf(explore).collectAsLazyPagingItems(),
                     onSelectTab = { tabs += it },
                     onOpenUser = { opened += it },
-                    onOpenPost = { opened += "post:$it" },
+                    onRemoveRecent = { calls += "remove:$it" },
+                    onRemoveAllRecent = { calls += "removeAll" },
+                    onRetryRecent = { calls += "retry" },
                 )
             }
         }
@@ -70,17 +68,41 @@ class SearchScreenTest {
     }
 
     @Test
-    fun before_searching_it_shows_what_people_publish_and_a_post_opens() {
-        show(SearchUiState(), explore = TestSocial.pages(listOf(TestPosts.post("post-9"))))
+    fun before_searching_there_are_no_publications_only_the_recent_people() {
+        show(SearchUiState(recent = listOf(TestSocial.user())))
 
-        composeRule.waitUntil(WAIT_MILLIS) {
-            composeRule.onAllNodes(hasContentDescription("Open post")).fetchSemanticsNodes().isNotEmpty()
-        }
+        composeRule.onNodeWithText("Recent").assertIsDisplayed()
         composeRule.onNodeWithText("People and pets").assertDoesNotExist()
-        composeRule.onNodeWithText("Pets").assertDoesNotExist()
-        composeRule.onNodeWithContentDescription("Open post").performClick()
+        composeRule.onNodeWithContentDescription("Open post").assertDoesNotExist()
+        composeRule.onNodeWithText("Bea").performClick()
 
-        assertEquals(listOf("post:post-9"), opened)
+        assertEquals(listOf("bea-id"), opened)
+    }
+
+    @Test
+    fun a_recent_person_can_be_removed_and_so_can_all_of_them() {
+        show(SearchUiState(recent = listOf(TestSocial.user())))
+
+        composeRule.onNodeWithContentDescription("Remove Bea from recent").performClick()
+        composeRule.onNodeWithText("Clear").performClick()
+
+        assertEquals(listOf("remove:bea-id", "removeAll"), calls)
+    }
+
+    @Test
+    fun while_the_recent_people_are_on_their_way_it_says_it_is_loading() {
+        show(SearchUiState(isLoadingRecent = true))
+
+        composeRule.onNodeWithContentDescription("Loading", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun if_the_recent_people_could_not_be_loaded_it_can_try_again() {
+        show(SearchUiState(hasRecentFailed = true))
+
+        composeRule.onNodeWithText("Try again").performScrollTo().performClick()
+
+        assertEquals(listOf("retry"), calls)
     }
 
     @Test

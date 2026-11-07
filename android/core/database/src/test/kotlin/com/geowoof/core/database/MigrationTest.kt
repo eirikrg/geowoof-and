@@ -159,4 +159,24 @@ class MigrationTest {
             }
         }
     }
+
+    @Test
+    fun the_recent_people_start_empty_and_nothing_else_changes() {
+        helper.createDatabase(7).use { connection ->
+            connection.execSQL(
+                "INSERT INTO user_settings (id, liveVisibility, hideStartDistanceM) VALUES (0, 'Everyone', 500)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(8).use { connection ->
+            connection.prepare("SELECT liveVisibility FROM user_settings").use { statement ->
+                statement.step()
+                assertEquals("Everyone", statement.getText(0))
+            }
+            connection.prepare("SELECT COUNT(*) FROM recent_people").use { statement ->
+                statement.step()
+                assertEquals(0L, statement.getLong(0))
+            }
+        }
+    }
 }

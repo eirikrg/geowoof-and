@@ -6,6 +6,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.geowoof.core.data.repository.AuthRepository
 import com.geowoof.core.data.repository.PostsRepository
+import com.geowoof.core.model.Post
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.model.TimelineItem
 import com.geowoof.feature.social.post.PostInteractions
@@ -19,6 +20,8 @@ class CommunityViewModel @Inject constructor(auth: AuthRepository, posts: PostsR
     val myUserId: String? = (auth.sessionState.value as? SessionState.SignedIn)?.user?.id
 
     val feed: Flow<PagingData<TimelineItem>> = posts.feed().cachedIn(viewModelScope)
+
+    val explore: Flow<PagingData<Post>> = posts.explore().cachedIn(viewModelScope)
 
     internal val interactions = PostInteractions(posts, viewModelScope)
 }

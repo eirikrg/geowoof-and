@@ -7,6 +7,8 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
@@ -34,6 +36,7 @@ import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.Comment
 import com.geowoof.core.model.Mention
+import com.geowoof.core.model.Post
 import com.geowoof.core.model.PostVisibility
 import com.geowoof.core.model.RemoteImage
 import com.geowoof.core.model.ReportReason
@@ -86,11 +89,16 @@ class CommunityScreenTest {
         items: PagingData<TimelineItem>,
         state: PostInteractionState = PostInteractionState(),
         myUserId: String? = "ana-id",
+        explore: PagingData<Post> = TestSocial.pages(emptyList()),
+        selectedTab: CommunityTab = CommunityTab.Following,
     ) {
         composeRule.setContent {
             GeoWoofTheme(dynamicColor = false) {
                 CommunityContent(
                     feed = flowOf(items).collectAsLazyPagingItems(),
+                    explore = flowOf(explore).collectAsLazyPagingItems(),
+                    selectedTab = selectedTab,
+                    onSelectTab = { calls += "tab:$it" },
                     myUserId = myUserId,
                     state = state,
                     reportDetails = TextFieldState(),
@@ -170,6 +178,53 @@ class CommunityScreenTest {
         composeRule.onNodeWithText("Bea").performClick()
 
         assertEquals(listOf("user:bea-id"), calls)
+    }
+
+    @Test
+    fun community_has_the_people_you_follow_and_explore() {
+        showFeed(TestSocial.pages(listOf(TestPosts.item())))
+
+        composeRule.onNodeWithText("Following").assertIsSelected()
+        composeRule.onNodeWithText("Explore").assertIsNotSelected().performClick()
+
+        assertEquals(listOf("tab:Explore"), calls)
+    }
+
+    @Test
+    fun explore_shows_the_photos_of_what_people_publish_and_a_photo_opens_the_post() {
+        val post = TestPosts.post("post-9")
+        showFeed(
+            TestSocial.pages(emptyList()),
+            explore = TestSocial.pages(listOf(post)),
+            selectedTab = CommunityTab.Explore,
+        )
+
+        composeRule.waitUntil(WAIT_MILLIS) {
+            composeRule.onAllNodes(hasContentDescription("Open post")).fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithContentDescription("Open post").performClick()
+
+        assertEquals(listOf("open:post-9"), calls)
+    }
+
+    @Test
+    fun with_nothing_to_explore_it_says_what_will_appear() {
+        showFeed(TestSocial.pages(emptyList()), selectedTab = CommunityTab.Explore)
+
+        waitForText("Nothing to explore yet")
+    }
+
+    @Test
+    fun if_explore_could_not_be_loaded_it_can_try_again() {
+        val failed = LoadStates(
+            refresh = LoadState.Error(RemoteLoadException(AppError.Network)),
+            prepend = LoadState.NotLoading(false),
+            append = LoadState.NotLoading(false),
+        )
+
+        showFeed(TestSocial.pages(emptyList()), explore = PagingData.empty(failed), selectedTab = CommunityTab.Explore)
+
+        waitForText("Try again")
     }
 
     @Test

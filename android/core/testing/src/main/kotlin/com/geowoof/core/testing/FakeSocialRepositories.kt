@@ -4,6 +4,7 @@ import androidx.paging.LoadState
 import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import com.geowoof.core.data.repository.PeopleRepository
+import com.geowoof.core.data.repository.RecentPeopleRepository
 import com.geowoof.core.data.repository.SocialRepository
 import com.geowoof.core.model.BlockedUser
 import com.geowoof.core.model.FollowRequest
@@ -140,9 +141,32 @@ class FakeSocialRepository : SocialRepository {
         record("report:$userId:$reason:$details")
 }
 
+/** Behaves like the real one, in memory, except that it keeps everyone. */
 @Suppress("TooManyFunctions")
+class FakeRecentPeopleRepository(initial: List<String> = emptyList()) : RecentPeopleRepository {
+    override val ids = MutableStateFlow(initial)
+
+    override suspend fun add(userId: String) {
+        ids.value = listOf(userId) + (ids.value - userId)
+    }
+
+    override suspend fun remove(userId: String) {
+        ids.value = ids.value - userId
+    }
+
+    override suspend fun removeAll() {
+        ids.value = emptyList()
+    }
+}
+
 class FakePeopleRepository : PeopleRepository {
     var profileResult: Outcome<Profile> = Outcome.Success(TestPets.profile(displayName = "Bea", username = "bea"))
+
+    /** The answer for one person in particular, over [profileResult]. */
+    var profilesById: Map<String, Outcome<Profile>> = emptyMap()
+
+    /** Whose profile was asked for. */
+    val profileReads = mutableListOf<String>()
     var countsResult: Outcome<ProfileCounts> = Outcome.Success(
         ProfileCounts(followers = 12, following = 8, friends = 5),
     )
@@ -175,7 +199,10 @@ class FakePeopleRepository : PeopleRepository {
         return flowOf(TestSocial.pages(pets))
     }
 
-    override suspend fun profile(userId: String) = profileResult
+    override suspend fun profile(userId: String): Outcome<Profile> {
+        profileReads += userId
+        return profilesById[userId] ?: profileResult
+    }
 
     override suspend fun counts(userId: String) = countsResult
 

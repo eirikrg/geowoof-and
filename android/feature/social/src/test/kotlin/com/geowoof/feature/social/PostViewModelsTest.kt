@@ -377,12 +377,12 @@ class CommunityViewModelTest {
     private val posts = FakePostsRepository()
 
     @Test
-    fun it_knows_who_is_looking_and_asks_for_the_feed() = runTest {
+    fun it_knows_who_is_looking_and_asks_for_the_feed_and_explore() = runTest {
         val viewModel = CommunityViewModel(FakeAuthRepository(SessionState.SignedIn(TestUsers.user())), posts)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.feed.collect {} }
 
         assertEquals(TestUsers.user().id, viewModel.myUserId)
-        assertEquals(listOf("feed"), posts.reads)
+        assertEquals(listOf("feed", "explore"), posts.reads)
     }
 
     @Test

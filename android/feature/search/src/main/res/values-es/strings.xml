@@ -11,5 +11,9 @@
     <string name="feature_search_no_pets">Ninguna mascota coincide con lo que has escrito.</string>
     <string name="feature_search_retry">Reintentar</string>
     <string name="feature_search_pet_owner">%1$s · de @%2$s</string>
+    <string name="feature_search_recent">Recientes</string>
+    <string name="feature_search_remove_all_recent">Borrar</string>
+    <string name="feature_search_remove_recent">Quitar a %1$s de recientes</string>
+    <string name="feature_search_recent_failed">No se han podido cargar las personas recientes</string>
     <string name="feature_search_error_title">La búsqueda no ha funcionado</string>
 </resources>

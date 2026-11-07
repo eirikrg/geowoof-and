@@ -63,19 +63,17 @@ import kotlinx.coroutines.flow.flowOf
 @Composable
 fun SearchScreen(
     onOpenUser: (userId: String) -> Unit,
-    onOpenPost: (postId: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val users = viewModel.users.collectAsLazyPagingItems()
     val pets = viewModel.pets.collectAsLazyPagingItems()
-    val explore = viewModel.explore.collectAsLazyPagingItems()
     // Back from a profile, someone may have been blocked or may have changed their name.
-    LifecycleResumeEffect(users, pets, explore) {
+    LifecycleResumeEffect(users, pets, viewModel) {
         users.refresh()
         pets.refresh()
-        explore.refresh()
+        viewModel.onReloadRecent()
         onPauseOrDispose {}
     }
     SearchContent(
@@ -83,10 +81,14 @@ fun SearchScreen(
         query = viewModel.query,
         users = users,
         pets = pets,
-        explore = explore,
         onSelectTab = viewModel::onSelectTab,
-        onOpenUser = onOpenUser,
-        onOpenPost = onOpenPost,
+        onOpenUser = { userId ->
+            viewModel.onPersonOpened(userId)
+            onOpenUser(userId)
+        },
+        onRemoveRecent = viewModel::onRemoveRecent,
+        onRemoveAllRecent = viewModel::onRemoveAllRecent,
+        onRetryRecent = viewModel::onReloadRecent,
         modifier = modifier,
     )
 }
@@ -98,10 +100,11 @@ internal fun SearchContent(
     query: TextFieldState,
     users: LazyPagingItems<UserSummary>,
     pets: LazyPagingItems<PetSearchResult>,
-    explore: LazyPagingItems<Post>,
     onSelectTab: (SearchTab) -> Unit,
     onOpenUser: (userId: String) -> Unit,
-    onOpenPost: (postId: String) -> Unit,
+    onRemoveRecent: (userId: String) -> Unit,
+    onRemoveAllRecent: () -> Unit,
+    onRetryRecent: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val spacing = GeoWoofTheme.spacing
@@ -141,7 +144,13 @@ internal fun SearchContent(
                 }
             }
             when {
-                !uiState.hasEnoughText -> ExploreGrid(explore, onOpenPost)
+                !uiState.hasEnoughText -> RecentPeopleList(
+                    uiState = uiState,
+                    onOpenUser = onOpenUser,
+                    onRemove = onRemoveRecent,
+                    onRemoveAll = onRemoveAllRecent,
+                    onRetry = onRetryRecent,
+                )
 
                 uiState.tab == SearchTab.People -> Results(
                     items = users,
@@ -159,42 +168,6 @@ internal fun SearchContent(
                     items(pets.itemCount, key = pets.itemKey(PetSearchResult::id)) { index ->
                         pets[index]?.let { pet -> PetResultRow(pet, onClick = { onOpenUser(pet.owner.id) }) }
                     }
-                }
-            }
-        }
-    }
-}
-
-/** Before searching: the most recent of what anyone can see. Without anything, it explains what the field is for. */
-@Composable
-private fun ExploreGrid(
-    posts: LazyPagingItems<Post>,
-    onOpenPost: (postId: String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    if (posts.itemCount == 0) {
-        EmptyState(
-            icon = GeoWoofIcons.PersonSearch,
-            title = stringResource(R.string.feature_search_search_empty_title),
-            message = stringResource(R.string.feature_search_search_empty_message),
-            modifier = modifier,
-            illustration = GeoWoofIllustrations.EmptySearch,
-        )
-    } else {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(EXPLORE_COLUMNS),
-            modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(ExploreSpacing),
-            horizontalArrangement = Arrangement.spacedBy(ExploreSpacing),
-            verticalArrangement = Arrangement.spacedBy(ExploreSpacing),
-        ) {
-            items(posts.itemCount, key = posts.itemKey(Post::id)) { index ->
-                posts[index]?.let { post ->
-                    PostGridItem(
-                        image = post.media.firstOrNull(),
-                        isRepost = false,
-                        onClick = { onOpenPost(post.id) },
-                    )
                 }
             }
         }
@@ -259,8 +232,6 @@ private fun PetResultRow(pet: PetSearchResult, onClick: () -> Unit, modifier: Mo
 }
 
 private val PetAvatarSize = 48.dp
-private val ExploreSpacing = 4.dp
-private const val EXPLORE_COLUMNS = 3
 
 private val FINISHED = LoadStates(
     refresh = LoadState.NotLoading(endOfPaginationReached = true),
@@ -278,10 +249,11 @@ private fun SearchIdlePreview() {
             query = TextFieldState(),
             users = flowOf(PagingData.empty<UserSummary>(FINISHED)).collectAsLazyPagingItems(),
             pets = flowOf(PagingData.empty<PetSearchResult>(FINISHED)).collectAsLazyPagingItems(),
-            explore = flowOf(PagingData.empty<Post>(FINISHED)).collectAsLazyPagingItems(),
             onSelectTab = {},
             onOpenUser = {},
-            onOpenPost = {},
+            onRemoveRecent = {},
+            onRemoveAllRecent = {},
+            onRetryRecent = {},
         )
     }
 }
@@ -301,10 +273,11 @@ private fun SearchPetsPreview() {
                     FINISHED,
                 ),
             ).collectAsLazyPagingItems(),
-            explore = flowOf(PagingData.empty<Post>(FINISHED)).collectAsLazyPagingItems(),
             onSelectTab = {},
             onOpenUser = {},
-            onOpenPost = {},
+            onRemoveRecent = {},
+            onRemoveAllRecent = {},
+            onRetryRecent = {},
         )
     }
 }

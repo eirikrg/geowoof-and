@@ -1,5 +1,6 @@
 package com.geowoof.feature.social
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -11,17 +12,22 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -29,6 +35,7 @@ import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.LoadStates
@@ -39,12 +46,14 @@ import androidx.paging.compose.itemKey
 import com.geowoof.core.data.repository.RemoteLoadException
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.component.ErrorState
+import com.geowoof.core.designsystem.component.FittedText
 import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.GeoWoofLogoHead
 import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.component.SkeletonPost
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
+import com.geowoof.core.model.Post
 import com.geowoof.core.model.ReportReason
 import com.geowoof.core.model.TimelineItem
 import com.geowoof.core.ui.userMessage
@@ -54,7 +63,7 @@ import com.geowoof.feature.social.post.PostDialogs
 import com.geowoof.feature.social.post.PostInteractionState
 import kotlinx.coroutines.flow.flowOf
 
-/** The feed: what the person and those they follow publish and repost. */
+/** What people publish: those the person follows, in the feed, and anyone with a public profile, in Explore. */
 @Composable
 fun CommunityScreen(
     onCreatePost: () -> Unit,
@@ -66,8 +75,18 @@ fun CommunityScreen(
 ) {
     val interactions = viewModel.interactions
     val state by interactions.state.collectAsStateWithLifecycle()
+    val explore = viewModel.explore.collectAsLazyPagingItems()
+    var selectedTab by rememberSaveable { mutableStateOf(CommunityTab.Following) }
+    // It comes from the server: back from a post, someone may have been blocked or have gone private.
+    LifecycleResumeEffect(explore, selectedTab) {
+        if (selectedTab == CommunityTab.Explore) explore.refresh()
+        onPauseOrDispose {}
+    }
     CommunityContent(
         feed = viewModel.feed.collectAsLazyPagingItems(),
+        explore = explore,
+        selectedTab = selectedTab,
+        onSelectTab = { selectedTab = it },
         myUserId = viewModel.myUserId,
         state = state,
         reportDetails = interactions.reportDetails,
@@ -94,6 +113,9 @@ fun CommunityScreen(
 @Composable
 internal fun CommunityContent(
     feed: LazyPagingItems<TimelineItem>,
+    explore: LazyPagingItems<Post>,
+    selectedTab: CommunityTab,
+    onSelectTab: (CommunityTab) -> Unit,
     myUserId: String?,
     state: PostInteractionState,
     reportDetails: TextFieldState,
@@ -136,17 +158,39 @@ internal fun CommunityContent(
             }
         },
     ) { innerPadding ->
-        PullToRefreshBox(
-            isRefreshing = feed.loadState.refresh is LoadState.Loading && feed.itemCount > 0,
-            onRefresh = feed::refresh,
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            FeedList(feed, myUserId, actions, onFindPeople)
+            CommunityTabs(selectedTab, onSelectTab)
+            val list: LazyPagingItems<*> = if (selectedTab == CommunityTab.Following) feed else explore
+            PullToRefreshBox(
+                isRefreshing = list.loadState.refresh is LoadState.Loading && list.itemCount > 0,
+                onRefresh = list::refresh,
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when (selectedTab) {
+                    CommunityTab.Following -> FeedList(feed, myUserId, actions, onFindPeople)
+                    CommunityTab.Explore -> ExploreGrid(explore, onOpenPost = actions.onOpenPost)
+                }
+            }
         }
     }
     PostDialogs(state, reportDetails, onSelectReportReason, onConfirmDialog, onDismissDialog)
+}
+
+@Composable
+private fun CommunityTabs(selected: CommunityTab, onSelect: (CommunityTab) -> Unit, modifier: Modifier = Modifier) {
+    PrimaryTabRow(selectedTabIndex = selected.ordinal, modifier = modifier) {
+        CommunityTab.entries.forEach { tab ->
+            Tab(
+                selected = selected == tab,
+                onClick = { onSelect(tab) },
+                text = { FittedText(stringResource(tab.label), style = MaterialTheme.typography.titleSmall) },
+            )
+        }
+    }
 }
 
 @Composable
@@ -236,6 +280,9 @@ private fun CommunityPreview() {
     GeoWoofTheme(dynamicColor = false) {
         CommunityContent(
             feed = flowOf(PagingData.empty<TimelineItem>(finished)).collectAsLazyPagingItems(),
+            explore = flowOf(PagingData.empty<Post>(finished)).collectAsLazyPagingItems(),
+            selectedTab = CommunityTab.Following,
+            onSelectTab = {},
             myUserId = null,
             state = PostInteractionState(),
             reportDetails = TextFieldState(),

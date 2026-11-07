@@ -11,5 +11,9 @@
     <string name="feature_search_no_pets">No pet matches what you wrote.</string>
     <string name="feature_search_retry">Try again</string>
     <string name="feature_search_pet_owner">%1$s · from @%2$s</string>
+    <string name="feature_search_recent">Recent</string>
+    <string name="feature_search_remove_all_recent">Clear</string>
+    <string name="feature_search_remove_recent">Remove %1$s from recent</string>
+    <string name="feature_search_recent_failed">The recent people could not be loaded</string>
     <string name="feature_search_error_title">The search did not work</string>
 </resources>

@@ -4,6 +4,11 @@
     <string name="feature_social_community_empty_title">El feed de tu comunidad</string>
     <string name="feature_social_community_empty_message">Sigue a otros dueños o publica tu primera foto, y lo verás todo aquí.</string>
     <string name="feature_social_back">Atrás</string>
+    <string name="feature_social_tab_following">Siguiendo</string>
+    <string name="feature_social_tab_explore">Explorar</string>
+    <string name="feature_social_explore_empty_title">Aún no hay nada que explorar</string>
+    <string name="feature_social_explore_empty_message">Cuando alguien con el perfil público publique una foto, la verás aquí.</string>
+    <string name="feature_social_explore_error_title">No se ha podido cargar Explorar</string>
     <string name="feature_social_retry">Reintentar</string>
     <string name="feature_social_dismiss">Cancelar</string>
     <string name="feature_social_more_options">Más opciones</string>

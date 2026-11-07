@@ -83,7 +83,6 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
         )
         searchScreen(
             onOpenUser = { userId -> navController.navigateToUserProfile(userId) },
-            onOpenPost = { postId -> navController.navigateToPost(postId) },
         )
         profileScreens(
             navController = navController,
