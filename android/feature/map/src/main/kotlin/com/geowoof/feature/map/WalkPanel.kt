@@ -1,5 +1,6 @@
 package com.geowoof.feature.map
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -30,6 +31,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.geowoof.core.designsystem.component.FittedText
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ActiveWalk
@@ -40,7 +42,11 @@ import com.geowoof.core.model.RouteSegment
 import com.geowoof.core.model.WalkStats
 import java.time.Instant
 
-/** What can be done now: start a walk, or follow the one in progress. */
+/**
+ * What can be done now: start a walk, or follow the one in progress. While the person looks around the map, the panel
+ * shrinks to make room: the same card changes its size and its content appears inside, so that it does not look like
+ * two different things.
+ */
 @Composable
 internal fun WalkPanel(uiState: MapUiState, actions: MapActions, modifier: Modifier = Modifier) {
     val walk = uiState.walk
@@ -60,39 +66,56 @@ internal fun WalkPanel(uiState: MapUiState, actions: MapActions, modifier: Modif
         }
         return
     }
-    val spacing = GeoWoofTheme.spacing
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(spacing.medium),
+        modifier = modifier.padding(GeoWoofTheme.spacing.medium),
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = PanelElevation,
     ) {
-        Column(
-            modifier = Modifier.padding(spacing.large),
-            verticalArrangement = Arrangement.spacedBy(spacing.medium),
-        ) {
-            if (walk.isTracking) {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    itemVerticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (walk.status == ActiveWalkStatus.Recording) OnAWalk()
-                    LiveVisibilityChip(
-                        visibility = uiState.liveVisibility,
-                        onClick = actions.onChangeVisibility,
-                    )
-                }
+        AnimatedContent(
+            targetState = uiState.isLookingAround,
+            transitionSpec = { panelTransition() },
+            contentAlignment = Alignment.Center,
+            label = "walk panel",
+        ) { isSmall ->
+            val contentModifier = Modifier.ignoringTouches(transition.isRunning)
+            if (isSmall) {
+                SmallWalkPanel(walk, uiState.stats, actions, contentModifier)
+            } else {
+                WholeWalkPanel(uiState, walk, actions, contentModifier)
             }
-            when (walk.status) {
-                ActiveWalkStatus.Preparing -> PreparingContent(actions)
-                ActiveWalkStatus.Recording -> RecordingContent(walk, uiState.stats, actions)
-                ActiveWalkStatus.Paused -> PausedContent(walk, uiState.stats, actions)
-                ActiveWalkStatus.Interrupted -> InterruptedContent(actions)
-                ActiveWalkStatus.Finished -> FinishedContent(actions)
+        }
+    }
+}
+
+@Composable
+private fun WholeWalkPanel(uiState: MapUiState, walk: ActiveWalk, actions: MapActions, modifier: Modifier = Modifier) {
+    val spacing = GeoWoofTheme.spacing
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(spacing.large),
+        verticalArrangement = Arrangement.spacedBy(spacing.medium),
+    ) {
+        if (walk.isTracking) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (walk.status == ActiveWalkStatus.Recording) OnAWalk()
+                LiveVisibilityChip(
+                    visibility = uiState.liveVisibility,
+                    onClick = actions.onChangeVisibility,
+                )
             }
+        }
+        when (walk.status) {
+            ActiveWalkStatus.Preparing -> PreparingContent(actions)
+            ActiveWalkStatus.Recording -> RecordingContent(walk, uiState.stats, actions)
+            ActiveWalkStatus.Paused -> PausedContent(walk, uiState.stats, actions)
+            ActiveWalkStatus.Interrupted -> InterruptedContent(actions)
+            ActiveWalkStatus.Finished -> FinishedContent(actions)
         }
     }
 }
@@ -126,7 +149,7 @@ private fun ColumnScope.RecordingContent(walk: ActiveWalk, stats: WalkStats?, ac
         ) {
             Icon(painterResource(GeoWoofIcons.Pause), contentDescription = null)
             Spacer(Modifier.width(GeoWoofTheme.spacing.small))
-            Text(stringResource(R.string.feature_map_pause))
+            FittedText(stringResource(R.string.feature_map_pause), style = MaterialTheme.typography.labelLarge)
         }
         Button(
             onClick = actions.onFinish,
@@ -136,7 +159,7 @@ private fun ColumnScope.RecordingContent(walk: ActiveWalk, stats: WalkStats?, ac
         ) {
             Icon(painterResource(GeoWoofIcons.Stop), contentDescription = null)
             Spacer(Modifier.width(GeoWoofTheme.spacing.small))
-            Text(stringResource(R.string.feature_map_finish))
+            FittedText(stringResource(R.string.feature_map_finish), style = MaterialTheme.typography.labelLarge)
         }
     }
 }
@@ -174,7 +197,7 @@ private fun ResumeOrFinish(resumeLabel: Int, actions: MapActions) {
         ) {
             Icon(painterResource(GeoWoofIcons.PlayArrow), contentDescription = null)
             Spacer(Modifier.width(GeoWoofTheme.spacing.small))
-            Text(stringResource(resumeLabel))
+            FittedText(stringResource(resumeLabel), style = MaterialTheme.typography.labelLarge)
         }
         Button(
             onClick = actions.onFinish,
@@ -184,7 +207,7 @@ private fun ResumeOrFinish(resumeLabel: Int, actions: MapActions) {
         ) {
             Icon(painterResource(GeoWoofIcons.Stop), contentDescription = null)
             Spacer(Modifier.width(GeoWoofTheme.spacing.small))
-            Text(stringResource(R.string.feature_map_finish))
+            FittedText(stringResource(R.string.feature_map_finish), style = MaterialTheme.typography.labelLarge)
         }
     }
 }

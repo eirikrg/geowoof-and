@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -13,6 +15,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +36,7 @@ import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.component.ErrorState
+import com.geowoof.core.designsystem.component.HeroBandHeight
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.PeopleListKind
@@ -157,12 +162,18 @@ internal fun ProfileContent(
     reportDetails: TextFieldState,
     actions: ProfileActions,
     modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState(),
 ) {
     val snackbars = rememberProfileMessages(uiState, actions.onMessageShown)
+    val collapse = rememberProfileCollapse(listState)
+    val refresh = {
+        actions.onRefresh()
+        lists.refresh()
+    }
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbars) },
-        topBar = { ProfileTopBar(uiState, actions) },
+        topBar = { ProfileTopBar(uiState, actions, collapse) },
     ) { innerPadding ->
         val contentModifier = Modifier
             .fillMaxSize()
@@ -180,7 +191,7 @@ internal fun ProfileContent(
                 title = stringResource(R.string.feature_profile_error_title),
                 message = uiState.loadError.userMessage(),
                 retryLabel = stringResource(R.string.feature_profile_retry),
-                onRetry = actions.onRefresh,
+                onRetry = refresh,
                 modifier = contentModifier,
             )
 
@@ -188,16 +199,43 @@ internal fun ProfileContent(
                 CircularProgressIndicator()
             }
 
-            else -> PullToRefreshBox(
+            else -> ProfileRefreshBox(
                 isRefreshing = uiState.isLoading,
-                onRefresh = actions.onRefresh,
+                onRefresh = refresh,
                 modifier = contentModifier,
             ) {
-                ProfileList(uiState, profile, lists, actions)
+                ProfileList(uiState, profile, lists, actions, listState)
             }
         }
     }
     ProfileDialogs(uiState, reportDetails, actions)
+}
+
+/** The indicator comes out from below the photo, which goes over the list and would hide it. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProfileRefreshBox(
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val state = rememberPullToRefreshState()
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier,
+        state = state,
+        indicator = {
+            PullToRefreshDefaults.Indicator(
+                state = state,
+                isRefreshing = isRefreshing,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = HeroBandHeight + ProfilePhotoSize / 2),
+            )
+        },
+    ) { content() }
 }
 
 @Composable

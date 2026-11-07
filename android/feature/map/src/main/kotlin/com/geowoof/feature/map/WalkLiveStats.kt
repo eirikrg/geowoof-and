@@ -37,7 +37,7 @@ import java.time.Instant
 
 /** That it is recording, with a dot that breathes so that it is clear that it has not stopped. */
 @Composable
-internal fun OnAWalk(modifier: Modifier = Modifier) {
+internal fun RecordingDot(modifier: Modifier = Modifier) {
     val alpha by rememberInfiniteTransition(label = "recording").animateFloat(
         initialValue = 1f,
         targetValue = DOT_MIN_ALPHA,
@@ -45,17 +45,22 @@ internal fun OnAWalk(modifier: Modifier = Modifier) {
         label = "recording dot",
     )
     val color = MaterialTheme.colorScheme.tertiary
+    Box(
+        modifier = modifier
+            .size(DotSize)
+            .graphicsLayer { this.alpha = alpha }
+            .background(color, CircleShape),
+    )
+}
+
+@Composable
+internal fun OnAWalk(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.small),
     ) {
-        Box(
-            modifier = Modifier
-                .size(DotSize)
-                .graphicsLayer { this.alpha = alpha }
-                .background(color, CircleShape),
-        )
+        RecordingDot()
         Text(stringResource(R.string.feature_map_on_a_walk), style = MaterialTheme.typography.titleSmall)
     }
 }
@@ -102,7 +107,7 @@ private fun LiveStat(value: String, label: String, modifier: Modifier = Modifier
 
 /** It runs while recording. While paused, it stays at the last position. */
 @Composable
-private fun rememberElapsedSeconds(walk: ActiveWalk): Int {
+internal fun rememberElapsedSeconds(walk: ActiveWalk): Int {
     val stopped = ((walk.lastPoint?.offsetMs ?: 0) / MS_PER_SECOND).toInt()
     val elapsed by produceState(stopped, walk.status, walk.startedAt) {
         value = stopped

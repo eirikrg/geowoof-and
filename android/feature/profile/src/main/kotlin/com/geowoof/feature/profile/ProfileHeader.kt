@@ -39,24 +39,16 @@ import com.geowoof.core.model.Profile
 import com.geowoof.core.model.ProfileCounts
 import com.geowoof.core.model.Relationship
 import com.geowoof.core.model.RelationshipStatus
-import com.geowoof.core.ui.ImageVariant
-import com.geowoof.core.ui.RemoteAvatar
 
-/** Who it is: their photo and, unless the profile is restricted, their name and city. */
+/**
+ * Who it is: unless the profile is restricted, their name and city. The photo is not here: it goes over the page, in
+ * [ProfileTopBar], so that it can reach the bar. This only keeps its place.
+ */
 @Composable
 internal fun ProfileHeader(uiState: ProfileUiState, profile: Profile, modifier: Modifier = Modifier) {
     val spacing = GeoWoofTheme.spacing
     Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        HeroBand(photoSize = AvatarSize) { photoModifier ->
-            RemoteAvatar(
-                image = profile.avatar,
-                fallbackIcon = GeoWoofIcons.Person,
-                contentDescription = stringResource(R.string.feature_profile_photo),
-                size = AvatarSize,
-                variant = ImageVariant.Medium,
-                modifier = photoModifier,
-            )
-        }
+        HeroBand(photoSize = ProfilePhotoSize) {}
         ProfileDetails(uiState, profile, Modifier.padding(horizontal = spacing.large, vertical = spacing.small))
     }
 }
@@ -311,5 +303,4 @@ internal fun RequestsRow(received: Int, onClick: () -> Unit, modifier: Modifier 
     )
 }
 
-private val AvatarSize = 104.dp
 private val SmallIconSize = 16.dp

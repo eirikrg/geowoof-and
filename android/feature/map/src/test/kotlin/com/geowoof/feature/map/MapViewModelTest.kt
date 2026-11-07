@@ -224,6 +224,155 @@ class MapViewModelTest {
         assertFalse(state.isLocating)
     }
 
+    @Test
+    fun moving_the_map_during_a_walk_makes_room_for_it() = runTest {
+        walks.set(TestWalks.activeWalk())
+        subscribe()
+
+        viewModel.onMapMovedByHand()
+
+        assertTrue(state.isLookingAround)
+    }
+
+    @Test
+    fun moving_the_map_without_a_walk_changes_nothing() = runTest {
+        subscribe()
+
+        viewModel.onMapMovedByHand()
+        walks.set(TestWalks.activeWalk())
+
+        assertFalse(state.isLookingAround)
+    }
+
+    @Test
+    fun a_paused_walk_makes_room_too() = runTest {
+        walks.set(TestWalks.activeWalk(status = ActiveWalkStatus.Paused))
+        subscribe()
+
+        viewModel.onMapMovedByHand()
+
+        assertTrue(state.isLookingAround)
+    }
+
+    /** They are waiting for an answer, or have nothing to show yet. */
+    @Test
+    fun the_other_states_of_a_walk_keep_the_whole_panel() = runTest {
+        for (status in listOf(ActiveWalkStatus.Preparing, ActiveWalkStatus.Interrupted, ActiveWalkStatus.Finished)) {
+            walks.set(TestWalks.activeWalk(status = status))
+            subscribe()
+
+            viewModel.onMapMovedByHand()
+
+            assertFalse(status.name, state.isLookingAround)
+        }
+    }
+
+    @Test
+    fun while_a_finger_moves_the_map_it_does_not_go_back_by_itself() = runTest {
+        walks.set(TestWalks.activeWalk())
+        subscribe()
+
+        viewModel.onMapMovedByHand()
+        advanceTimeBy(60_000)
+
+        assertTrue(state.isLookingAround)
+    }
+
+    @Test
+    fun a_moment_after_letting_go_of_the_map_it_goes_back_to_the_walk() = runTest {
+        walks.set(TestWalks.activeWalk())
+        subscribe()
+        viewModel.onMapMovedByHand()
+
+        viewModel.onMapStoppedByHand()
+        advanceTimeBy(7_999)
+        assertTrue(state.isLookingAround)
+
+        advanceTimeBy(2)
+        assertFalse(state.isLookingAround)
+    }
+
+    @Test
+    fun moving_it_again_gives_another_moment() = runTest {
+        walks.set(TestWalks.activeWalk())
+        subscribe()
+        viewModel.onMapMovedByHand()
+        viewModel.onMapStoppedByHand()
+        advanceTimeBy(7_000)
+
+        viewModel.onMapMovedByHand()
+        viewModel.onMapStoppedByHand()
+        advanceTimeBy(7_000)
+
+        assertTrue(state.isLookingAround)
+    }
+
+    @Test
+    fun it_does_not_go_back_behind_who_they_are_looking_at() = runTest {
+        walks.set(TestWalks.activeWalk())
+        subscribe()
+        viewModel.onMapMovedByHand()
+        viewModel.onMapStoppedByHand()
+
+        viewModel.onLookingAtWalkers(true)
+        advanceTimeBy(60_000)
+        assertTrue(state.isLookingAround)
+
+        viewModel.onLookingAtWalkers(false)
+        advanceTimeBy(8_001)
+        assertFalse(state.isLookingAround)
+    }
+
+    @Test
+    fun touching_the_small_panel_goes_back_at_once() = runTest {
+        walks.set(TestWalks.activeWalk())
+        subscribe()
+        viewModel.onMapMovedByHand()
+
+        viewModel.onBackToTheWalk()
+
+        assertFalse(state.isLookingAround)
+    }
+
+    @Test
+    fun while_looking_around_my_location_is_the_way_back_to_the_walk() = runTest {
+        walks.set(TestWalks.activeWalk())
+        location.lastKnownPosition = GeoPoint(39.54, -0.57)
+        subscribe()
+        viewModel.onMapMovedByHand()
+
+        viewModel.onMyLocationClick()
+
+        assertFalse(state.isLookingAround)
+        assertNull(state.cameraTarget)
+    }
+
+    @Test
+    fun pausing_from_the_small_panel_leaves_it_small_for_a_moment() = runTest {
+        walks.set(TestWalks.activeWalk())
+        subscribe()
+        viewModel.onMapMovedByHand()
+
+        viewModel.onPauseClick()
+        assertEquals(ActiveWalkStatus.Paused, state.walk?.status)
+        assertTrue(state.isLookingAround)
+
+        advanceTimeBy(8_001)
+        assertFalse(state.isLookingAround)
+    }
+
+    @Test
+    fun the_next_walk_does_not_start_small() = runTest {
+        walks.set(TestWalks.activeWalk())
+        subscribe()
+        viewModel.onMapMovedByHand()
+
+        viewModel.onFinishClick()
+        walks.set(TestWalks.activeWalk(id = "next"))
+
+        assertFalse(state.isLookingAround)
+    }
+
     private fun kotlinx.coroutines.test.TestScope.subscribe() {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
     }

@@ -11,6 +11,7 @@ import com.geowoof.core.location.LocationAccess
 import com.geowoof.core.location.LocationDataSource
 import com.geowoof.core.location.LocationPermissionLevel
 import com.geowoof.core.model.ActiveWalk
+import com.geowoof.core.model.ActiveWalkStatus
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.GeoPoint
 import com.geowoof.core.model.LiveVisibility
@@ -67,6 +68,8 @@ data class MapUiState(
     val cameraTarget: CameraTarget? = null,
     /** It does not know yet where to open: the map would show another city for a moment. */
     val isLocating: Boolean = false,
+    /** The person moved the map during a walk: the camera lets them look, and the panel makes room. */
+    val isLookingAround: Boolean = false,
     val error: AppError? = null,
 )
 
@@ -81,8 +84,13 @@ private data class MapChoices(
     val startsAfterChoice: Boolean = false,
     val cameraTarget: CameraTarget? = null,
     val isLocating: Boolean = true,
+    val isLookingAround: Boolean = false,
     val error: AppError? = null,
 )
+
+/** The other states are waiting for an answer from the person, and keep the whole panel. */
+private val ActiveWalk.canLookAround: Boolean
+    get() = status == ActiveWalkStatus.Recording || status == ActiveWalkStatus.Paused
 
 /** Each function is one thing the user can do with a walk. */
 @Suppress("TooManyFunctions", "LongParameterList")
@@ -103,6 +111,8 @@ class MapViewModel @Inject constructor(
 
     private var hasShownThePerson = false
     private var findingThePerson: Job? = null
+    private var goingBackToTheWalk: Job? = null
+    private var isLookingAtWalkers = false
 
     /** What to do once the permission is granted. */
     private var pendingStart: PendingStart? = null
@@ -126,6 +136,7 @@ class MapViewModel @Inject constructor(
                 isChoosingVisibility = current.isChoosingVisibility,
                 cameraTarget = current.cameraTarget,
                 isLocating = current.isLocating,
+                isLookingAround = current.isLookingAround && walk?.canLookAround == true,
                 error = current.error,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), MapUiState(isLocating = true))
@@ -195,7 +206,10 @@ class MapViewModel @Inject constructor(
 
     fun onErrorShown() = choices.update { it.copy(error = null) }
 
-    fun onMyLocationClick() = goToThePerson(isJump = false)
+    /** While looking around, it is the way back to the walk, which is where the person is. */
+    fun onMyLocationClick() {
+        if (uiState.value.isLookingAround) onBackToTheWalk() else goToThePerson(isJump = false)
+    }
 
     fun onCameraTargetReached() = choices.update { it.copy(cameraTarget = null) }
 
@@ -252,15 +266,45 @@ class MapViewModel @Inject constructor(
     fun onMapMovedByHand() {
         hasShownThePerson = true
         findingThePerson?.cancel()
+        goingBackToTheWalk?.cancel()
+        if (uiState.value.walk?.canLookAround == true) choices.update { it.copy(isLookingAround = true) }
     }
 
-    fun onResumeClick() = proceed(PendingStart.Resume)
+    /** A moment to look at what they went to see, which starts again each time they move the map. */
+    fun onMapStoppedByHand() = goBackToTheWalkLater()
+
+    /** Nothing moves behind who they are looking at. */
+    fun onLookingAtWalkers(isLooking: Boolean) {
+        isLookingAtWalkers = isLooking
+        if (isLooking) goingBackToTheWalk?.cancel() else goBackToTheWalkLater()
+    }
+
+    fun onBackToTheWalk() {
+        goingBackToTheWalk?.cancel()
+        choices.update { it.copy(isLookingAround = false) }
+    }
+
+    private fun goBackToTheWalkLater() {
+        goingBackToTheWalk?.cancel()
+        if (!choices.value.isLookingAround || isLookingAtWalkers) return
+        goingBackToTheWalk = viewModelScope.launch {
+            delay(LOOK_AROUND_MILLIS)
+            onBackToTheWalk()
+        }
+    }
+
+    fun onResumeClick() {
+        goBackToTheWalkLater()
+        proceed(PendingStart.Resume)
+    }
 
     fun onPauseClick() {
+        goBackToTheWalkLater()
         viewModelScope.launch { activeWalks.pause() }
     }
 
     fun onFinishClick() {
+        onBackToTheWalk()
         viewModelScope.launch {
             activeWalks.finish()
             choices.update { it.copy(openSummary = true) }
@@ -348,5 +392,6 @@ class MapViewModel @Inject constructor(
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
         const val MAX_LOCATING_MILLIS = 3_000L
+        const val LOOK_AROUND_MILLIS = 8_000L
     }
 }

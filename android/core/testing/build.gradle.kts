@@ -18,4 +18,5 @@ dependencies {
     api(libs.kotlinx.coroutines.test)
     api(libs.turbine)
     api(libs.androidx.paging.common)
+    implementation(libs.robolectric)
 }

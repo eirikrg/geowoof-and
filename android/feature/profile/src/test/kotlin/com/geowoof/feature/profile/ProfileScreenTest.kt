@@ -34,6 +34,7 @@ import com.geowoof.core.model.RelationshipStatus
 import com.geowoof.core.model.ReportReason
 import com.geowoof.core.model.TimelineItem
 import com.geowoof.core.model.Walk
+import com.geowoof.core.testing.DrainMainLooperRule
 import com.geowoof.core.testing.FakePeopleRepository
 import com.geowoof.core.testing.FakePostsRepository
 import com.geowoof.core.testing.FakeSocialRepository
@@ -56,6 +57,9 @@ import org.robolectric.annotation.Config
 @RunWith(AndroidJUnit4::class)
 @Config(qualifiers = "w412dp-h915dp")
 class ProfileScreenTest {
+    @get:Rule(order = -2)
+    val drainMainLooper = DrainMainLooperRule()
+
     @get:Rule
     val composeRule = createComposeRule()
 

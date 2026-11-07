@@ -2,8 +2,7 @@ package com.geowoof.core.designsystem.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,11 +19,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-private val BandHeight = 72.dp
+/** The height of the band. The center of the photo is on its bottom edge. */
+val HeroBandHeight: Dp = 72.dp
 private val BandShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
 private val PhotoBorder = 4.dp
-private const val TRAIL_SHARE = 0.55f
-private const val TRAIL_ALPHA = 0.22f
 
 /** The color of the top bar over a [HeroBand], so that they look like one. */
 @Composable
@@ -32,37 +30,41 @@ fun heroTopBarColors(): TopAppBarColors =
     TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
 
 /**
- * The start of the page of someone: a band of color with the trail of the logo, which continues the top bar,
- * and their [photo] halfway out of it, of [photoSize].
+ * The start of the page of someone: a band of color with a little map of the place, which continues the top bar,
+ * and their [photo] halfway out of it, of [photoSize] and in a [HeroPhotoFrame]. A profile leaves [photo] empty,
+ * because its photo flies over the page to reach the bar.
  */
 @Composable
-fun HeroBand(photoSize: Dp, modifier: Modifier = Modifier, photo: @Composable BoxScope.(Modifier) -> Unit) {
+fun HeroBand(photoSize: Dp, modifier: Modifier = Modifier, photo: @Composable () -> Unit) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(BandHeight + photoSize / 2 + PhotoBorder),
+            .height(HeroBandHeight + photoSize / 2 + PhotoBorder),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(BandHeight)
+                .height(HeroBandHeight)
                 .clip(BandShape)
                 .background(MaterialTheme.colorScheme.secondaryContainer),
         ) {
-            TrailDecoration(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .fillMaxHeight()
-                    .fillMaxWidth(TRAIL_SHARE),
-                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = TRAIL_ALPHA),
+            HeroTrail(
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.fillMaxSize(),
             )
         }
-        Surface(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surface,
-        ) {
-            Box { photo(Modifier.padding(PhotoBorder)) }
-        }
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) { photo() }
+    }
+}
+
+/** The ring around the photo of a [HeroBand], which separates it from the band. */
+@Composable
+fun HeroPhotoFrame(modifier: Modifier = Modifier, photo: @Composable () -> Unit) {
+    Surface(
+        modifier = modifier,
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surface,
+    ) {
+        Box(modifier = Modifier.padding(PhotoBorder)) { photo() }
     }
 }

@@ -11,17 +11,21 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 
-/** Keeps the camera on the walk in progress, and takes it where it is asked. Both can come before there is a map. */
+/**
+ * Keeps the camera on the walk in progress, unless the person [isLookingAround], and takes it where it is asked. Both
+ * can come before there is a map.
+ */
 @Composable
 internal fun MapCameraEffects(
     camera: CameraPositionState,
     walk: ActiveWalk?,
+    isLookingAround: Boolean,
     target: CameraTarget?,
     onReachTarget: () -> Unit,
 ) {
     val lastPoint = walk?.lastPoint
-    LaunchedEffect(lastPoint) {
-        lastPoint?.let { camera.goTo(it.position, WALK_ZOOM) }
+    LaunchedEffect(lastPoint, isLookingAround) {
+        if (!isLookingAround) lastPoint?.let { camera.goTo(it.position, WALK_ZOOM) }
     }
     val currentOnReachTarget by rememberUpdatedState(onReachTarget)
     LaunchedEffect(target) {

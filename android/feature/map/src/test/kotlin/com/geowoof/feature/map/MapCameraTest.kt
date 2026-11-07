@@ -30,7 +30,7 @@ class MapCameraTest {
 
     private fun show(walk: ActiveWalk? = null, target: CameraTarget? = null) {
         composeRule.setContent {
-            MapCameraEffects(camera, walk, target, onReachTarget = { timesReached++ })
+            MapCameraEffects(camera, walk, isLookingAround = false, target, onReachTarget = { timesReached++ })
         }
         composeRule.waitForIdle()
     }
@@ -56,7 +56,9 @@ class MapCameraTest {
         val first = TestWalks.activeWalk(segments = listOf(TestWalks.segment(points = 2)))
         val later = TestWalks.activeWalk(segments = listOf(TestWalks.segment(points = 5)))
         var walk by mutableStateOf(first)
-        composeRule.setContent { MapCameraEffects(camera, walk, target = null, onReachTarget = {}) }
+        composeRule.setContent {
+            MapCameraEffects(camera, walk, isLookingAround = false, target = null, onReachTarget = {})
+        }
         composeRule.waitForIdle()
         assertCameraIsAt(first.end(), WALK_ZOOM)
 
@@ -64,6 +66,39 @@ class MapCameraTest {
         composeRule.waitForIdle()
 
         assertCameraIsAt(later.end(), WALK_ZOOM)
+    }
+
+    /** With each point it took them back, and there was no way to see what is around. */
+    @Test
+    fun while_the_person_looks_around_new_points_do_not_take_the_map_away() {
+        val first = TestWalks.activeWalk(segments = listOf(TestWalks.segment(points = 2)))
+        val later = TestWalks.activeWalk(segments = listOf(TestWalks.segment(points = 5)))
+        var walk by mutableStateOf(first)
+        composeRule.setContent {
+            MapCameraEffects(camera, walk, isLookingAround = true, target = null, onReachTarget = {})
+        }
+        composeRule.waitForIdle()
+
+        walk = later
+        composeRule.waitForIdle()
+
+        assertEquals(whereItWas, camera.position)
+    }
+
+    @Test
+    fun when_they_finish_looking_around_the_camera_goes_back_to_the_walk() {
+        val walk = TestWalks.activeWalk()
+        var isLookingAround by mutableStateOf(true)
+        composeRule.setContent {
+            MapCameraEffects(camera, walk, isLookingAround, target = null, onReachTarget = {})
+        }
+        composeRule.waitForIdle()
+        assertEquals(whereItWas, camera.position)
+
+        isLookingAround = false
+        composeRule.waitForIdle()
+
+        assertCameraIsAt(walk.end(), WALK_ZOOM)
     }
 
     @Test

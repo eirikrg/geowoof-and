@@ -1,17 +1,31 @@
 package com.geowoof.feature.map
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onParent
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.width
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.ActiveWalkStatus
@@ -35,32 +49,35 @@ class MapScreenTest {
 
     private val actions = mutableListOf<String>()
 
+    private val mapActions = MapActions(
+        onStart = { actions += "start" },
+        onDismissPetPicker = { actions += "dismissPets" },
+        onTogglePet = { actions += "toggle:$it" },
+        onConfirmPets = { actions += "confirm:$it" },
+        onAddPet = { actions += "addPet" },
+        onPause = { actions += "pause" },
+        onResume = { actions += "resume" },
+        onFinish = { actions += "finish" },
+        onCancel = { actions += "cancel" },
+        onReview = { actions += "review" },
+        onRequestPermissions = { actions += "permissions" },
+        onOpenAppSettings = { actions += "appSettings" },
+        onOpenLocationSettings = { actions += "locationSettings" },
+        onDismissPrompt = { actions += "dismissPrompt" },
+        onChangeVisibility = { actions += "changeVisibility" },
+        onChooseVisibility = { actions += "choose:$it" },
+        onDismissVisibility = { actions += "dismissVisibility" },
+        onDismissError = { actions += "dismissError" },
+        onAskForLocation = { actions += "askForLocation" },
+        onBackToWalk = { actions += "backToWalk" },
+    )
+
     private fun show(uiState: MapUiState, live: LiveWalkersUiState = LiveWalkersUiState()) {
         composeRule.setContent {
             GeoWoofTheme(dynamicColor = false) {
                 MapContent(
                     uiState = uiState,
-                    actions = MapActions(
-                        onStart = { actions += "start" },
-                        onDismissPetPicker = { actions += "dismissPets" },
-                        onTogglePet = { actions += "toggle:$it" },
-                        onConfirmPets = { actions += "confirm:$it" },
-                        onAddPet = { actions += "addPet" },
-                        onPause = { actions += "pause" },
-                        onResume = { actions += "resume" },
-                        onFinish = { actions += "finish" },
-                        onCancel = { actions += "cancel" },
-                        onReview = { actions += "review" },
-                        onRequestPermissions = { actions += "permissions" },
-                        onOpenAppSettings = { actions += "appSettings" },
-                        onOpenLocationSettings = { actions += "locationSettings" },
-                        onDismissPrompt = { actions += "dismissPrompt" },
-                        onChangeVisibility = { actions += "changeVisibility" },
-                        onChooseVisibility = { actions += "choose:$it" },
-                        onDismissVisibility = { actions += "dismissVisibility" },
-                        onDismissError = { actions += "dismissError" },
-                        onAskForLocation = { actions += "askForLocation" },
-                    ),
+                    actions = mapActions,
                     live = live,
                     liveActions = LiveWalkersActions(
                         onOpenList = { actions += "openList" },
@@ -80,6 +97,12 @@ class MapScreenTest {
     }
 
     private fun click(text: String) = composeRule.onNodeWithText(text).performClick()
+
+    private val lookingAround = MapUiState(
+        walk = TestWalks.activeWalk(),
+        stats = TestWalks.stats(distanceM = 3120),
+        isLookingAround = true,
+    )
 
     @Test
     fun the_first_time_it_says_why_it_wants_the_location_and_then_asks_the_system() {
@@ -128,6 +151,115 @@ class MapScreenTest {
         click("Finish")
 
         assertEquals(listOf("pause", "finish"), actions)
+    }
+
+    @Test
+    fun while_looking_around_it_shows_what_matters_with_the_actions_at_hand() {
+        show(
+            MapUiState(
+                walk = TestWalks.activeWalk(),
+                stats = TestWalks.stats(distanceM = 3120),
+                isLookingAround = true,
+            ),
+        )
+
+        composeRule.onNodeWithText("3.12 km").assertIsDisplayed()
+        composeRule.onNodeWithText("Time").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Pause").performClick()
+        composeRule.onNodeWithContentDescription("Finish").performClick()
+
+        assertEquals(listOf("pause", "finish"), actions)
+    }
+
+    @Test
+    fun the_small_panel_leaves_the_map_free_on_both_sides() {
+        show(MapUiState(walk = TestWalks.activeWalk(), stats = TestWalks.stats(), isLookingAround = true))
+
+        val panel = composeRule.onNodeWithContentDescription("Pause").onParent().getUnclippedBoundsInRoot()
+        val window = composeRule.onRoot().getUnclippedBoundsInRoot()
+
+        assertTrue("${panel.width} of ${window.width}", panel.width < window.width)
+    }
+
+    @Test
+    fun touching_the_small_panel_brings_back_the_whole_one() {
+        show(lookingAround)
+
+        // On the numbers: the center of the capsule is on its buttons.
+        composeRule.onNodeWithText("3.12 km").performTouchInput { click(Offset(x = 48.dp.toPx(), y = height / 2f)) }
+
+        assertEquals(listOf("backToWalk"), actions)
+    }
+
+    @Test
+    fun the_small_panel_tells_talkback_what_touching_it_does() {
+        show(lookingAround)
+
+        val label = composeRule.onNodeWithText("3.12 km").fetchSemanticsNode()
+            .config[SemanticsActions.OnClick].label
+
+        assertEquals("Show the whole panel", label)
+    }
+
+    @Test
+    fun a_paused_walk_in_the_small_panel_can_be_resumed() {
+        show(
+            MapUiState(
+                walk = TestWalks.activeWalk(status = ActiveWalkStatus.Paused),
+                stats = TestWalks.stats(),
+                isLookingAround = true,
+            ),
+        )
+
+        composeRule.onNodeWithText("Walk paused").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Resume").performClick()
+
+        assertEquals(listOf("resume"), actions)
+    }
+
+    @Test
+    fun it_goes_from_one_panel_to_the_other_when_the_person_starts_and_stops_looking_around() {
+        var uiState by mutableStateOf(MapUiState(walk = TestWalks.activeWalk(), stats = TestWalks.stats()))
+        composeRule.setContent {
+            GeoWoofTheme(dynamicColor = false) {
+                WalkPanel(uiState = uiState, actions = mapActions)
+            }
+        }
+        composeRule.onNodeWithText("Pause").assertIsDisplayed()
+
+        uiState = uiState.copy(isLookingAround = true)
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Pause").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Pause").assertIsDisplayed()
+
+        uiState = uiState.copy(isLookingAround = false)
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Pause").assertIsDisplayed()
+    }
+
+    /** It can open by itself as a finger arrives, and where the small one has Pause, the whole one has Finish. */
+    @Test
+    fun while_the_panel_grows_a_touch_that_was_for_the_small_one_does_nothing() {
+        var uiState by mutableStateOf(lookingAround)
+        composeRule.setContent {
+            GeoWoofTheme(dynamicColor = false) {
+                WalkPanel(uiState = uiState, actions = mapActions)
+            }
+        }
+        composeRule.waitForIdle()
+        composeRule.mainClock.autoAdvance = false
+
+        uiState = uiState.copy(isLookingAround = false)
+        Snapshot.sendApplyNotifications()
+        composeRule.mainClock.advanceTimeBy(ANIMATION_STARTED_MILLIS)
+        composeRule.onNodeWithText("Finish").performClick()
+        composeRule.mainClock.advanceTimeByFrame()
+        assertEquals(emptyList<String>(), actions)
+
+        composeRule.mainClock.autoAdvance = true
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Finish").performClick()
+        assertEquals(listOf("finish"), actions)
     }
 
     @Test
@@ -440,5 +572,9 @@ class MapScreenTest {
         show(MapUiState(error = AppError.Network))
 
         composeRule.onNodeWithText("No connection. Check your internet and try again.").assertIsDisplayed()
+    }
+
+    private companion object {
+        const val ANIMATION_STARTED_MILLIS = 100L
     }
 }

@@ -1,6 +1,5 @@
 package com.geowoof.feature.chat
 
-import android.os.Looper
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +31,7 @@ import com.geowoof.core.model.MessagePreview
 import com.geowoof.core.model.MessageStatus
 import com.geowoof.core.model.Person
 import com.geowoof.core.model.RemoteImage
+import com.geowoof.core.testing.DrainMainLooperRule
 import com.geowoof.core.testing.FakeAuthRepository
 import com.geowoof.core.testing.FakeChatRepository
 import com.geowoof.core.testing.FakeOpenConversations
@@ -43,11 +43,7 @@ import kotlinx.serialization.Serializable
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestRule
-import org.junit.runner.Description
 import org.junit.runner.RunWith
-import org.junit.runners.model.Statement
-import org.robolectric.Shadows.shadowOf
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -464,23 +460,6 @@ class ChatTimeTest {
 
         assertEquals(time.format(message.atZone(ZoneOffset.UTC)), formatChatTime(message, now, ZoneOffset.UTC))
         assertEquals(date.format(message.atZone(madrid)), formatChatTime(message, now, madrid))
-    }
-}
-
-/**
- * Robolectric empties the main looper between tests, and AndroidUiDispatcher, which is one for the whole JVM,
- * believes for ever that what it had just posted is on its way: it runs nothing else, and LazyPagingItems needs it.
- * The screen stays in Loading, in about half of the runs, depending on how the previous test ended.
- */
-class DrainMainLooperRule : TestRule {
-    override fun apply(base: Statement, description: Description): Statement = object : Statement() {
-        override fun evaluate() {
-            try {
-                base.evaluate()
-            } finally {
-                shadowOf(Looper.getMainLooper()).idle()
-            }
-        }
     }
 }
 

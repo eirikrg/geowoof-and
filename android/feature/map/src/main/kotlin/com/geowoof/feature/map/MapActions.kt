@@ -24,4 +24,5 @@ internal class MapActions(
     val onDismissError: () -> Unit,
     val onMyLocation: () -> Unit = {},
     val onAskForLocation: () -> Unit = {},
+    val onBackToWalk: () -> Unit = {},
 )

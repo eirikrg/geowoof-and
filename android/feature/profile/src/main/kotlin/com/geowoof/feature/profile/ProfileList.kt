@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -76,7 +77,13 @@ internal class ProfileLists(
     val walks: LazyPagingItems<Walk>,
     /** Only in your own profile. */
     val saved: LazyPagingItems<Post>?,
-)
+) {
+    /** What coming back to the profile reloads: pulling it down or retrying has to show the same. */
+    fun refresh() {
+        posts.refresh()
+        saved?.refresh()
+    }
+}
 
 @Composable
 internal fun ProfileList(
@@ -84,13 +91,16 @@ internal fun ProfileList(
     profile: Profile,
     lists: ProfileLists,
     actions: ProfileActions,
+    listState: LazyListState,
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(ProfileTab.Photos) }
     val tabs = ProfileTab.entries.filter { it != ProfileTab.Saved || lists.saved != null }
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = GeoWoofTheme.spacing.huge),
+        state = listState,
+        // Room to reach the bar: a list that nearly fits would leave the photo halfway.
+        contentPadding = PaddingValues(bottom = GeoWoofTheme.spacing.huge + ProfileCollapseRange),
     ) {
         item { ProfileHeader(uiState, profile) }
         item { ProfileCounters(uiState.counts, uiState.canOpenLists, actions.onOpenPeople) }

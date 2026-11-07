@@ -54,6 +54,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geowoof.core.designsystem.component.FormTextField
 import com.geowoof.core.designsystem.component.HeroBand
+import com.geowoof.core.designsystem.component.HeroPhotoFrame
 import com.geowoof.core.designsystem.component.IconBadge
 import com.geowoof.core.designsystem.component.heroTopBarColors
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
@@ -227,15 +228,16 @@ private fun LazyListScope.petDetails(pet: Pet) {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            HeroBand(photoSize = PetPhotoSize) { photoModifier ->
-                RemoteAvatar(
-                    image = pet.avatar,
-                    fallbackIcon = GeoWoofIcons.Pets,
-                    contentDescription = stringResource(R.string.feature_pets_photo),
-                    size = PetPhotoSize,
-                    variant = ImageVariant.Medium,
-                    modifier = photoModifier,
-                )
+            HeroBand(photoSize = PetPhotoSize) {
+                HeroPhotoFrame {
+                    RemoteAvatar(
+                        image = pet.avatar,
+                        fallbackIcon = GeoWoofIcons.Pets,
+                        contentDescription = stringResource(R.string.feature_pets_photo),
+                        size = PetPhotoSize,
+                        variant = ImageVariant.Medium,
+                    )
+                }
             }
             Column(
                 modifier = Modifier.padding(GeoWoofTheme.spacing.large),

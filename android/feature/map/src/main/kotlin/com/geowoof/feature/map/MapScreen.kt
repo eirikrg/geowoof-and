@@ -103,6 +103,8 @@ fun MapScreen(
         viewModel.onScreenResumed()
         onPauseOrDispose {}
     }
+    val isLookingAtWalkers = live.isListOpen || live.selected != null
+    LaunchedEffect(isLookingAtWalkers) { viewModel.onLookingAtWalkers(isLookingAtWalkers) }
     val currentOnOpenSummary by rememberUpdatedState(onOpenSummary)
     LaunchedEffect(uiState.openSummary) {
         if (uiState.openSummary) {
@@ -142,6 +144,7 @@ fun MapScreen(
                 viewModel.onAskForLocationClick()
                 permissions.launch(locationPermissions())
             },
+            onBackToWalk = viewModel::onBackToTheWalk,
         ),
         live = live,
         liveActions = LiveWalkersActions(
@@ -162,6 +165,7 @@ fun MapScreen(
     ) { mapModifier ->
         WalkMap(
             walk = uiState.walk,
+            isLookingAround = uiState.isLookingAround,
             isLocating = uiState.isLocating,
             quietLocations = viewModel.quietLocations,
             hasLocationPermission = uiState.hasLocationPermission,
@@ -171,6 +175,7 @@ fun MapScreen(
             cameraTarget = uiState.cameraTarget,
             onReachCameraTarget = viewModel::onCameraTargetReached,
             onMoveByHand = viewModel::onMapMovedByHand,
+            onStopMovingByHand = viewModel::onMapStoppedByHand,
             modifier = mapModifier,
         )
     }
@@ -330,6 +335,7 @@ private fun LiveStatus(live: LiveWalkersUiState, actions: LiveWalkersActions, mo
 @Composable
 private fun WalkMap(
     walk: ActiveWalk?,
+    isLookingAround: Boolean,
     isLocating: Boolean,
     quietLocations: Flow<Location>,
     hasLocationPermission: Boolean,
@@ -339,6 +345,7 @@ private fun WalkMap(
     cameraTarget: CameraTarget?,
     onReachCameraTarget: () -> Unit,
     onMoveByHand: () -> Unit,
+    onStopMovingByHand: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val cameraPositionState = rememberCameraPositionState {
@@ -372,13 +379,14 @@ private fun WalkMap(
             }
     }
     val currentOnMoveByHand by rememberUpdatedState(onMoveByHand)
+    val currentOnStopMovingByHand by rememberUpdatedState(onStopMovingByHand)
     LaunchedEffect(cameraPositionState) {
         snapshotFlow {
             cameraPositionState.isMoving &&
                 cameraPositionState.cameraMoveStartedReason == CameraMoveStartedReason.GESTURE
-        }.collect { isByHand -> if (isByHand) currentOnMoveByHand() }
+        }.collect { isByHand -> if (isByHand) currentOnMoveByHand() else currentOnStopMovingByHand() }
     }
-    MapCameraEffects(cameraPositionState, walk, cameraTarget, onReachCameraTarget)
+    MapCameraEffects(cameraPositionState, walk, isLookingAround, cameraTarget, onReachCameraTarget)
     if (isLocating) {
         Box(modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainer))
         return
