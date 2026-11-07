@@ -382,7 +382,12 @@ private fun WalkMap(
     LaunchedEffect(lastPoint) {
         lastPoint?.let {
             val target = LatLng(it.position.latitude, it.position.longitude)
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(target, WALK_ZOOM))
+            // A walk in progress can come before there is a map, when CameraUpdateFactory is not initialized yet.
+            if (cameraPositionState.projection == null) {
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(target, WALK_ZOOM)
+            } else {
+                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(target, WALK_ZOOM))
+            }
         }
     }
     val currentOnReachCameraTarget by rememberUpdatedState(onReachCameraTarget)
