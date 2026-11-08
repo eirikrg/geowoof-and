@@ -17,6 +17,7 @@
     <string name="feature_social_report_sent">Gracias. Revisaremos tu reporte.</string>
     <string name="feature_social_report_post">Reportar esta publicación</string>
     <string name="feature_social_report_comment">Reportar este comentario</string>
+    <string name="feature_social_comment_options">Opciones del comentario de %1$s</string>
     <string name="feature_social_delete_post_title">¿Eliminar esta publicación?</string>
     <string name="feature_social_delete_post_message">Desaparecerá con sus comentarios, likes y reposts. No se puede deshacer.</string>
     <string name="feature_social_delete_comment_title">¿Eliminar este comentario?</string>

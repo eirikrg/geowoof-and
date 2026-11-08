@@ -17,6 +17,7 @@
     <string name="feature_social_report_sent">Thanks. We will review your report.</string>
     <string name="feature_social_report_post">Report this post</string>
     <string name="feature_social_report_comment">Report this comment</string>
+    <string name="feature_social_comment_options">Options for the comment by %1$s</string>
     <string name="feature_social_delete_post_title">Delete this post?</string>
     <string name="feature_social_delete_post_message">It will disappear with its comments, likes and reposts. This cannot be undone.</string>
     <string name="feature_social_delete_comment_title">Delete this comment?</string>
