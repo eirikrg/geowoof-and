@@ -59,6 +59,15 @@
     <string name="core_ui_pet_size_medium">Medium</string>
     <string name="core_ui_pet_size_large">Large</string>
     <string name="core_ui_pet_size_giant">Giant</string>
+    <string name="core_ui_pet_sex_label">Sex</string>
+    <string name="core_ui_pet_birth_date_label">Birth date</string>
+    <string name="core_ui_pet_size_label">Size</string>
+    <string name="core_ui_pet_color_label">Color</string>
+    <string name="core_ui_pet_neutered_label">Neutered</string>
+    <string name="core_ui_pet_microchip_label">Microchip</string>
+    <string name="core_ui_pet_microchip_private">Only you can see this</string>
+    <string name="core_ui_yes">Yes</string>
+    <string name="core_ui_no">No</string>
     <string name="core_ui_field_date_future">The date cannot be in the future</string>
     <string name="core_ui_field_date_old">The date cannot be before 1990</string>
     <string name="core_ui_error_walk_not_found">This walk no longer exists.</string>

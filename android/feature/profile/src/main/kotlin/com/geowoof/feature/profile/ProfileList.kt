@@ -2,7 +2,6 @@ package com.geowoof.feature.profile
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,15 +13,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.PrimaryTabRow
@@ -36,8 +32,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -53,25 +47,21 @@ import com.geowoof.core.designsystem.component.SkeletonBox
 import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
-import com.geowoof.core.model.Pet
 import com.geowoof.core.model.Post
 import com.geowoof.core.model.Profile
 import com.geowoof.core.model.TimelineItem
 import com.geowoof.core.model.Walk
 import com.geowoof.core.ui.PagedContent
 import com.geowoof.core.ui.PostGridItem
-import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.WalkCard
 import com.geowoof.core.ui.WalkTotalsGrid
 import com.geowoof.core.ui.heroListPadding
 import com.geowoof.core.ui.pagedContent
-import com.geowoof.core.ui.shortDescription
 
 /** The tabs of a profile. Only you see [Saved], in your own. */
 internal enum class ProfileTab(@param:StringRes val label: Int) {
     Photos(R.string.feature_profile_tab_photos),
     Walks(R.string.feature_profile_tab_walks),
-    Pets(R.string.feature_profile_tab_pets),
     Saved(R.string.feature_profile_tab_saved),
 }
 
@@ -99,6 +89,7 @@ internal fun ProfileList(
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(ProfileTab.Photos) }
+    var shownPetId by rememberSaveable { mutableStateOf<String?>(null) }
     val tabs = ProfileTab.entries.filter { it != ProfileTab.Saved || lists.saved != null }
     val photos = lists.posts.pagedContent()
     val walks = lists.walks.pagedContent()
@@ -135,14 +126,18 @@ internal fun ProfileList(
                 )
             }
         } else {
+            petHighlights(uiState.pets, actions, onShowPet = { shownPetId = it })
             stickyHeader { ProfileTabs(tabs, selectedTab, onSelect = { selectedTab = it }) }
             when (selectedTab) {
                 ProfileTab.Photos -> photosTab(uiState, lists.posts, photos, actions)
                 ProfileTab.Walks -> walksTab(uiState, lists.walks, walks, actions)
-                ProfileTab.Pets -> petsTab(uiState, actions)
                 ProfileTab.Saved -> if (lists.saved != null && saved != null) savedTab(lists.saved, saved, actions)
             }
         }
+    }
+    // Your own pets open their page, and they never come here.
+    uiState.pets.find { it.id == shownPetId }?.let { pet ->
+        PetSheet(pet, onDismiss = { shownPetId = null })
     }
 }
 
@@ -337,42 +332,6 @@ private fun LazyListScope.walksTab(
     }
 }
 
-private fun LazyListScope.petsTab(uiState: ProfileUiState, actions: ProfileActions) {
-    actions.onAddPet?.let { onAddPet ->
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = GeoWoofTheme.spacing.large, vertical = GeoWoofTheme.spacing.small),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                FilledTonalButton(onClick = onAddPet) {
-                    Icon(painterResource(GeoWoofIcons.Add), contentDescription = null)
-                    Spacer(Modifier.width(GeoWoofTheme.spacing.small))
-                    Text(stringResource(R.string.feature_profile_add_pet))
-                }
-            }
-        }
-    }
-    if (uiState.pets.isEmpty() && !uiState.isLoading) {
-        item {
-            if (uiState.isOwn) {
-                EmptyState(
-                    icon = GeoWoofIcons.Pets,
-                    title = stringResource(R.string.feature_profile_no_pets_title),
-                    message = stringResource(R.string.feature_profile_no_pets_message),
-                    illustration = GeoWoofIllustrations.EmptyPets,
-                )
-            } else {
-                EmptyLine(GeoWoofIcons.Pets, stringResource(R.string.feature_profile_no_pets_of_person))
-            }
-        }
-    }
-    items(uiState.pets, key = Pet::id) { pet ->
-        PetRow(pet = pet, onClick = actions.onOpenPet?.let { onOpenPet -> { onOpenPet(pet.id) } })
-    }
-}
-
 /** A tab with nothing to show: smaller than an [EmptyState], because the profile is still above it. */
 @Composable
 private fun EmptyLine(@DrawableRes icon: Int, text: String, modifier: Modifier = Modifier) {
@@ -390,33 +349,6 @@ private fun EmptyLine(@DrawableRes icon: Int, text: String, modifier: Modifier =
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-        )
-    }
-}
-
-/** Only your own pets open: those of other people have no screen yet. */
-@Composable
-private fun PetRow(pet: Pet, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
-    val spacing = GeoWoofTheme.spacing
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.large, vertical = spacing.extraSmall)
-            .clip(MaterialTheme.shapes.large)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) {
-        ListItem(
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-            headlineContent = { Text(pet.name, style = MaterialTheme.typography.titleMedium) },
-            supportingContent = { Text(pet.shortDescription(), style = MaterialTheme.typography.bodyMedium) },
-            leadingContent = {
-                RemoteAvatar(image = pet.avatar, fallbackIcon = GeoWoofIcons.Pets, contentDescription = null)
-            },
-            trailingContent = onClick?.let {
-                { Icon(painterResource(GeoWoofIcons.ChevronRight), contentDescription = null) }
-            },
         )
     }
 }

@@ -6,8 +6,7 @@
     <string name="feature_profile_photo">Profile photo</string>
     <string name="feature_profile_username">\@%1$s</string>
     <string name="feature_profile_add_pet">Add pet</string>
-    <string name="feature_profile_no_pets_title">No pets yet</string>
-    <string name="feature_profile_no_pets_message">Add your first pet to record its weight and take it on walks.</string>
+    <string name="feature_profile_new_pet">New</string>
     <string name="feature_profile_choose_photo">Choose photo</string>
     <string name="feature_profile_remove_photo">Remove photo</string>
     <string name="feature_profile_name_label">Your name</string>
@@ -37,7 +36,6 @@
     <string name="feature_profile_reject">Reject</string>
     <string name="feature_profile_tab_photos">Photos</string>
     <string name="feature_profile_tab_walks">Walks</string>
-    <string name="feature_profile_tab_pets">Pets</string>
     <string name="feature_profile_tab_saved">Saved</string>
     <string name="feature_profile_add_photo">Add photo</string>
     <string name="feature_profile_no_own_photos">The photos you publish and repost will appear here.</string>
@@ -48,7 +46,6 @@
     <string name="feature_profile_no_own_walks">Start a walk from the map and it will appear here.</string>
     <string name="feature_profile_no_walks">No walks you can see.</string>
     <string name="feature_profile_walks_failed">The walks could not be loaded.</string>
-    <string name="feature_profile_no_pets_of_person">No pets yet.</string>
     <string name="feature_profile_unavailable_title">Profile not available</string>
     <string name="feature_profile_unavailable_message">This person does not exist or you cannot see their profile.</string>
     <string name="feature_profile_follow_back_title">Follow %1$s back?</string>

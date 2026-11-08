@@ -59,6 +59,15 @@
     <string name="core_ui_pet_size_medium">Mediano</string>
     <string name="core_ui_pet_size_large">Grande</string>
     <string name="core_ui_pet_size_giant">Gigante</string>
+    <string name="core_ui_pet_sex_label">Sexo</string>
+    <string name="core_ui_pet_birth_date_label">Fecha de nacimiento</string>
+    <string name="core_ui_pet_size_label">Tamaño</string>
+    <string name="core_ui_pet_color_label">Color</string>
+    <string name="core_ui_pet_neutered_label">Esterilizado</string>
+    <string name="core_ui_pet_microchip_label">Microchip</string>
+    <string name="core_ui_pet_microchip_private">Solo lo ves tú</string>
+    <string name="core_ui_yes">Sí</string>
+    <string name="core_ui_no">No</string>
     <string name="core_ui_field_date_future">La fecha no puede ser futura</string>
     <string name="core_ui_field_date_old">La fecha no puede ser anterior a 1990</string>
     <string name="core_ui_error_walk_not_found">Este paseo ya no existe.</string>

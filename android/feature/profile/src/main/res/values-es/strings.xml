@@ -6,8 +6,7 @@
     <string name="feature_profile_photo">Foto de perfil</string>
     <string name="feature_profile_username">\@%1$s</string>
     <string name="feature_profile_add_pet">Añadir mascota</string>
-    <string name="feature_profile_no_pets_title">Aún no tienes mascotas</string>
-    <string name="feature_profile_no_pets_message">Añade tu primera mascota para registrar su peso y llevarla de paseo.</string>
+    <string name="feature_profile_new_pet">Nueva</string>
     <string name="feature_profile_choose_photo">Elegir foto</string>
     <string name="feature_profile_remove_photo">Quitar foto</string>
     <string name="feature_profile_name_label">Tu nombre</string>
@@ -37,7 +36,6 @@
     <string name="feature_profile_reject">Rechazar</string>
     <string name="feature_profile_tab_photos">Fotos</string>
     <string name="feature_profile_tab_walks">Paseos</string>
-    <string name="feature_profile_tab_pets">Mascotas</string>
     <string name="feature_profile_tab_saved">Guardadas</string>
     <string name="feature_profile_add_photo">Añadir foto</string>
     <string name="feature_profile_no_own_photos">Aquí aparecerán las fotos que publiques y repostees.</string>
@@ -48,7 +46,6 @@
     <string name="feature_profile_no_own_walks">Empieza un paseo desde el mapa y aparecerá aquí.</string>
     <string name="feature_profile_no_walks">No hay paseos que puedas ver.</string>
     <string name="feature_profile_walks_failed">No se han podido cargar los paseos.</string>
-    <string name="feature_profile_no_pets_of_person">Aún no tiene mascotas.</string>
     <string name="feature_profile_unavailable_title">Perfil no disponible</string>
     <string name="feature_profile_unavailable_message">Esta persona no existe o no puedes ver su perfil.</string>
     <string name="feature_profile_follow_back_title">¿Seguir también a %1$s?</string>

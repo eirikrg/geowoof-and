@@ -61,6 +61,7 @@ import com.geowoof.core.ui.rememberPhotoPicker
 import com.geowoof.feature.pets.PetDateDialog
 import com.geowoof.feature.pets.R
 import java.time.LocalDate
+import com.geowoof.core.ui.R as CoreUiR
 
 // The small pieces of the pet form.
 
@@ -125,7 +126,7 @@ internal fun BirthDateAndNeutered(
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.extraSmall)) {
         ListGroup(inset = 0.dp) {
             ListGroupItem(
-                headline = stringResource(R.string.feature_pets_birth_date_label),
+                headline = stringResource(CoreUiR.string.core_ui_pet_birth_date_label),
                 supporting = uiState.birthDate?.formatted() ?: stringResource(R.string.feature_pets_birth_date_empty),
                 icon = GeoWoofIcons.CalendarMonth,
                 onClick = { picking = true },
@@ -141,7 +142,7 @@ internal fun BirthDateAndNeutered(
             )
             ListGroupDivider()
             ListGroupItem(
-                headline = stringResource(R.string.feature_pets_neutered_label),
+                headline = stringResource(CoreUiR.string.core_ui_pet_neutered_label),
                 modifier = Modifier.toggleable(
                     value = uiState.neutered,
                     role = Role.Switch,
