@@ -13,13 +13,29 @@ if (file("google-services.json").exists()) {
     apply(plugin = libs.plugins.google.services.get().pluginId)
 }
 
+// The version is the last tag vX.Y.Z, and each pull request merged into main adds one to it. Between two
+// tags it reads like 0.9.1-3-gabc1234. GEOWOOF_VERSION wins, and without git or tags it is 0.0.0.
+val appVersion: String = providers.environmentVariable("GEOWOOF_VERSION").orNull
+    ?: runCatching {
+        providers.exec {
+            commandLine("git", "describe", "--tags", "--match", "v[0-9]*")
+            isIgnoreExitValue = true
+        }.standardOutput.asText.get().trim().removePrefix("v")
+    }.getOrDefault("").ifBlank { "0.0.0" }
+
+// Always higher for a higher version, as Android requires for an update: 0.9.1 is 9001 and 1.0.0 is 1000000.
+val appVersionCode: Int = Regex("""^(\d+)\.(\d+)\.(\d+)""").find(appVersion)?.destructured
+    ?.let { (major, minor, patch) -> major.toInt() * 1_000_000 + minor.toInt() * 1_000 + patch.toInt() }
+    ?.coerceAtLeast(1)
+    ?: 1
+
 android {
     namespace = "com.geowoof.app"
 
     defaultConfig {
         applicationId = "com.geowoof.app"
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = appVersionCode
+        versionName = appVersion
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // The Secrets Gradle Plugin overrides this per variant, but does not reach the unit-test
         // components of AGP 9; they get the same default as local.defaults.properties.
