@@ -63,6 +63,7 @@ import com.geowoof.core.ui.PostGridItem
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.WalkCard
 import com.geowoof.core.ui.WalkTotalsGrid
+import com.geowoof.core.ui.heroListPadding
 import com.geowoof.core.ui.pagedContent
 import com.geowoof.core.ui.shortDescription
 
@@ -105,8 +106,7 @@ internal fun ProfileList(
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         state = listState,
-        // Room to reach the bar: a list that nearly fits would leave the photo halfway.
-        contentPadding = PaddingValues(bottom = GeoWoofTheme.spacing.huge + ProfileCollapseRange),
+        contentPadding = heroListPadding(),
     ) {
         item { ProfileHeader(uiState, profile) }
         item { ProfileCounters(uiState.counts, uiState.canOpenLists, actions.onOpenPeople) }

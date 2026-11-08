@@ -46,7 +46,9 @@ import com.geowoof.core.model.Relationship
 import com.geowoof.core.model.RelationshipStatus
 import com.geowoof.core.model.TimelineItem
 import com.geowoof.core.model.Walk
+import com.geowoof.core.ui.HeroRefreshBox
 import com.geowoof.core.ui.RefreshOnReturn
+import com.geowoof.core.ui.rememberHeroCollapse
 import com.geowoof.core.ui.userMessage
 import kotlinx.coroutines.flow.flowOf
 import java.time.Instant
@@ -169,7 +171,7 @@ internal fun ProfileContent(
     listState: LazyListState = rememberLazyListState(),
 ) {
     val snackbars = rememberProfileMessages(uiState, actions.onMessageShown)
-    val collapse = rememberProfileCollapse(listState)
+    val collapse = rememberHeroCollapse(listState)
     val refresh = {
         actions.onRefresh()
         lists.refresh()
@@ -203,9 +205,10 @@ internal fun ProfileContent(
                 CircularProgressIndicator()
             }
 
-            else -> ProfileRefreshBox(
+            else -> HeroRefreshBox(
                 isRefreshing = uiState.isLoading,
                 onRefresh = refresh,
+                photoSize = ProfilePhotoSize,
                 modifier = contentModifier,
             ) {
                 ProfileList(uiState, profile, lists, actions, listState)
@@ -213,33 +216,6 @@ internal fun ProfileContent(
         }
     }
     ProfileDialogs(uiState, reportDetails, actions)
-}
-
-/** The indicator comes out from below the photo, which goes over the list and would hide it. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ProfileRefreshBox(
-    isRefreshing: Boolean,
-    onRefresh: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    val state = rememberPullToRefreshState()
-    PullToRefreshBox(
-        isRefreshing = isRefreshing,
-        onRefresh = onRefresh,
-        modifier = modifier,
-        state = state,
-        indicator = {
-            PullToRefreshDefaults.Indicator(
-                state = state,
-                isRefreshing = isRefreshing,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = HeroBandHeight + ProfilePhotoSize / 2),
-            )
-        },
-    ) { content() }
 }
 
 @Composable
