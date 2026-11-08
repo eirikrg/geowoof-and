@@ -12,4 +12,13 @@
     <string name="core_notifications_comment_added">%1$s commented on your post</string>
     <string name="core_notifications_post_reposted">%1$s reposted your post</string>
     <string name="core_notifications_user_mentioned">%1$s mentioned you</string>
+    <string name="core_notifications_channel_health">Pet health</string>
+    <string name="core_notifications_health_title">%1$s: %2$s</string>
+    <string name="core_notifications_health_today">Today</string>
+    <string name="core_notifications_health_today_at">Today at %1$s</string>
+    <string name="core_notifications_health_tomorrow">Tomorrow</string>
+    <string name="core_notifications_health_tomorrow_at">Tomorrow at %1$s</string>
+    <string name="core_notifications_health_on">On %1$s</string>
+    <string name="core_notifications_health_on_at">On %1$s at %2$s</string>
+    <string name="core_notifications_health_day_pattern">MMMM d</string>
 </resources>

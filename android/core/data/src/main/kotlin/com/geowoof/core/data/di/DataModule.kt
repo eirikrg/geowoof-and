@@ -15,6 +15,7 @@ import com.geowoof.core.data.repository.DefaultActiveWalkRepository
 import com.geowoof.core.data.repository.DefaultAppearanceRepository
 import com.geowoof.core.data.repository.DefaultAuthRepository
 import com.geowoof.core.data.repository.DefaultChatRepository
+import com.geowoof.core.data.repository.DefaultHealthRepository
 import com.geowoof.core.data.repository.DefaultLiveRepository
 import com.geowoof.core.data.repository.DefaultMediaRepository
 import com.geowoof.core.data.repository.DefaultNotificationsRepository
@@ -27,6 +28,7 @@ import com.geowoof.core.data.repository.DefaultSettingsRepository
 import com.geowoof.core.data.repository.DefaultSocialRepository
 import com.geowoof.core.data.repository.DefaultWalkSynchronizer
 import com.geowoof.core.data.repository.DefaultWalksRepository
+import com.geowoof.core.data.repository.HealthRepository
 import com.geowoof.core.data.repository.LiveRepository
 import com.geowoof.core.data.repository.MediaRepository
 import com.geowoof.core.data.repository.NotificationsRepository
@@ -66,6 +68,9 @@ internal interface DataModule {
 
     @Binds
     fun bindsPetsRepository(repository: DefaultPetsRepository): PetsRepository
+
+    @Binds
+    fun bindsHealthRepository(repository: DefaultHealthRepository): HealthRepository
 
     @Binds
     fun bindsMediaRepository(repository: DefaultMediaRepository): MediaRepository

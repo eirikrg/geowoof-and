@@ -9,8 +9,13 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.net.toUri
+import com.geowoof.core.model.HealthReminderItem
 import com.geowoof.core.model.NotificationType
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import javax.inject.Inject
 
 /**
@@ -32,6 +37,53 @@ internal class AndroidNotificationPresenter @Inject constructor(@ApplicationCont
 
     override fun clearConversation(conversationId: String) = manager.cancel(conversationId, MESSAGE_NOTIFICATION_ID)
 
+    /** "Luna: Rabia" and when: today, tomorrow or the day, with its time if it has one. It opens her health. */
+    override fun showHealthReminder(item: HealthReminderItem, dueOn: LocalDate) {
+        createChannels()
+        val event = item.event
+        val notification = NotificationCompat.Builder(context, CHANNEL_HEALTH)
+            .setSmallIcon(R.drawable.core_notifications_ic_notification)
+            .setColor(BRAND_COLOR)
+            .setContentTitle(context.getString(R.string.core_notifications_health_title, item.petName, event.title))
+            .setContentText(whenText(dueOn, event.dueAt))
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setContentIntent(openLink("geowoof://pet-health/${event.petId}"))
+            .setAutoCancel(true)
+            .build()
+        post(event.id, HEALTH_NOTIFICATION_ID, notification)
+    }
+
+    private fun whenText(dueOn: LocalDate, dueAt: LocalTime?): String {
+        val today = LocalDate.now()
+        val time = dueAt?.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
+        return when {
+            dueOn == today && time != null -> context.getString(R.string.core_notifications_health_today_at, time)
+
+            dueOn == today -> context.getString(R.string.core_notifications_health_today)
+
+            dueOn == today.plusDays(
+                1,
+            ) && time != null -> context.getString(R.string.core_notifications_health_tomorrow_at, time)
+
+            dueOn == today.plusDays(1) -> context.getString(R.string.core_notifications_health_tomorrow)
+
+            else -> {
+                // In the language of the app, which can be other than that of the phone.
+                val locale = context.resources.configuration.locales[0]
+                val pattern = DateTimeFormatter.ofPattern(
+                    context.getString(R.string.core_notifications_health_day_pattern),
+                    locale,
+                )
+                val day = dueOn.format(pattern)
+                if (time != null) {
+                    context.getString(R.string.core_notifications_health_on_at, day, time)
+                } else {
+                    context.getString(R.string.core_notifications_health_on, day)
+                }
+            }
+        }
+    }
+
     private fun createChannels() {
         manager.createNotificationChannelsCompat(
             listOf(
@@ -40,6 +92,9 @@ internal class AndroidNotificationPresenter @Inject constructor(@ApplicationCont
                     .build(),
                 NotificationChannelCompat.Builder(CHANNEL_SOCIAL, NotificationManagerCompat.IMPORTANCE_DEFAULT)
                     .setName(context.getString(R.string.core_notifications_channel_social))
+                    .build(),
+                NotificationChannelCompat.Builder(CHANNEL_HEALTH, NotificationManagerCompat.IMPORTANCE_HIGH)
+                    .setName(context.getString(R.string.core_notifications_channel_health))
                     .build(),
             ),
         )
@@ -130,6 +185,8 @@ internal class AndroidNotificationPresenter @Inject constructor(@ApplicationCont
         const val CHANNEL_SOCIAL = "social"
         const val MESSAGE_NOTIFICATION_ID = 3001
         const val SOCIAL_NOTIFICATION_ID = 3002
+        const val CHANNEL_HEALTH = "health"
+        const val HEALTH_NOTIFICATION_ID = 3003
     }
 }
 

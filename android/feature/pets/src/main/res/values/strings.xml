@@ -40,4 +40,94 @@
     <string name="feature_pets_more_details">Add more details</string>
     <string name="feature_pets_weight_change">%1$s kg since %2$s</string>
     <string name="feature_pets_weight_no_change">The same as on %1$s</string>
+    <string name="feature_pets_health_title">Health</string>
+    <string name="feature_pets_health_of">%1$s\'s health</string>
+    <string name="feature_pets_health_see_all">See all</string>
+    <string name="feature_pets_health_add">Add</string>
+    <string name="feature_pets_health_section_empty">Vaccines, deworming, appointments and medicines, and a reminder when they are due.</string>
+    <string name="feature_pets_health_empty_title">Nothing yet</string>
+    <string name="feature_pets_health_empty_message">Add vaccines, deworming, vet appointments and medicines, and GeoWoof reminds you when they are due.</string>
+    <string name="feature_pets_health_vaccine">Vaccine</string>
+    <string name="feature_pets_health_deworming">Deworming</string>
+    <string name="feature_pets_health_vet_visit">Vet visit</string>
+    <string name="feature_pets_health_medication">Medication</string>
+    <string name="feature_pets_health_other">Other</string>
+    <string name="feature_pets_health_overdue">Overdue</string>
+    <string name="feature_pets_health_upcoming">Coming up</string>
+    <string name="feature_pets_health_history">History</string>
+    <string name="feature_pets_health_mark_done">Mark %1$s as done</string>
+    <string name="feature_pets_health_done_on">Done on %1$s</string>
+    <string name="feature_pets_health_today">Today</string>
+    <string name="feature_pets_health_tomorrow">Tomorrow</string>
+    <string name="feature_pets_health_day_at">%1$s at %2$s</string>
+    <string name="feature_pets_health_no_repeat">Does not repeat</string>
+    <string name="feature_pets_health_every_until">%1$s until %2$s</string>
+    <string name="feature_pets_health_reminder_none">No reminder</string>
+    <string name="feature_pets_health_reminder_on_the_day">On the day (an hour before, if it has a time)</string>
+    <string name="feature_pets_health_reminder_day_before">The day before</string>
+    <string name="feature_pets_health_reminder_week_before">A week before</string>
+    <string name="feature_pets_health_new_title">Add to health</string>
+    <string name="feature_pets_health_edit_title">Edit</string>
+    <string name="feature_pets_health_type">Type</string>
+    <string name="feature_pets_health_what">What it is</string>
+    <string name="feature_pets_health_title_missing">Write what it is</string>
+    <string name="feature_pets_health_date">Date</string>
+    <string name="feature_pets_health_time">Time</string>
+    <string name="feature_pets_health_all_day">No time</string>
+    <string name="feature_pets_health_repeats">Repeats</string>
+    <string name="feature_pets_health_until">Until</string>
+    <string name="feature_pets_health_no_end">No end</string>
+    <string name="feature_pets_health_remind">Remind me</string>
+    <string name="feature_pets_health_already_done">Already done</string>
+    <string name="feature_pets_health_done_on_label">Done on</string>
+    <string name="feature_pets_health_notes">Notes</string>
+    <string name="feature_pets_health_add_to_calendar">Add to calendar</string>
+    <string name="feature_pets_health_no_calendar">There is no calendar app on this phone.</string>
+    <string name="feature_pets_health_delete_title">Delete it?</string>
+    <string name="feature_pets_health_delete_message">It disappears from the health of your pet, with its reminder.</string>
+    <string name="feature_pets_health_notifications_off">The reminders cannot arrive: the notifications of GeoWoof are off.</string>
+    <string name="feature_pets_health_turn_on">Turn them on</string>
+    <string name="feature_pets_health_alarms_late">Reminders may arrive up to an hour late. Allow alarms and reminders so that they arrive on time.</string>
+    <string name="feature_pets_health_allow">Allow</string>
+    <string name="feature_pets_health_notifications_title">Know when it is due</string>
+    <string name="feature_pets_health_notifications_message">GeoWoof reminds you of the vaccines, deworming, appointments and medicines of your pets. You can change it whenever you want in the settings of the phone.</string>
+    <plurals name="feature_pets_health_every_days">
+        <item quantity="one">Every day</item>
+        <item quantity="other">Every %d days</item>
+    </plurals>
+    <plurals name="feature_pets_health_every_weeks">
+        <item quantity="one">Every week</item>
+        <item quantity="other">Every %d weeks</item>
+    </plurals>
+    <plurals name="feature_pets_health_every_months">
+        <item quantity="one">Every month</item>
+        <item quantity="other">Every %d months</item>
+    </plurals>
+    <plurals name="feature_pets_health_every_years">
+        <item quantity="one">Every year</item>
+        <item quantity="other">Every %d years</item>
+    </plurals>
+    <plurals name="feature_pets_health_in_days">
+        <item quantity="one">In %d day</item>
+        <item quantity="other">In %d days</item>
+    </plurals>
+    <plurals name="feature_pets_health_days_late">
+        <item quantity="one">%d day late</item>
+        <item quantity="other">%d days late</item>
+    </plurals>
+    <string-array name="feature_pets_health_vaccine_suggestions">
+        <item>Rabies</item>
+        <item>Core vaccine</item>
+        <item>Leishmaniasis</item>
+        <item>Kennel cough</item>
+    </string-array>
+    <string-array name="feature_pets_health_deworming_suggestions">
+        <item>Internal</item>
+        <item>External</item>
+    </string-array>
+    <string-array name="feature_pets_health_vet_visit_suggestions">
+        <item>Check-up</item>
+        <item>Vaccination</item>
+        <item>Dentist</item>
+    </string-array>
 </resources>

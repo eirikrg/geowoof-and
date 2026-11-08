@@ -8,14 +8,23 @@ import com.geowoof.core.data.session.SessionManager
 import com.geowoof.core.data.session.UserDataCleaner
 import com.geowoof.core.database.GeoWoofDatabase
 import com.geowoof.core.model.AppError
+import com.geowoof.core.model.HealthEvent
+import com.geowoof.core.model.HealthEventType
+import com.geowoof.core.model.HealthReminder
+import com.geowoof.core.model.HealthRepeat
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.PetDraft
 import com.geowoof.core.model.PetSex
 import com.geowoof.core.model.PetSpecies
 import com.geowoof.core.model.ProfileDraft
+import com.geowoof.core.model.RepeatUnit
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.network.PetsNetworkDataSource
 import com.geowoof.core.network.ProfileNetworkDataSource
+import com.geowoof.core.network.model.HealthEventBody
+import com.geowoof.core.network.model.NetworkHealthCompletion
+import com.geowoof.core.network.model.NetworkHealthEvent
+import com.geowoof.core.network.model.NetworkHealthRepeat
 import com.geowoof.core.network.model.NetworkImage
 import com.geowoof.core.network.model.NetworkPage
 import com.geowoof.core.network.model.NetworkPet
@@ -35,7 +44,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 
 /** The repositories against a real Room database, because it is what the screens read from. */
 @RunWith(AndroidJUnit4::class)
@@ -73,6 +84,13 @@ class PetsAndProfileRepositoryTest {
         database.petWeightDao(),
         signedInSessions(),
         ContentChanges(),
+    )
+
+    private suspend fun TestScope.healthRepository() = DefaultHealthRepository(
+        petsNetwork,
+        database.healthEventDao(),
+        database.petDao(),
+        signedInSessions(),
     )
 
     private fun pet(id: String = "luna", species: String = "Dog") = NetworkPet(
@@ -327,6 +345,42 @@ class PetsAndProfileRepositoryTest {
             result { NetworkWeightEntry(weightId, body.measuredOn, body.weightKg) }
 
         override suspend fun deleteWeight(petId: String, weightId: String) = result { }
+
+        /** The health that the server has, by its identifier. */
+        val health = linkedMapOf<String, NetworkHealthEvent>()
+
+        override suspend fun health(petId: String) = result { NetworkPage(health.values.filter { it.petId == petId }) }
+
+        override suspend fun putHealthEvent(petId: String, eventId: String, body: HealthEventBody) = result {
+            NetworkHealthEvent(
+                id = eventId,
+                petId = petId,
+                type = body.type,
+                title = body.title,
+                dueOn = body.dueOn,
+                dueAt = body.dueAt,
+                doneOn = body.doneOn,
+                repeat = body.repeat,
+                reminder = body.reminder,
+                notes = body.notes,
+                updatedAt = "2026-11-08T10:00:00Z",
+            ).also { health[eventId] = it }
+        }
+
+        override suspend fun completeHealthEvent(petId: String, eventId: String, doneOn: String) = result {
+            val done = health.getValue(eventId).copy(doneOn = doneOn)
+            val next = done.repeat?.let {
+                done.copy(id = "$eventId-next", dueOn = "2027-03-10", doneOn = null, notes = null)
+            }
+            health[eventId] = done
+            next?.let { health[it.id] = it }
+            NetworkHealthCompletion(done, next)
+        }
+
+        override suspend fun deleteHealthEvent(petId: String, eventId: String) = result {
+            health.remove(eventId)
+            Unit
+        }
     }
 
     private class FakeProfileNetwork : ProfileNetworkDataSource {
@@ -346,5 +400,107 @@ class PetsAndProfileRepositoryTest {
             sent += body
             return Outcome.Success(profile(body.displayName, body.city))
         }
+    }
+
+    private fun vaccine(id: String = "rabies") = HealthEvent(
+        id = id,
+        petId = "luna",
+        type = HealthEventType.Vaccine,
+        title = " Rabia ",
+        dueOn = LocalDate.of(2026, 3, 1),
+        dueAt = LocalTime.of(17, 30),
+        doneOn = null,
+        repeat = HealthRepeat(1, RepeatUnit.Years),
+        reminder = HealthReminder.DayBefore,
+        notes = " ",
+        updatedAt = Instant.EPOCH,
+    )
+
+    /** The health of a pet goes with it: the pet has to be in Room before. */
+    private suspend fun TestScope.withLuna() {
+        petsNetwork.pets = listOf(pet("luna"))
+        petsRepository().refreshMyPets()
+    }
+
+    @Test
+    fun what_is_saved_goes_to_the_server_whole_and_then_to_room() = runTest {
+        withLuna()
+        val repository = healthRepository()
+
+        repository.save(vaccine())
+
+        val sent = petsNetwork.health.getValue("rabies")
+        assertEquals("Rabia", sent.title)
+        assertEquals("17:30", sent.dueAt)
+        assertEquals(null, sent.notes)
+        assertEquals("Years", sent.repeat?.unit)
+        val stored = repository.events("luna").first().single()
+        assertEquals(LocalTime.of(17, 30), stored.dueAt)
+        assertEquals(HealthRepeat(1, RepeatUnit.Years), stored.repeat)
+        assertEquals(HealthReminder.DayBefore, stored.reminder)
+    }
+
+    @Test
+    fun completing_what_repeats_keeps_what_was_done_and_the_next_one() = runTest {
+        withLuna()
+        val repository = healthRepository()
+        repository.save(vaccine())
+
+        val completion = repository.complete(vaccine(), LocalDate.of(2026, 3, 10)) as Outcome.Success
+
+        assertEquals(LocalDate.of(2026, 3, 10), completion.value.done.doneOn)
+        assertEquals(LocalDate.of(2027, 3, 10), completion.value.next?.dueOn)
+        assertEquals(listOf("rabies", "rabies-next"), repository.events("luna").first().map { it.id })
+    }
+
+    @Test
+    fun a_refresh_makes_the_health_of_the_pet_match_the_server_and_the_reminders_say_its_name() = runTest {
+        withLuna()
+        val repository = healthRepository()
+        repository.save(vaccine("gone"))
+        petsNetwork.health.clear()
+        repository.save(vaccine("kept"))
+        petsNetwork.health.remove("gone")
+
+        repository.refresh("luna")
+
+        assertEquals(listOf("kept"), repository.events("luna").first().map { it.id })
+        assertEquals("Luna", repository.pendingReminders().first().single().petName)
+    }
+
+    /** A newer server can send a type or a reminder that this version does not know: it shows, as the closest one. */
+    @Test
+    fun a_value_that_this_version_does_not_know_does_not_break_the_list() = runTest {
+        withLuna()
+        val repository = healthRepository()
+        petsNetwork.health["new"] = NetworkHealthEvent(
+            id = "new",
+            petId = "luna",
+            type = "Surgery",
+            title = "Operación",
+            dueOn = "2026-12-01",
+            repeat = NetworkHealthRepeat(1, "Decades"),
+            reminder = "TwoHoursBefore",
+            updatedAt = "2026-11-08T10:00:00Z",
+        )
+
+        repository.refresh("luna")
+
+        val event = repository.events("luna").first().single()
+        assertEquals(HealthEventType.Other, event.type)
+        assertEquals(null, event.repeat)
+        assertEquals(HealthReminder.None, event.reminder)
+    }
+
+    @Test
+    fun deleting_takes_it_from_the_server_and_from_room() = runTest {
+        withLuna()
+        val repository = healthRepository()
+        repository.save(vaccine())
+
+        repository.delete(vaccine())
+
+        assertTrue(petsNetwork.health.isEmpty())
+        assertTrue(repository.events("luna").first().isEmpty())
     }
 }

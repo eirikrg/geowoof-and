@@ -14,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geowoof.core.domain.ParseWeightUseCase
 import com.geowoof.core.domain.ValidatePetUseCase
+import com.geowoof.core.testing.FakeHealthRepository
 import com.geowoof.core.testing.FakeMediaRepository
 import com.geowoof.core.testing.FakePetsRepository
 import com.geowoof.core.testing.FakeWalksRepository
@@ -52,7 +53,13 @@ class PetRouteArgumentsTest {
                 }
                 composable<PetDetailRoute> {
                     viewModel {
-                        PetDetailViewModel(createSavedStateHandle(), pets, FakeWalksRepository(), ParseWeightUseCase())
+                        PetDetailViewModel(
+                            createSavedStateHandle(),
+                            pets,
+                            FakeWalksRepository(),
+                            FakeHealthRepository(),
+                            ParseWeightUseCase(),
+                        )
                     }
                     Text("detail")
                 }

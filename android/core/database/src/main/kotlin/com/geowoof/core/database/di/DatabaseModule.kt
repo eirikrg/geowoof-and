@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.geowoof.core.database.ActiveWalkDao
 import com.geowoof.core.database.FeedDao
 import com.geowoof.core.database.GeoWoofDatabase
+import com.geowoof.core.database.HealthEventDao
 import com.geowoof.core.database.PetDao
 import com.geowoof.core.database.PetWeightDao
 import com.geowoof.core.database.ProfileDao
@@ -55,4 +56,7 @@ object DatabaseModule {
 
     @Provides
     fun providesRecentPersonDao(database: GeoWoofDatabase): RecentPersonDao = database.recentPersonDao()
+
+    @Provides
+    fun providesHealthEventDao(database: GeoWoofDatabase): HealthEventDao = database.healthEventDao()
 }

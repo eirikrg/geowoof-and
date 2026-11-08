@@ -1,6 +1,10 @@
 package com.geowoof.core.network
 
 import com.geowoof.core.model.Outcome
+import com.geowoof.core.network.model.CompleteHealthEventBody
+import com.geowoof.core.network.model.HealthEventBody
+import com.geowoof.core.network.model.NetworkHealthCompletion
+import com.geowoof.core.network.model.NetworkHealthEvent
 import com.geowoof.core.network.model.NetworkPage
 import com.geowoof.core.network.model.NetworkPet
 import com.geowoof.core.network.model.NetworkWeightEntry
@@ -52,6 +56,26 @@ internal interface PetsApi {
 
     @DELETE("api/v1/pets/{id}/weights/{weightId}")
     suspend fun deleteWeight(@Path("id") petId: String, @Path("weightId") weightId: String)
+
+    @GET("api/v1/pets/{id}/health")
+    suspend fun health(@Path("id") petId: String): NetworkPage<NetworkHealthEvent>
+
+    @PUT("api/v1/pets/{id}/health/{eventId}")
+    suspend fun putHealthEvent(
+        @Path("id") petId: String,
+        @Path("eventId") eventId: String,
+        @Body body: HealthEventBody,
+    ): NetworkHealthEvent
+
+    @POST("api/v1/pets/{id}/health/{eventId}/complete")
+    suspend fun completeHealthEvent(
+        @Path("id") petId: String,
+        @Path("eventId") eventId: String,
+        @Body body: CompleteHealthEventBody,
+    ): NetworkHealthCompletion
+
+    @DELETE("api/v1/pets/{id}/health/{eventId}")
+    suspend fun deleteHealthEvent(@Path("id") petId: String, @Path("eventId") eventId: String)
 }
 
 interface PetsNetworkDataSource {
@@ -72,6 +96,16 @@ interface PetsNetworkDataSource {
     suspend fun updateWeight(petId: String, weightId: String, body: WeightBody): Outcome<NetworkWeightEntry>
 
     suspend fun deleteWeight(petId: String, weightId: String): Outcome<Unit>
+
+    /** All the health of a pet: it is not paged. */
+    suspend fun health(petId: String): Outcome<NetworkPage<NetworkHealthEvent>>
+
+    /** Creates it with that identifier, or replaces it whole. */
+    suspend fun putHealthEvent(petId: String, eventId: String, body: HealthEventBody): Outcome<NetworkHealthEvent>
+
+    suspend fun completeHealthEvent(petId: String, eventId: String, doneOn: String): Outcome<NetworkHealthCompletion>
+
+    suspend fun deleteHealthEvent(petId: String, eventId: String): Outcome<Unit>
 }
 
 internal class RetrofitPetsNetworkDataSource @Inject constructor(private val api: PetsApi, private val json: Json) :
@@ -96,4 +130,15 @@ internal class RetrofitPetsNetworkDataSource @Inject constructor(private val api
 
     override suspend fun deleteWeight(petId: String, weightId: String) =
         apiCall(json) { api.deleteWeight(petId, weightId) }
+
+    override suspend fun health(petId: String) = apiCall(json) { api.health(petId) }
+
+    override suspend fun putHealthEvent(petId: String, eventId: String, body: HealthEventBody) =
+        apiCall(json) { api.putHealthEvent(petId, eventId, body) }
+
+    override suspend fun completeHealthEvent(petId: String, eventId: String, doneOn: String) =
+        apiCall(json) { api.completeHealthEvent(petId, eventId, CompleteHealthEventBody(doneOn)) }
+
+    override suspend fun deleteHealthEvent(petId: String, eventId: String) =
+        apiCall(json) { api.deleteHealthEvent(petId, eventId) }
 }

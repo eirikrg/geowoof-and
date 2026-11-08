@@ -85,6 +85,8 @@ internal fun PetDetailScreen(
     onBack: () -> Unit,
     onEdit: (petId: String) -> Unit,
     onOpenWalks: (petId: String) -> Unit,
+    onOpenHealth: (petId: String) -> Unit,
+    onAddHealth: (petId: String) -> Unit,
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PetDetailViewModel = hiltViewModel(),
@@ -114,6 +116,8 @@ internal fun PetDetailScreen(
         onEdit = onEdit,
         onOpenWalks = onOpenWalks,
         modifier = modifier,
+        onOpenHealth = onOpenHealth,
+        onAddHealth = onAddHealth,
     )
 }
 
@@ -143,6 +147,8 @@ internal fun PetDetailContent(
     onOpenWalks: (petId: String) -> Unit,
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
+    onOpenHealth: (petId: String) -> Unit = {},
+    onAddHealth: (petId: String) -> Unit = {},
 ) {
     val snackbars = remember { SnackbarHostState() }
     val collapse = rememberHeroCollapse(listState)
@@ -218,6 +224,11 @@ internal fun PetDetailContent(
             ) {
                 uiState.pet?.let { pet ->
                     petDetails(pet)
+                    healthSection(
+                        pending = uiState.healthPending,
+                        onOpen = { onOpenHealth(pet.id) },
+                        onAdd = { onAddHealth(pet.id) },
+                    )
                     walkSection(uiState.walkTotals, onOpenWalks = { onOpenWalks(pet.id) })
                 }
                 weightSection(uiState.weights, actions)
