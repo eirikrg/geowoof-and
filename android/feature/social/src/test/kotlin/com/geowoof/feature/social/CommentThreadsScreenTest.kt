@@ -37,6 +37,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import java.time.Duration
+import java.time.Instant
 
 /** The comments of a post with their replies under them. Ana is the one looking. */
 @RunWith(AndroidJUnit4::class)
@@ -109,6 +111,19 @@ class CommentThreadsScreenTest {
         assertTrue("the reply starts at ${first.left}, the comment at ${comment.left}", first.left > comment.left)
         composeRule.onNodeWithText("View 2 replies").assertDoesNotExist()
         composeRule.onNodeWithText("Hide replies").assertDoesNotExist()
+    }
+
+    /** Short beside the name, and whole for TalkBack. */
+    @Test
+    fun each_comment_says_how_long_ago_it_was_written() {
+        val written = Instant.now().minus(Duration.ofDays(2))
+        val dani = TestSocial.user("dani-id", "dani", "Dani")
+        show(listOf(TestPosts.comment("c1", dani, "Qué bonito").copy(createdAt = written)))
+
+        scrollTo("Qué bonito")
+        val time = composeRule.onNodeWithText("2d").assertIsDisplayed().getBoundsInRoot()
+        composeRule.onNodeWithContentDescription("2 days ago").assertExists()
+        assertTrue(time.left > composeRule.onNodeWithText("Dani").getBoundsInRoot().right)
     }
 
     /** Without a gap between them: the line of the thread joins them. */

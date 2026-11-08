@@ -32,7 +32,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -41,6 +44,8 @@ import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Comment
 import com.geowoof.core.ui.MentionText
 import com.geowoof.core.ui.RemoteAvatar
+import com.geowoof.core.ui.relativeToNow
+import com.geowoof.core.ui.shortAgo
 import com.geowoof.feature.social.R
 
 /*
@@ -180,11 +185,28 @@ private fun CommentRow(
         },
         menu = { CommentMenu(comment, myUserId, actions.card.onShowDialog) },
     ) {
-        Text(
-            text = comment.author.displayName,
-            modifier = Modifier.clickable { actions.card.onOpenUser(comment.author.id) },
-            style = MaterialTheme.typography.titleSmall,
-        )
+        // Who and how long ago. A long name gives way, and the time is always seen.
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = comment.author.displayName,
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .clickable { actions.card.onOpenUser(comment.author.id) },
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            val whole = comment.createdAt.relativeToNow()
+            Text(
+                text = comment.createdAt.shortAgo(),
+                modifier = Modifier
+                    .padding(start = TimeGap)
+                    .semantics { contentDescription = whole },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
         MentionText(text = comment.text, mentions = comment.mentions, onOpenUser = actions.card.onOpenUser)
         SmallAction(text = stringResource(R.string.feature_social_reply), onClick = { actions.onReply(comment) })
     }
@@ -295,6 +317,7 @@ private val PhotoSize = 40.dp
 private val ReplyPhotoSize = 28.dp
 private val PhotoGap = 12.dp
 private val TextGap = 2.dp
+private val TimeGap = 6.dp
 private val RowTop = 8.dp
 private val RowBottom = 2.dp
 private val SmallActionPadding = 6.dp

@@ -144,4 +144,35 @@
     <string name="core_ui_photo_position">%1$d/%2$d</string>
     <string name="core_ui_photo_position_description">Foto %1$d de %2$d</string>
     <string name="core_ui_photo_failed">No se ha podido cargar la foto.</string>
+    <string name="core_ui_ago_now">ahora</string>
+    <plurals name="core_ui_ago_minutes">
+        <item quantity="one">%d min</item>
+        <item quantity="many">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
+    <plurals name="core_ui_ago_hours">
+        <item quantity="one">%d h</item>
+        <item quantity="many">%d h</item>
+        <item quantity="other">%d h</item>
+    </plurals>
+    <plurals name="core_ui_ago_days">
+        <item quantity="one">%d d</item>
+        <item quantity="many">%d d</item>
+        <item quantity="other">%d d</item>
+    </plurals>
+    <plurals name="core_ui_ago_weeks">
+        <item quantity="one">%d sem</item>
+        <item quantity="many">%d sem</item>
+        <item quantity="other">%d sem</item>
+    </plurals>
+    <plurals name="core_ui_ago_months">
+        <item quantity="one">%d mes</item>
+        <item quantity="many">%d meses</item>
+        <item quantity="other">%d meses</item>
+    </plurals>
+    <plurals name="core_ui_ago_years">
+        <item quantity="one">%d año</item>
+        <item quantity="many">%d años</item>
+        <item quantity="other">%d años</item>
+    </plurals>
 </resources>
