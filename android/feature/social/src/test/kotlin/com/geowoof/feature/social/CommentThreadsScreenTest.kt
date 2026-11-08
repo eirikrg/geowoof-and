@@ -11,7 +11,9 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
@@ -109,6 +111,17 @@ class CommentThreadsScreenTest {
         composeRule.onNodeWithText("Hide replies").assertDoesNotExist()
     }
 
+    /** Without a gap between them: the line of the thread joins them. */
+    @Test
+    fun the_first_reply_is_right_under_its_comment() {
+        show(listOf(TestPosts.comment("c1", bea, "Qué bonito", replies = listOf(reply("r1")))))
+
+        scrollTo("Respuesta r1")
+        val answer = composeRule.onAllNodesWithText("Reply")[0].getBoundsInRoot()
+        val author = composeRule.onNodeWithText("Carlos").getBoundsInRoot()
+        assertTrue("${author.top - answer.bottom} between them", author.top - answer.bottom <= 16.dp)
+    }
+
     @Test
     fun more_replies_are_folded_until_they_are_opened() {
         val folded = TestPosts.comment(
@@ -166,8 +179,8 @@ class CommentThreadsScreenTest {
         show(listOf(TestPosts.comment("c1", bea, "Qué bonito", replies = listOf(reply("r1")))))
 
         scrollTo("Respuesta r1")
-        composeRule.onAllNodesWithText("Reply")[0].performClick()
-        composeRule.onAllNodesWithText("Reply")[1].performClick()
+        composeRule.onAllNodesWithText("Reply")[0].performScrollTo().performClick()
+        composeRule.onAllNodesWithText("Reply")[1].performScrollTo().performClick()
 
         assertEquals(listOf("reply:c1", "reply:r1"), calls)
     }
