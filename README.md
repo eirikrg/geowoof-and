@@ -1,12 +1,12 @@
 # GeoWoof · Android
 
-App de GeoWoof, una red social para dueños de mascotas: paseos con GPS, paseantes en directo, seguidores, publicaciones y chat. El backend está en [geowoof-backend](https://github.com/eirikrg/geowoof-backend).
+App de GeoWoof, una red social para dueños de mascotas: paseos con GPS, paseantes en directo, seguidores, publicaciones y chat. El backend está en [geowoof-api](https://github.com/eirikrg/geowoof-api).
 
 Kotlin, Jetpack Compose y Material 3, con Hilt, Room, WorkManager y Paging 3.
 
 ## Arrancar
 
-1. Arranca el backend con `docker compose up --build` en `geowoof-backend`.
+1. Arranca el backend con `docker compose up --build` en `geowoof-api`.
 2. Abre `android/` en Android Studio, o compila desde la terminal:
 
    ```bash
