@@ -70,6 +70,8 @@ fun GeoWoofNavHost(navController: NavHostController, modifier: Modifier = Modifi
         exitTransition = screenExit,
         popEnterTransition = screenPopEnter,
         popExitTransition = screenPopExit,
+        predictivePopEnterTransition = screenPredictivePopEnter,
+        predictivePopExitTransition = screenPredictivePopExit,
     ) {
         mapScreens(
             navController = navController,
@@ -126,6 +128,8 @@ fun AuthNavHost(modifier: Modifier = Modifier, navController: NavHostController 
         exitTransition = screenExit,
         popEnterTransition = screenPopEnter,
         popExitTransition = screenPopExit,
+        predictivePopEnterTransition = screenPredictivePopEnter,
+        predictivePopExitTransition = screenPredictivePopExit,
     ) {
         authScreens(navController)
     }
@@ -151,6 +155,8 @@ fun OnboardingNavHost(
         exitTransition = screenExit,
         popEnterTransition = screenPopEnter,
         popExitTransition = screenPopExit,
+        predictivePopEnterTransition = screenPredictivePopEnter,
+        predictivePopExitTransition = screenPredictivePopExit,
     ) {
         verifyEmailScreen(
             onDone = { navController.continueToUsername() },
