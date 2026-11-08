@@ -27,7 +27,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -271,17 +270,7 @@ private fun CommentRow(comment: Comment, myUserId: String?, actions: PostCardAct
                 size = CommentAvatarSize,
             )
         },
-        trailingContent = {
-            if (comment.canDelete) {
-                TextButton(onClick = { actions.onShowDialog(PostDialog.ConfirmDeleteComment(comment)) }) {
-                    Text(stringResource(R.string.feature_social_delete))
-                }
-            } else if (comment.author.id != myUserId) {
-                TextButton(onClick = { actions.onShowDialog(PostDialog.ReportComment(comment)) }) {
-                    Text(stringResource(R.string.feature_social_report))
-                }
-            }
-        },
+        trailingContent = { CommentMenu(comment, myUserId, actions.onShowDialog) },
     )
 }
 

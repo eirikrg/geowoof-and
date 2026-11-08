@@ -481,22 +481,76 @@ class CommunityScreenTest {
         assertEquals(listOf("mention:bea"), calls)
     }
 
-    @Test
-    fun a_comment_says_who_wrote_it_and_can_be_deleted_or_reported() {
-        val comments = listOf(
-            TestPosts.comment("1", TestSocial.user("carlos-id", "carlos", "Carlos"), "Soy Carlos", canDelete = true),
-            TestPosts.comment("2", TestSocial.user("dani-id", "dani", "Dani"), "Soy Dani"),
-        )
-        showDetail(detail(), comments)
-
+    /** Ana is the one looking. Only the dots are at hand: what they offer opens on touching them. */
+    private fun showComments(vararg comments: Comment) {
+        showDetail(detail(), comments.toList())
         composeRule.waitUntil(WAIT_MILLIS) {
             runCatching {
-                composeRule.onAllNodes(hasScrollToNodeAction()).onFirst().performScrollToNode(hasText("Soy Carlos"))
+                composeRule.onAllNodes(hasScrollToNodeAction()).onFirst()
+                    .performScrollToNode(hasText(comments.last().text))
             }.isSuccess
         }
-        composeRule.onNodeWithText("Soy Carlos").assertIsDisplayed()
+    }
+
+    private fun openMenuOf(name: String) =
+        composeRule.onNodeWithContentDescription("Options for the comment by $name").performClick()
+
+    @Test
+    fun a_comment_says_who_wrote_it_and_its_options_are_behind_three_dots() {
+        showComments(TestPosts.comment("1", TestSocial.user("dani-id", "dani", "Dani"), "Soy Dani"))
+
+        composeRule.onNodeWithText("Dani").assertIsDisplayed()
+        composeRule.onNodeWithText("Soy Dani").assertIsDisplayed()
+        composeRule.onNodeWithText("Report").assertDoesNotExist()
+        composeRule.onNodeWithText("Delete").assertDoesNotExist()
+    }
+
+    @Test
+    fun your_own_comment_can_only_be_deleted_and_it_asks_first() {
+        showComments(TestPosts.comment("1", TestSocial.user("ana-id", "ana", "Ana"), "Soy Ana", canDelete = true))
+
+        openMenuOf("Ana")
+
+        composeRule.onNodeWithText("Report").assertDoesNotExist()
         composeRule.onNodeWithText("Delete").performClick()
         assertEquals(listOf(PostDialog.ConfirmDeleteComment::class.simpleName), calls)
+        composeRule.onNodeWithText("Delete").assertDoesNotExist()
+    }
+
+    @Test
+    fun the_comment_of_someone_else_can_only_be_reported() {
+        showComments(TestPosts.comment("1", TestSocial.user("dani-id", "dani", "Dani"), "Soy Dani"))
+
+        openMenuOf("Dani")
+
+        composeRule.onNodeWithText("Delete").assertDoesNotExist()
+        composeRule.onNodeWithText("Report").performClick()
+        assertEquals(listOf(PostDialog.ReportComment::class.simpleName), calls)
+    }
+
+    /** The server lets the author of the post delete what others write in it. */
+    @Test
+    fun in_your_own_post_the_comment_of_someone_else_can_be_deleted_and_reported() {
+        showComments(TestPosts.comment("1", TestSocial.user("dani-id", "dani", "Dani"), "Soy Dani", canDelete = true))
+
+        openMenuOf("Dani")
+
+        composeRule.onNodeWithText("Report").assertIsDisplayed()
+        composeRule.onNodeWithText("Delete").performClick()
+        assertEquals(listOf(PostDialog.ConfirmDeleteComment::class.simpleName), calls)
+    }
+
+    @Test
+    fun each_comment_has_its_own_menu() {
+        showComments(
+            TestPosts.comment("1", TestSocial.user("ana-id", "ana", "Ana"), "Soy Ana", canDelete = true),
+            TestPosts.comment("2", TestSocial.user("dani-id", "dani", "Dani"), "Soy Dani"),
+        )
+
+        openMenuOf("Dani")
+        composeRule.onNodeWithText("Report").performClick()
+
+        assertEquals(listOf(PostDialog.ReportComment::class.simpleName), calls)
     }
 
     @Test
