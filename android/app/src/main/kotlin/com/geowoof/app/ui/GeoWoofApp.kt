@@ -1,6 +1,11 @@
 package com.geowoof.app.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -126,13 +131,14 @@ fun MainShell(
     )
     val showNavigation = currentDestination == null ||
         TopLevelDestination.entries.any { currentDestination.isInHierarchyOf(it) }
+    val layoutType = if (showNavigation) {
+        NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfoV2())
+    } else {
+        NavigationSuiteType.None
+    }
     NavigationSuiteScaffold(
         modifier = modifier,
-        layoutType = if (showNavigation) {
-            NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfoV2())
-        } else {
-            NavigationSuiteType.None
-        },
+        layoutType = layoutType,
         navigationSuiteItems = {
             TopLevelDestination.entries.forEach { destination ->
                 val selected = currentDestination.isInHierarchyOf(destination)
@@ -161,11 +167,28 @@ fun MainShell(
             }
         },
     ) {
-        CompositionLocalProvider(LocalInbox provides inbox) {
-            navHost(appState.navController)
-            OpenPendingLink(pendingLink, appState.navController, onConsumeLink)
+        // The bar already leaves room for the system bar under it. If the screens did it as well, a strip of the
+        // background would be left between them and the bar (2026-11-08): their Scaffolds leave out what is consumed.
+        Box(Modifier.consumeWindowInsets(layoutType.coveredInsets())) {
+            CompositionLocalProvider(LocalInbox provides inbox) {
+                navHost(appState.navController)
+                OpenPendingLink(pendingLink, appState.navController, onConsumeLink)
+            }
         }
     }
+}
+
+/** The system bar on the side of the window that the navigation takes: below a bar, beside a rail. */
+@Composable
+private fun NavigationSuiteType.coveredInsets(): WindowInsets = when (this) {
+    NavigationSuiteType.None -> WindowInsets(0)
+
+    NavigationSuiteType.NavigationBar,
+    NavigationSuiteType.ShortNavigationBarCompact,
+    NavigationSuiteType.ShortNavigationBarMedium,
+    -> WindowInsets.systemBars.only(WindowInsetsSides.Bottom)
+
+    else -> WindowInsets.systemBars.only(WindowInsetsSides.Start)
 }
 
 /**
