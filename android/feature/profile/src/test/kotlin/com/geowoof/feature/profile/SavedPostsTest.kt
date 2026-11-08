@@ -5,13 +5,13 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.paging.LoadState
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Post
 import com.geowoof.core.model.TaggedPet
 import com.geowoof.core.testing.TestPosts
 import com.geowoof.core.testing.TestSocial
+import com.geowoof.core.ui.PagedContent
 import com.geowoof.core.ui.relativeToNow
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -35,9 +35,9 @@ class SavedPostsTest {
         }
     }
 
-    private fun showPlaceholder(refresh: LoadState, onRetry: () -> Unit = {}) {
+    private fun showPlaceholder(content: PagedContent, onRetry: () -> Unit = {}) {
         composeRule.setContent {
-            GeoWoofTheme(dynamicColor = false) { SavedPostsPlaceholder(refresh, onRetry) }
+            GeoWoofTheme(dynamicColor = false) { SavedPostsPlaceholder(content, onRetry) }
         }
     }
 
@@ -120,7 +120,7 @@ class SavedPostsTest {
 
     @Test
     fun while_they_are_on_their_way_it_says_it_is_loading() {
-        showPlaceholder(LoadState.Loading)
+        showPlaceholder(PagedContent.Loading)
 
         composeRule.onNodeWithContentDescription("Loading", substring = true).assertIsDisplayed()
     }
@@ -128,7 +128,7 @@ class SavedPostsTest {
     @Test
     fun if_they_could_not_be_loaded_it_can_try_again() {
         var retries = 0
-        showPlaceholder(LoadState.Error(IllegalStateException()), onRetry = { retries++ })
+        showPlaceholder(PagedContent.Error, onRetry = { retries++ })
 
         composeRule.onNodeWithText("The saved posts could not be loaded.").assertIsDisplayed()
         composeRule.onNodeWithText("Try again").performClick()
@@ -138,7 +138,7 @@ class SavedPostsTest {
 
     @Test
     fun without_any_it_says_what_will_appear_here() {
-        showPlaceholder(LoadState.NotLoading(endOfPaginationReached = true))
+        showPlaceholder(PagedContent.Empty)
 
         composeRule.onNodeWithText("Nothing saved yet").assertIsDisplayed()
     }

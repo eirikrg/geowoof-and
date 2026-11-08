@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.component.ErrorState
 import com.geowoof.core.designsystem.component.GeoWoofIllustrations
@@ -22,19 +21,20 @@ import com.geowoof.core.designsystem.component.SkeletonBox
 import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
+import com.geowoof.core.ui.PagedContent
 
 /** What the tab shows while there are no cards: they are on their way, they could not be loaded or there are none. */
 @Composable
-internal fun SavedPostsPlaceholder(refresh: LoadState, onRetry: () -> Unit, modifier: Modifier = Modifier) {
-    when (refresh) {
+internal fun SavedPostsPlaceholder(content: PagedContent, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+    when (content) {
         // Where the first card will be, so that nothing jumps when they come.
-        is LoadState.Loading -> SkeletonList(
+        PagedContent.Loading -> SkeletonList(
             modifier = modifier.padding(top = GeoWoofTheme.spacing.small),
             rows = SKELETON_ROWS,
             row = { SavedPostSkeleton() },
         )
 
-        is LoadState.Error -> ErrorState(
+        PagedContent.Error -> ErrorState(
             title = stringResource(R.string.feature_profile_saved_failed),
             message = "",
             retryLabel = stringResource(R.string.feature_profile_retry),
@@ -42,13 +42,16 @@ internal fun SavedPostsPlaceholder(refresh: LoadState, onRetry: () -> Unit, modi
             modifier = modifier,
         )
 
-        is LoadState.NotLoading -> EmptyState(
+        PagedContent.Empty -> EmptyState(
             icon = GeoWoofIcons.Bookmark,
             title = stringResource(R.string.feature_profile_no_saved_title),
             message = stringResource(R.string.feature_profile_no_saved),
             modifier = modifier,
             illustration = GeoWoofIllustrations.EmptySaved,
         )
+
+        // The cards themselves.
+        PagedContent.Items -> Unit
     }
 }
 

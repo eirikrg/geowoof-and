@@ -10,10 +10,12 @@ dependencies {
     api(projects.core.designsystem)
     api(projects.core.model)
     implementation(projects.core.common)
+    api(libs.androidx.paging.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.credentials)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.androidx.credentials.playServicesAuth)
     implementation(libs.googleId)
+    testImplementation(projects.core.testing)
 }

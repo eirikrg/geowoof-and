@@ -53,10 +53,12 @@ import com.geowoof.core.model.PetSearchResult
 import com.geowoof.core.model.PetSpecies
 import com.geowoof.core.model.Post
 import com.geowoof.core.model.UserSummary
+import com.geowoof.core.ui.PagedContent
 import com.geowoof.core.ui.PostGridItem
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.UserRow
 import com.geowoof.core.ui.labelRes
+import com.geowoof.core.ui.pagedContent
 import com.geowoof.core.ui.userMessage
 import kotlinx.coroutines.flow.flowOf
 
@@ -154,6 +156,7 @@ internal fun SearchContent(
 
                 uiState.tab == SearchTab.People -> Results(
                     items = users,
+                    searchedText = uiState.searchedText,
                     emptyMessage = stringResource(R.string.feature_search_no_people),
                 ) {
                     items(users.itemCount, key = users.itemKey(UserSummary::id)) { index ->
@@ -163,6 +166,7 @@ internal fun SearchContent(
 
                 else -> Results(
                     items = pets,
+                    searchedText = uiState.searchedText,
                     emptyMessage = stringResource(R.string.feature_search_no_pets),
                 ) {
                     items(pets.itemCount, key = pets.itemKey(PetSearchResult::id)) { index ->
@@ -178,24 +182,24 @@ internal fun SearchContent(
 @Composable
 private fun <T : Any> Results(
     items: LazyPagingItems<T>,
+    searchedText: String,
     emptyMessage: String,
     modifier: Modifier = Modifier,
     content: LazyListScope.() -> Unit,
 ) {
-    val refresh = items.loadState.refresh
-    val isEmpty = items.itemCount == 0
-    when {
-        isEmpty && refresh is LoadState.Loading -> SkeletonList(modifier)
+    val failure = (items.loadState.refresh as? LoadState.Error)?.error as? RemoteLoadException
+    when (items.pagedContent(key = searchedText)) {
+        PagedContent.Loading -> SkeletonList(modifier)
 
-        isEmpty && refresh is LoadState.Error -> ErrorState(
+        PagedContent.Error -> ErrorState(
             title = stringResource(R.string.feature_search_error_title),
-            message = (refresh.error as? RemoteLoadException)?.error?.userMessage().orEmpty(),
+            message = failure?.error?.userMessage().orEmpty(),
             retryLabel = stringResource(R.string.feature_search_retry),
             onRetry = items::retry,
             modifier = modifier,
         )
 
-        isEmpty -> EmptyState(
+        PagedContent.Empty -> EmptyState(
             icon = GeoWoofIcons.Search,
             title = stringResource(R.string.feature_search_nothing_found),
             message = emptyMessage,
@@ -203,7 +207,7 @@ private fun <T : Any> Results(
             illustration = GeoWoofIllustrations.EmptySearch,
         )
 
-        else -> LazyColumn(modifier = modifier.fillMaxSize(), content = content)
+        PagedContent.Items -> LazyColumn(modifier = modifier.fillMaxSize(), content = content)
     }
 }
 
