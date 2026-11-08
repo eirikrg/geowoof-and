@@ -2,6 +2,7 @@ package com.geowoof.feature.search
 
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
+import com.geowoof.core.data.repository.ContentChanges
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.testing.FakePeopleRepository
@@ -25,7 +26,7 @@ class SearchViewModelTest {
 
     private val people = FakePeopleRepository()
     private val recents = FakeRecentPeopleRepository()
-    private val viewModel by lazy { SearchViewModel(people, recents) }
+    private val viewModel by lazy { SearchViewModel(people, recents, ContentChanges()) }
 
     private fun TestScope.subscribe() {
         backgroundScope.launch { viewModel.uiState.collect {} }

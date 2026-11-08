@@ -21,7 +21,7 @@ class AccountRepositoryTest {
         runCurrent()
         sessions.start(networkSession(user = networkUser(username = null)))
         runCurrent()
-        return DefaultAccountRepository(network, sessions) to sessions
+        return DefaultAccountRepository(network, sessions, ContentChanges()) to sessions
     }
 
     private fun SessionManager.user() = (sessionState.value as SessionState.SignedIn).user

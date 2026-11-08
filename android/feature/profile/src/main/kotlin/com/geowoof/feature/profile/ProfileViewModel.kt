@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.geowoof.core.data.repository.AuthRepository
+import com.geowoof.core.data.repository.ContentChange
+import com.geowoof.core.data.repository.ContentChanges
 import com.geowoof.core.data.repository.PeopleRepository
 import com.geowoof.core.data.repository.PetsRepository
 import com.geowoof.core.data.repository.PostsRepository
@@ -45,6 +47,7 @@ class ProfileViewModel @Inject constructor(
     private val people: PeopleRepository,
     private val social: SocialRepository,
     postsRepository: PostsRepository,
+    contentChanges: ContentChanges,
 ) : ViewModel() {
     private val status = MutableStateFlow(LoadStatus(isLoading = true))
     private var isLoadingNow = false
@@ -55,6 +58,9 @@ class ProfileViewModel @Inject constructor(
         (myId()?.let { postsRepository.userPosts(it) } ?: flowOf(PagingData.empty())).cachedIn(viewModelScope)
 
     val saved: Flow<PagingData<Post>> = postsRepository.savedPosts().cachedIn(viewModelScope)
+
+    /** What changes the photos and the saved posts. A block takes away the posts of that person. */
+    val listChanges: Flow<Int> = contentChanges.of(ContentChange.Posts, ContentChange.Relationships)
 
     val uiState: StateFlow<ProfileUiState> = combine(
         combine(profiles.myProfile, pets.myPets, walksRepository.observeTotals(), ::Triple),

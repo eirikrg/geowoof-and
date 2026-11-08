@@ -9,6 +9,8 @@ import android.content.IntentFilter
 import androidx.core.app.NotificationCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.geowoof.core.data.repository.ContentChange
+import com.geowoof.core.data.repository.ContentChanges
 import com.geowoof.core.model.NotificationType
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.testing.FakeAuthRepository
@@ -16,8 +18,10 @@ import com.geowoof.core.testing.FakeChatRepository
 import com.geowoof.core.testing.FakeNotificationsRepository
 import com.geowoof.core.testing.FakeOpenConversations
 import com.geowoof.core.testing.FakePushTokenProvider
+import com.geowoof.core.testing.FakeSocialRepository
 import com.geowoof.core.testing.TestUsers
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -102,9 +106,21 @@ class PushHandlerTest {
     private val notifications = FakeNotificationsRepository()
     private val open = FakeOpenConversations()
     private val presenter = RecordingPresenter()
+    private val social = FakeSocialRepository()
+    private val changes = ContentChanges()
 
-    private fun TestScope.handler(auth: FakeAuthRepository) =
-        PushHandler(auth, chat, notifications, open, presenter, CoroutineScope(UnconfinedTestDispatcher(testScheduler)))
+    private fun TestScope.handler(auth: FakeAuthRepository) = PushHandler(
+        auth,
+        chat,
+        notifications,
+        social,
+        changes,
+        open,
+        presenter,
+        CoroutineScope(UnconfinedTestDispatcher(testScheduler)),
+    )
+
+    private suspend fun relationshipChanges() = changes.of(ContentChange.Relationships).first()
 
     @Test
     fun a_message_is_shown_and_the_list_brought_up_to_date() = runTest {
@@ -139,6 +155,30 @@ class PushHandlerTest {
 
         assertEquals(1, presenter.shown.size)
         assertEquals(1, notifications.refreshes)
+    }
+
+    @Test
+    fun someone_who_accepts_a_request_brings_the_requests_and_the_lists_up_to_date() = runTest {
+        handler(FakeAuthRepository(SIGNED_IN)).onPush(LIKE + ("type" to "FollowRequestAccepted"))
+
+        assertEquals(listOf("refreshRequests"), social.calls)
+        assertEquals(1, relationshipChanges())
+    }
+
+    @Test
+    fun a_new_request_is_not_yet_a_relationship() = runTest {
+        handler(FakeAuthRepository(SIGNED_IN)).onPush(LIKE + ("type" to "FollowRequested"))
+
+        assertEquals(listOf("refreshRequests"), social.calls)
+        assertEquals(0, relationshipChanges())
+    }
+
+    @Test
+    fun a_like_changes_no_list() = runTest {
+        handler(FakeAuthRepository(SIGNED_IN)).onPush(LIKE)
+
+        assertEquals(emptyList<String>(), social.calls)
+        assertEquals(0, relationshipChanges())
     }
 
     @Test

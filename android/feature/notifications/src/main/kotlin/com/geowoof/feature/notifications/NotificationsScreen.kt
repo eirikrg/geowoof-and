@@ -38,6 +38,8 @@ import androidx.paging.cachedIn
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.geowoof.core.data.repository.ContentChange
+import com.geowoof.core.data.repository.ContentChanges
 import com.geowoof.core.data.repository.NotificationsRepository
 import com.geowoof.core.data.repository.RemoteLoadException
 import com.geowoof.core.designsystem.component.EmptyState
@@ -49,6 +51,7 @@ import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppNotification
 import com.geowoof.core.model.NotificationType
+import com.geowoof.core.ui.RefreshOnReturn
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.RequestNotificationPermission
 import com.geowoof.core.ui.relativeToNow
@@ -60,8 +63,14 @@ import javax.inject.Inject
 
 /** Opening the list means having seen what is in it. Each row still shows whether it was new when it opened. */
 @HiltViewModel
-class NotificationsViewModel @Inject constructor(private val notifications: NotificationsRepository) : ViewModel() {
+class NotificationsViewModel @Inject constructor(
+    private val notifications: NotificationsRepository,
+    contentChanges: ContentChanges,
+) : ViewModel() {
     val items: Flow<PagingData<AppNotification>> = notifications.notifications().cachedIn(viewModelScope)
+
+    /** A block takes away what that person did. */
+    val changes: Flow<Int> = contentChanges.of(ContentChange.Relationships)
 
     fun onOpened() {
         viewModelScope.launch { notifications.markAllRead() }
@@ -85,6 +94,8 @@ internal fun NotificationsScreen(
     RequestNotificationPermission()
     val items = viewModel.items.collectAsLazyPagingItems()
     LaunchedEffect(viewModel) { viewModel.onOpened() }
+    // New ones arrive while the person is away, in a post or out of the app.
+    RefreshOnReturn(items, viewModel.changes)
     NotificationsContent(items = items, actions = actions, modifier = modifier)
 }
 

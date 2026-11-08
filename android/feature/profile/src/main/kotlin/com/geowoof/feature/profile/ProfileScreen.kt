@@ -46,6 +46,7 @@ import com.geowoof.core.model.Relationship
 import com.geowoof.core.model.RelationshipStatus
 import com.geowoof.core.model.TimelineItem
 import com.geowoof.core.model.Walk
+import com.geowoof.core.ui.RefreshOnReturn
 import com.geowoof.core.ui.userMessage
 import kotlinx.coroutines.flow.flowOf
 import java.time.Instant
@@ -68,13 +69,13 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val posts = viewModel.posts.collectAsLazyPagingItems()
     val saved = viewModel.saved.collectAsLazyPagingItems()
-    // Back from creating a post, or from saving or deleting one.
-    LifecycleResumeEffect(viewModel, posts, saved) {
+    // The numbers, always. The lists, back from posting, saving, deleting or blocking, or after a while away.
+    LifecycleResumeEffect(viewModel) {
         viewModel.onResume()
-        posts.refresh()
-        saved.refresh()
         onPauseOrDispose {}
     }
+    RefreshOnReturn(posts, viewModel.listChanges)
+    RefreshOnReturn(saved, viewModel.listChanges)
     ProfileContent(
         uiState = uiState,
         lists = ProfileLists(posts, viewModel.walks.collectAsLazyPagingItems(), saved),
@@ -115,14 +116,17 @@ internal fun UserProfileScreen(
     LaunchedEffect(uiState.isFinished) {
         if (uiState.isFinished) currentOnBack()
     }
-    LifecycleResumeEffect(viewModel, posts) {
+    LifecycleResumeEffect(viewModel) {
         viewModel.onResume()
-        posts.refresh()
         onPauseOrDispose {}
     }
+    // Only this person changes them: they are loaded again after a while away.
+    val walks = viewModel.walks.collectAsLazyPagingItems()
+    RefreshOnReturn(posts)
+    RefreshOnReturn(walks)
     ProfileContent(
         uiState = uiState,
-        lists = ProfileLists(posts, viewModel.walks.collectAsLazyPagingItems(), saved = null),
+        lists = ProfileLists(posts, walks, saved = null),
         reportDetails = viewModel.reportDetails,
         actions = ProfileActions(
             onBack = onBack,

@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.geowoof.core.data.repository.AuthRepository
+import com.geowoof.core.data.repository.ContentChange
+import com.geowoof.core.data.repository.ContentChanges
 import com.geowoof.core.data.repository.PeopleRepository
 import com.geowoof.core.data.repository.PostsRepository
 import com.geowoof.core.model.AppError
@@ -46,6 +48,7 @@ class PostDetailViewModel @Inject constructor(
     auth: AuthRepository,
     private val posts: PostsRepository,
     people: PeopleRepository,
+    contentChanges: ContentChanges,
 ) : ViewModel() {
     private val postId: String = checkNotNull(savedStateHandle["postId"])
     private val state = MutableStateFlow(PostDetailUiState())
@@ -54,6 +57,9 @@ class PostDetailViewModel @Inject constructor(
     val myUserId: String? = (auth.sessionState.value as? SessionState.SignedIn)?.user?.id
 
     val uiState: StateFlow<PostDetailUiState> = state.asStateFlow()
+
+    /** A block hides the post or a comment, and the names and the pets are shown in both. */
+    val changes: Flow<Int> = contentChanges.of(ContentChange.Relationships, ContentChange.Profile, ContentChange.Pets)
 
     val commentText = TextFieldState()
 

@@ -4,6 +4,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
+import com.geowoof.core.data.repository.ContentChange
+import com.geowoof.core.data.repository.ContentChanges
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.MediaPurpose
 import com.geowoof.core.model.Outcome
@@ -24,6 +26,7 @@ import com.geowoof.feature.social.create.CreatePostUiState
 import com.geowoof.feature.social.create.CreatePostViewModel
 import com.geowoof.feature.social.post.PostDetailViewModel
 import com.geowoof.feature.social.post.PostDialog
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -155,7 +158,8 @@ class PostDetailViewModelTest {
     private val posts = FakePostsRepository()
     private val people = FakePeopleRepository()
 
-    private fun viewModel() = PostDetailViewModel(SavedStateHandle(mapOf("postId" to "post-1")), auth, posts, people)
+    private fun viewModel() =
+        PostDetailViewModel(SavedStateHandle(mapOf("postId" to "post-1")), auth, posts, people, ContentChanges())
 
     @Test
     fun it_brings_the_post() {
@@ -378,7 +382,8 @@ class CommunityViewModelTest {
 
     @Test
     fun it_knows_who_is_looking_and_asks_for_the_feed_and_explore() = runTest {
-        val viewModel = CommunityViewModel(FakeAuthRepository(SessionState.SignedIn(TestUsers.user())), posts)
+        val viewModel =
+            CommunityViewModel(FakeAuthRepository(SessionState.SignedIn(TestUsers.user())), posts, ContentChanges())
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.feed.collect {} }
 
         assertEquals(TestUsers.user().id, viewModel.myUserId)
@@ -386,8 +391,18 @@ class CommunityViewModelTest {
     }
 
     @Test
+    fun following_someone_somewhere_else_changes_the_feed_and_explore() = runTest {
+        val changes = ContentChanges()
+        val viewModel = CommunityViewModel(FakeAuthRepository(SessionState.SignedOut), posts, changes)
+
+        changes.notify(ContentChange.Relationships)
+
+        assertEquals(1, viewModel.changes.first())
+    }
+
+    @Test
     fun a_like_goes_to_the_repository() {
-        val viewModel = CommunityViewModel(FakeAuthRepository(SessionState.SignedOut), posts)
+        val viewModel = CommunityViewModel(FakeAuthRepository(SessionState.SignedOut), posts, ContentChanges())
 
         viewModel.interactions.onToggleLike(TestPosts.post(likedByMe = true))
 

@@ -7,6 +7,8 @@ import androidx.paging.LoadState
 import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.geowoof.core.data.repository.ContentChange
+import com.geowoof.core.data.repository.ContentChanges
 import com.geowoof.core.data.repository.PeopleRepository
 import com.geowoof.core.data.repository.RecentPeopleRepository
 import com.geowoof.core.model.AppError
@@ -63,8 +65,12 @@ private data class RecentPeople(
 class SearchViewModel @Inject constructor(
     private val people: PeopleRepository,
     private val recents: RecentPeopleRepository,
+    contentChanges: ContentChanges,
 ) : ViewModel() {
     val query = TextFieldState()
+
+    /** Who can be found, with which name, and their pets. */
+    val changes: Flow<Int> = contentChanges.of(ContentChange.Relationships, ContentChange.Profile, ContentChange.Pets)
 
     private val tab = MutableStateFlow(SearchTab.People)
     private val reloads = MutableStateFlow(0)

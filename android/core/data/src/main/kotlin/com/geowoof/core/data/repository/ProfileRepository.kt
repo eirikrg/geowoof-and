@@ -34,6 +34,7 @@ internal class DefaultProfileRepository @Inject constructor(
     private val network: ProfileNetworkDataSource,
     private val dao: ProfileDao,
     private val sessions: SessionManager,
+    private val changes: ContentChanges,
 ) : ProfileRepository {
     override val myProfile: Flow<Profile?> = sessions.sessionState
         .map { (it as? SessionState.SignedIn)?.user?.id }
@@ -51,7 +52,7 @@ internal class DefaultProfileRepository @Inject constructor(
 
     override suspend fun save(draft: ProfileDraft): Outcome<Profile> =
         when (val outcome = network.replaceMyProfile(draft.toBody())) {
-            is Outcome.Success -> Outcome.Success(store(outcome.value))
+            is Outcome.Success -> Outcome.Success(store(outcome.value)).also { changes.notify(ContentChange.Profile) }
             is Outcome.Failure -> outcome
         }
 

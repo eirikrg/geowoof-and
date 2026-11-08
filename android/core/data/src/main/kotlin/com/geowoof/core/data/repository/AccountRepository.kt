@@ -27,6 +27,7 @@ interface AccountRepository {
 internal class DefaultAccountRepository @Inject constructor(
     private val network: AuthNetworkDataSource,
     private val sessions: SessionManager,
+    private val changes: ContentChanges,
 ) : AccountRepository {
     override suspend fun usernameAvailability(username: String) =
         network.usernameAvailability(username).map { it.toModel() }
@@ -43,6 +44,7 @@ internal class DefaultAccountRepository @Inject constructor(
         is Outcome.Success -> {
             val user = outcome.value.toStored()
             sessions.updateUser(user)
+            changes.notify(ContentChange.Profile)
             Outcome.Success(user.toModel())
         }
 

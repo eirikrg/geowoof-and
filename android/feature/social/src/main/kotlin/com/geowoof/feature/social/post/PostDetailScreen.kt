@@ -62,6 +62,8 @@ import com.geowoof.core.model.ReportReason
 import com.geowoof.core.model.UserSummary
 import com.geowoof.core.ui.MentionText
 import com.geowoof.core.ui.PagedContent
+import com.geowoof.core.ui.RefreshOnReturn
+import com.geowoof.core.ui.ReloadOnReturn
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.UserRow
 import com.geowoof.core.ui.pagedContent
@@ -86,9 +88,13 @@ internal fun PostDetailScreen(
     LaunchedEffect(uiState.isFinished) {
         if (uiState.isFinished) currentOnBack()
     }
+    val comments = viewModel.comments.collectAsLazyPagingItems()
+    // Back from blocking the author or someone who commented, it is no longer to be seen.
+    ReloadOnReturn(onReload = viewModel::refresh, changes = viewModel.changes)
+    RefreshOnReturn(comments, viewModel.changes)
     PostDetailContent(
         uiState = uiState,
-        comments = viewModel.comments.collectAsLazyPagingItems(),
+        comments = comments,
         myUserId = viewModel.myUserId,
         interactionState = interactionState,
         reportDetails = interactions.reportDetails,

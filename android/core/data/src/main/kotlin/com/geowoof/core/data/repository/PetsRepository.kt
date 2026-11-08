@@ -64,6 +64,7 @@ internal class DefaultPetsRepository @Inject constructor(
     private val pets: PetDao,
     private val weights: PetWeightDao,
     private val sessions: SessionManager,
+    private val changes: ContentChanges,
 ) : PetsRepository {
     private val currentUserId: Flow<String?> = sessions.sessionState
         .map { (it as? SessionState.SignedIn)?.user?.id }
@@ -109,6 +110,7 @@ internal class DefaultPetsRepository @Inject constructor(
         val outcome = network.deletePet(petId)
         if (outcome is Outcome.Success) {
             pets.delete(petId)
+            changes.notify(ContentChange.Pets)
         }
 
         return outcome
@@ -160,6 +162,7 @@ internal class DefaultPetsRepository @Inject constructor(
         is Outcome.Success -> {
             val entity = outcome.value.toEntity()
             pets.upsert(entity)
+            changes.notify(ContentChange.Pets)
             Outcome.Success(entity.toModel())
         }
 

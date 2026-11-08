@@ -1,6 +1,7 @@
 package com.geowoof.feature.profile
 
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.geowoof.core.data.repository.ContentChanges
 import com.geowoof.core.domain.ValidateDisplayNameUseCase
 import com.geowoof.core.domain.ValidateProfileUseCase
 import com.geowoof.core.model.AppError
@@ -51,7 +52,7 @@ class ProfileViewModelsTest {
     private val posts = FakePostsRepository()
     private val media = FakeMediaRepository()
 
-    private fun profile() = ProfileViewModel(auth, profiles, pets, walks, people, social, posts)
+    private fun profile() = ProfileViewModel(auth, profiles, pets, walks, people, social, posts, ContentChanges())
 
     private fun editor() = EditProfileViewModel(profiles, media, ValidateProfileUseCase(ValidateDisplayNameUseCase()))
 
@@ -128,7 +129,7 @@ class ProfileViewModelsTest {
     @Test
     fun without_a_saved_profile_or_a_connection_the_screen_offers_to_retry_instead_of_waiting_forever() = runTest {
         val empty = FakeProfileRepository().apply { refreshResult = Outcome.Failure(AppError.Network) }
-        val viewModel = ProfileViewModel(auth, empty, pets, walks, people, social, posts)
+        val viewModel = ProfileViewModel(auth, empty, pets, walks, people, social, posts, ContentChanges())
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
         assertEquals(AppError.Network, viewModel.uiState.value.loadError)
 
@@ -141,7 +142,7 @@ class ProfileViewModelsTest {
     @Test
     fun retrying_clears_the_failure_while_it_loads_and_when_it_works() = runTest {
         val empty = FakeProfileRepository().apply { refreshResult = Outcome.Failure(AppError.Network) }
-        val viewModel = ProfileViewModel(auth, empty, pets, walks, people, social, posts)
+        val viewModel = ProfileViewModel(auth, empty, pets, walks, people, social, posts, ContentChanges())
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
 
         empty.refreshResult = Outcome.Success(Unit)

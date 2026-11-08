@@ -27,6 +27,7 @@ import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.geowoof.core.data.repository.ContentChanges
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppError
 import com.geowoof.core.model.PeopleListKind
@@ -681,7 +682,7 @@ class ProfileScreenTest {
                     Text(entry.toRoute<UserProfileRoute>().userId)
                 }
                 composable<PeopleListRoute> { entry ->
-                    val list = viewModel { PeopleListViewModel(createSavedStateHandle(), people) }
+                    val list = viewModel { PeopleListViewModel(createSavedStateHandle(), people, ContentChanges()) }
                     Text("${list.kind}:${entry.toRoute<PeopleListRoute>().userId}")
                 }
             }

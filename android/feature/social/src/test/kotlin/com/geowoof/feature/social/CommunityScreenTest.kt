@@ -31,6 +31,7 @@ import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.geowoof.core.data.repository.ContentChanges
 import com.geowoof.core.data.repository.RemoteLoadException
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppError
@@ -585,7 +586,7 @@ class CommunityScreenTest {
                     LaunchedEffect(Unit) { navController.navigate(PostRoute("post-9")) }
                 }
                 composable<PostRoute> { entry ->
-                    viewModel { PostDetailViewModel(createSavedStateHandle(), auth, posts, people) }
+                    viewModel { PostDetailViewModel(createSavedStateHandle(), auth, posts, people, ContentChanges()) }
                     Text(entry.toRoute<PostRoute>().postId)
                 }
             }
