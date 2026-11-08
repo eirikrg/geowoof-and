@@ -41,5 +41,5 @@ style:
   MaxLineLength:
     maxLineLength: 120
   ForbiddenComment:
-    # No empty TODOs in delivered code; pending work goes to docs/backlog.md.
+    # No empty TODOs in delivered code; pending work goes to the backlog.
     comments: ['TODO:', 'FIXME:', 'STOPSHIP:']

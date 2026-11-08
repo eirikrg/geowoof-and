@@ -11,7 +11,7 @@ import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 // The lists that are only about the signed-in person. Followers and friends are not kept here, because
-// they can be very long and other people change them all the time (docs/decisions/0009).
+// they can be very long and other people change them all the time.
 
 /** What a list shows of the other person. */
 data class UserColumns(

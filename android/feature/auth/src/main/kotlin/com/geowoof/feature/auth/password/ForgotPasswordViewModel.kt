@@ -45,7 +45,7 @@ class ForgotPasswordViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    /** The API answers the same whether or not the account exists (docs/api.md). */
+    /** The API answers the same whether or not the account exists. */
     fun submit() {
         if (_uiState.value.isSubmitting) return
         val emailText = email.text.toString().trim()

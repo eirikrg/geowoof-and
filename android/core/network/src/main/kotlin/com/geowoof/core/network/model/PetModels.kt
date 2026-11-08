@@ -2,7 +2,7 @@ package com.geowoof.core.network.model
 
 import kotlinx.serialization.Serializable
 
-// Wire format of the API (docs/api.md, phase 2). Plain dates are ISO-8601 strings without time.
+// Wire format of the API. Plain dates are ISO-8601 strings without time.
 
 @Serializable
 data class NetworkImage(val assetId: String, val thumbUrl: String? = null, val mediumUrl: String? = null)
@@ -64,7 +64,7 @@ data class NetworkWeightEntry(val id: String, val measuredOn: String, val weight
 @Serializable
 data class WeightBody(val measuredOn: String, val weightKg: Double)
 
-/** A page of a list (docs/api.md, section 3). */
+/** A page of a list. */
 @Serializable
 data class NetworkPage<T>(val items: List<T>, val nextCursor: String? = null)
 

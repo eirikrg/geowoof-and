@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 /**
  * The OAuth client ID to request Google ID tokens with, or `null` when Sign in with Google is
- * unavailable: not configured in this build (docs/decisions/0012) or disabled in the backend.
+ * unavailable: not configured in this build or disabled in the backend.
  */
 class GetGoogleClientIdUseCase @Inject constructor(private val config: AppConfig, private val auth: AuthRepository) {
     suspend operator fun invoke(): String? {

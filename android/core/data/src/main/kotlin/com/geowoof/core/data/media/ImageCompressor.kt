@@ -25,7 +25,7 @@ import kotlin.math.roundToInt
 
 class CompressedImage(val bytes: ByteArray, val contentType: String)
 
-/** Prepares a picked image for upload: at most 2048 px, JPEG 85 % (docs/decisions/0010). */
+/** Prepares a picked image for upload: at most 2048 px, JPEG 85 %. */
 interface ImageCompressor {
     suspend fun compress(contentUri: String): Outcome<CompressedImage>
 

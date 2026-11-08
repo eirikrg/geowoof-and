@@ -4,9 +4,6 @@ plugins {
 
 android {
     namespace = "com.geowoof.core.testing"
-
-    // The polyline vectors and GPX traces shared with the backend tests.
-    sourceSets.getByName("main").resources.directories.add("../../../docs/fixtures")
 }
 
 dependencies {

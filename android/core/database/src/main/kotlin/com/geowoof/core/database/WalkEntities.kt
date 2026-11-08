@@ -55,7 +55,7 @@ data class ActiveWalkWithPoints(
     @Relation(parentColumn = "id", entityColumn = "walkId") val points: List<ActiveWalkPointEntity>,
 )
 
-// Saved walks: the ones waiting to be uploaded and the cached ones of the server (docs/decisions/0009).
+// Saved walks: the ones waiting to be uploaded and the cached ones of the server.
 
 @Entity(tableName = "walks", indices = [Index("startedAtEpochMs", "id")])
 data class WalkEntity(

@@ -45,7 +45,7 @@ private const val SCRIM_ALPHA = 0.5f
 
 /**
  * A photo of a post, cut to fill its space. The cache key uses the asset id and not the URL, because the signature
- * of a URL changes every time the server sends it (docs/decisions/0010).
+ * of a URL changes every time the server sends it.
  */
 @Composable
 fun PostImage(

@@ -15,7 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GeoWoof">
 
-        <!-- Injected by the Secrets Gradle Plugin; see docs/setup.md. -->
+        <!-- Injected by the Secrets Gradle Plugin from secrets.properties. -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />

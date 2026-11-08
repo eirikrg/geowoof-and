@@ -19,7 +19,7 @@ import javax.inject.Inject
 /**
  * Keeps recording with the screen off, in the foreground and with a persistent notification. It does
  * not ask for background location. If the system kills the process, `START_STICKY` brings it back
- * and it continues from what is in Room (docs/architecture.md, 4.4).
+ * and it continues from what is in Room.
  */
 @AndroidEntryPoint
 class WalkTrackingService : Service() {

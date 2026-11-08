@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/** Your own profile. What is yours comes from Room, and the numbers from the server (docs/decisions/0009). */
+/** Your own profile. What is yours comes from Room, and the numbers from the server. */
 @Suppress("LongParameterList")
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -83,7 +83,7 @@ class ProfileViewModel @Inject constructor(
         refresh()
     }
 
-    /** What Room already has stays on screen while this runs (docs/decisions/0009). */
+    /** What Room already has stays on screen while this runs. */
     fun refresh() {
         status.update { it.copy(isLoading = true, error = null, lastFailure = null) }
         load()

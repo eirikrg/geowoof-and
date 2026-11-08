@@ -10,7 +10,7 @@ import com.geowoof.feature.search.navigation.SearchRoute
 import com.geowoof.feature.social.navigation.CommunityRoute
 import kotlin.reflect.KClass
 
-/** Destinations of the main navigation (docs/decisions/0013), in display order. */
+/** Destinations of the main navigation, in display order. */
 enum class TopLevelDestination(
     @param:DrawableRes val selectedIcon: Int,
     @param:DrawableRes val unselectedIcon: Int,

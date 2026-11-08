@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.geowoof.core.designsystem.R
 
-/** Nunito, a single variable file: its rounded ends are those of the logo (docs/design/README.md). */
+/** Nunito, a single variable file: its rounded ends are those of the logo. */
 @OptIn(ExperimentalTextApi::class)
 private fun nunito(weight: FontWeight) = Font(
     resId = R.font.core_designsystem_nunito,

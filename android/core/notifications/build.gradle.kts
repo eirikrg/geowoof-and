@@ -15,7 +15,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(platform(libs.androidx.compose.bom))
 
-    // Without google-services.json it does nothing: the token is simply never asked for (ADR-0012).
+    // Without google-services.json it does nothing: the token is simply never asked for.
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.installations)
     implementation(libs.firebase.messaging)

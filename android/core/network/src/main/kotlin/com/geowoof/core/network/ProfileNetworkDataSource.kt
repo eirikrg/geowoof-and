@@ -9,7 +9,7 @@ import retrofit2.http.GET
 import retrofit2.http.PUT
 import javax.inject.Inject
 
-/** Profile endpoints (docs/api.md, phase 2). */
+/** Profile endpoints. */
 internal interface ProfileApi {
     @GET("api/v1/me/profile")
     suspend fun myProfile(): NetworkProfile

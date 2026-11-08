@@ -8,7 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-/** Build-time configuration from secrets.properties / local.defaults.properties (docs/setup.md). */
+/** Build-time configuration from secrets.properties / local.defaults.properties. */
 @Module
 @InstallIn(SingletonComponent::class)
 object AppConfigModule {

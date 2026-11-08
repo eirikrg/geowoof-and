@@ -26,7 +26,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 
-/** The whole chain with the simulated traces of docs/fixtures, whose truth is known. */
+/** The whole chain with the simulated traces of the fixtures, whose truth is known. */
 class WalkTrackingTest {
     private val filter = FilterLocationUseCase()
     private val smooth = SmoothRouteUseCase()

@@ -6,7 +6,7 @@ import java.time.LocalDate
 /** An image of the Media module. The signed URLs are `null` while it is being processed. */
 data class RemoteImage(val assetId: String, val thumbUrl: String?, val mediumUrl: String?)
 
-/** What an image is uploaded for: the API only lets it be used for that (docs/api.md). */
+/** What an image is uploaded for: the API only lets it be used for that. */
 enum class MediaPurpose {
     UserAvatar,
     PetAvatar,

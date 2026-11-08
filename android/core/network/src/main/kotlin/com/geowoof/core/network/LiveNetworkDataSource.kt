@@ -23,7 +23,7 @@ import retrofit2.http.PATCH
 import java.time.Instant
 import javax.inject.Inject
 
-/** The settings of docs/api.md, phase 7. */
+/** The endpoints of the live settings. */
 internal interface SettingsApi {
     @GET("api/v1/me/settings")
     suspend fun settings(): NetworkSettings
@@ -47,7 +47,7 @@ internal class RetrofitSettingsNetworkDataSource @Inject constructor(
     override suspend fun updateSettings(body: SettingsBody) = apiCall(json) { api.updateSettings(body) }
 }
 
-/** The live hub of docs/realtime.md. A call fails at once without a connection: nothing waits for it to come back. */
+/** The live hub. A call fails at once without a connection: nothing waits for it to come back. */
 interface LiveNetworkDataSource {
     val state: StateFlow<RealtimeState>
 

@@ -32,8 +32,8 @@ import com.geowoof.core.ui.labelRes
 
 /**
  * Before sharing anything the person is told what is sent and chooses who sees it, with no option
- * marked the first time. It also serves as the prominent disclosure of Google Play
- * (docs/decisions/0007). Choosing takes a second step, because a slip here has consequences.
+ * marked the first time. It also serves as the prominent disclosure of Google Play.
+ * Choosing takes a second step, because a slip here has consequences.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

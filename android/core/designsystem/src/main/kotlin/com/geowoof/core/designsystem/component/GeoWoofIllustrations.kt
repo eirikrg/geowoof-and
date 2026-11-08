@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.painterResource
 import com.geowoof.core.designsystem.R
 
-/** The illustrations of the app, from docs/design/illustrations. */
+/** The illustrations of the app. */
 object GeoWoofIllustrations {
     @DrawableRes val EmptyBlocked: Int = R.drawable.core_designsystem_illustration_empty_blocked
 

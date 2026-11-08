@@ -207,7 +207,7 @@ fun WalkPhotoImage(photo: WalkPhoto, modifier: Modifier = Modifier, onClick: (()
         when {
             photo.localPath != null -> File(photo.localPath!!)
 
-            // By asset, because the signature of the URL changes each time (docs/decisions/0010).
+            // By asset, because the signature of the URL changes each time.
             image?.mediumUrl != null -> ImageRequest.Builder(context)
                 .data(image.mediumUrl)
                 .memoryCacheKey("${image.assetId}:Medium")

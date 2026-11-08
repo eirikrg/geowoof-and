@@ -2,7 +2,7 @@ package com.geowoof.core.network.model
 
 import kotlinx.serialization.Serializable
 
-// The chat and the notifications of docs/api.md (phase 8), and the events of docs/realtime.md.
+// Wire format of the chat and the notifications, and the events of the chat hub.
 
 @Serializable
 data class NetworkMessage(

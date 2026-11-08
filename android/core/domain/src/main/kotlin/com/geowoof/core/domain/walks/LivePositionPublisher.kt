@@ -25,7 +25,7 @@ import javax.inject.Inject
 /**
  * Shares the position of a walk on the live map. Nothing of what happens here can touch the
  * recording: it listens to the device on its own, it does not queue anything and a failure only
- * means that the next position tries again (docs/decisions/0007).
+ * means that the next position tries again.
  *
  * The positions near the start stay on the device, so that the server never learns where a walk
  * begins. The route of the walk is not used because it only grows when moving: someone standing

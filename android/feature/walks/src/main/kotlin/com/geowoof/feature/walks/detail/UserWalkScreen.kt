@@ -77,7 +77,7 @@ data class UserWalkUiState(
     val error: AppError? = null,
 )
 
-/** A walk of someone else. It only comes from the server, which decides what can be seen (docs/decisions/0009). */
+/** A walk of someone else. It only comes from the server, which decides what can be seen. */
 @HiltViewModel
 class UserWalkViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,

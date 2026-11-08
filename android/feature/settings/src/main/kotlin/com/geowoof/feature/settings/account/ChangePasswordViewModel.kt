@@ -65,7 +65,7 @@ class ChangePasswordViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    /** The API starts a new session and closes the others (docs/api.md). */
+    /** The API starts a new session and closes the others. */
     fun submit() {
         val state = _uiState.value
         if (state.isSubmitting) return

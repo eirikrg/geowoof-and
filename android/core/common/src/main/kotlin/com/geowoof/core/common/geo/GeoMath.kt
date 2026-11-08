@@ -10,7 +10,7 @@ import kotlin.math.sqrt
 object GeoMath {
     private const val EARTH_RADIUS_M = 6_371_008.8
 
-    /** Haversine distance: precise enough for the short steps of a walk. It matches the server (ADR-0006). */
+    /** Haversine distance: precise enough for the short steps of a walk. It matches the server. */
     fun distanceMeters(from: GeoPoint, to: GeoPoint): Double {
         val latFrom = Math.toRadians(from.latitude)
         val latTo = Math.toRadians(to.latitude)

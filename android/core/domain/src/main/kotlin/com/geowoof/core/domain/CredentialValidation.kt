@@ -6,7 +6,7 @@ import com.geowoof.core.model.EmailIssue
 import com.geowoof.core.model.PasswordIssue
 import javax.inject.Inject
 
-// Client-side mirrors of the API rules (docs/api.md), for instant feedback. The API stays
+// Client-side mirrors of the API rules, for instant feedback. The API stays
 // authoritative: these never replace its validation.
 
 class ValidateEmailUseCase @Inject constructor() {

@@ -33,7 +33,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
 
-/** What a push says (docs/api.md, phase 8). All of it comes as text. */
+/** What a push says. All of it comes as text. */
 internal sealed interface PushContent {
     data class Message(val conversationId: String, val senderName: String, val body: String, val hasImage: Boolean) :
         PushContent

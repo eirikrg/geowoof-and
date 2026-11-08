@@ -47,7 +47,7 @@ interface WalkSyncScheduler {
 /** A list of walks could not be updated. What Room already has stays on screen. */
 class WalkLoadException(val error: AppError) : Exception("The walks could not be loaded: $error")
 
-/** Saved walks: read from Room, and written in a queue that works without a connection (docs/decisions/0009). */
+/** Saved walks: read from Room, and written in a queue that works without a connection. */
 interface WalksRepository {
     /** The walks of the person, or those of one of their pets, from the most recent to the oldest. */
     fun walks(petId: String? = null): Flow<PagingData<Walk>>
@@ -144,7 +144,7 @@ internal class DefaultWalksRepository @Inject constructor(
     }
 }
 
-/** Brings the pages of the server to Room, which is what the list reads (docs/decisions/0009). */
+/** Brings the pages of the server to Room, which is what the list reads. */
 @OptIn(ExperimentalPagingApi::class)
 internal class WalkRemoteMediator(
     private val petId: String?,

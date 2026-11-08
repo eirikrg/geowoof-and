@@ -76,7 +76,7 @@ class GoogleIdTokenRequester(private val context: Context, private val serverCli
     }
 }
 
-/** `null` when Google sign-in is not configured in this build (docs/decisions/0012). */
+/** `null` when Google sign-in is not configured in this build. */
 @Composable
 fun rememberGoogleIdTokenRequester(serverClientId: String?): GoogleIdTokenRequester? {
     val context = LocalContext.current
@@ -128,7 +128,7 @@ fun rememberGoogleSignInLauncher(
 
 /**
  * The "Continue with Google" button, with the colors, the padding and the logo that Google's branding
- * guidelines ask for in each theme. The font is the system one (docs/backlog.md).
+ * guidelines ask for in each theme. The font is the system one, for now.
  */
 @Composable
 fun GoogleSignInButton(onClick: () -> Unit, loading: Boolean, modifier: Modifier = Modifier, enabled: Boolean = true) {

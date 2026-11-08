@@ -27,7 +27,7 @@ data class WalkNotificationState(val status: ActiveWalkStatus, val distanceM: In
 
 /**
  * What the service does, without anything of Android: Room says what the walk needs, and this
- * follows it. The screens and the notification only change Room (docs/architecture.md, 4.4).
+ * follows it. The screens and the notification only change Room.
  */
 class WalkTrackingSession @Inject constructor(
     private val activeWalks: ActiveWalkRepository,

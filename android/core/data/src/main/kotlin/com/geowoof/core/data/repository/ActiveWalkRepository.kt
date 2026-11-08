@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 /**
  * The walk being recorded. Everything goes to Room at once, so that the death of the process only
- * loses the time until it comes back (docs/architecture.md, 4.4).
+ * loses the time until it comes back.
  */
 interface ActiveWalkRepository {
     val activeWalk: Flow<ActiveWalk?>

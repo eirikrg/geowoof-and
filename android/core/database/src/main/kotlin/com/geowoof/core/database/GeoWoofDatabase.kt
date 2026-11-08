@@ -16,7 +16,7 @@ import androidx.room.Upsert
 import androidx.room.migration.AutoMigrationSpec
 import kotlinx.coroutines.flow.Flow
 
-// Room is the source of truth of what the screens show (docs/decisions/0009).
+// Room is the source of truth of what the screens show.
 
 @Entity(tableName = "profiles")
 data class ProfileEntity(

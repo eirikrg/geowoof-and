@@ -19,7 +19,7 @@ enum class FixRejection {
     OutOfOrder,
 }
 
-/** Decides which positions can be part of a route (ADR-0006). */
+/** Decides which positions can be part of a route. */
 class FilterLocationUseCase @Inject constructor() {
     /** Why the position cannot be used, or `null` if it can. */
     fun rejection(fix: LocationFix, anchor: TrackAnchor?): FixRejection? = when {

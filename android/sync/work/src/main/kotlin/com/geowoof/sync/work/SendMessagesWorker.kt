@@ -29,8 +29,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
- * Sends what is waiting in the chat. A retry is safe, because the server recognises each message
- * (docs/decisions/0014).
+ * Sends what is waiting in the chat. A retry is safe, because the server recognises each message.
  */
 @HiltWorker
 class SendMessagesWorker @AssistedInject constructor(

@@ -8,7 +8,7 @@ import javax.inject.Inject
 data class SmoothedPosition(val position: GeoPoint, val varianceM2: Double, val timeEpochMs: Long)
 
 /**
- * Light smoothing with a one-dimensional Kalman filter per axis (ADR-0006). The less precise a
+ * Light smoothing with a one-dimensional Kalman filter per axis. The less precise a
  * position is, and the less time has passed, the less it moves the estimate.
  */
 class SmoothRouteUseCase @Inject constructor() {

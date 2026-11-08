@@ -35,7 +35,7 @@ sealed interface AppError {
     data object SessionExpired : AppError
 
     /**
-     * The API rejected the request with a ProblemDetails response (docs/api.md): [code] is stable
+     * The API rejected the request with a ProblemDetails response: [code] is stable
      * (for example `auth.invalid_credentials`) and [fieldErrors] lists invalid fields by name.
      */
     data class Api(

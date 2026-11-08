@@ -29,8 +29,8 @@ import com.geowoof.core.model.RemoteImage
 
 /**
  * Round avatar. The cache key uses the asset id and not the URL, because the signature of a URL
- * changes every time the server sends it, and the image would be downloaded again for nothing
- * (docs/decisions/0010). [localUri] shows a picture just picked, before it has been uploaded.
+ * changes every time the server sends it, and the image would be downloaded again for nothing.
+ * [localUri] shows a picture just picked, before it has been uploaded.
  * Without [allowHardware] it can be drawn on a bitmap, which is what a marker of the map is.
  */
 @Composable

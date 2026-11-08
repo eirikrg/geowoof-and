@@ -30,7 +30,7 @@ import java.time.Clock
 import java.time.Instant
 import javax.inject.Inject
 
-/** Nothing of this is stored: it is only true while it arrives (docs/decisions/0007). */
+/** Nothing of this is stored: it is only true while it arrives. */
 interface LiveRepository {
     /** While it is collected, the connection stays open and follows [viewports]. */
     fun nearby(viewports: Flow<MapViewport>): Flow<LiveNearby>

@@ -2,7 +2,7 @@ package com.geowoof.core.network.model
 
 import kotlinx.serialization.Serializable
 
-// The settings of docs/api.md (phase 7) and the messages of the hub in docs/realtime.md.
+// Wire format of the live settings and the messages of the live hub.
 
 @Serializable
 data class NetworkSettings(val liveVisibility: String? = null, val hideStartDistanceM: Int)

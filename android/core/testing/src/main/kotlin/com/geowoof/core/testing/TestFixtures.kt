@@ -9,7 +9,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.time.Instant
 
-/** The files of docs/fixtures, shared with the tests of the backend. */
+/** The polyline vectors and simulated GPS traces in this module's resources: the backend tests use the same. */
 object TestFixtures {
     data class PolylineVector(val name: String, val encoded: String, val points: List<GeoPoint>)
 

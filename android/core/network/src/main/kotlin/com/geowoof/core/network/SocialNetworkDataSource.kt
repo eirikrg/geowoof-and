@@ -17,7 +17,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import javax.inject.Inject
 
-/** Following, blocks and reports (docs/api.md, phases 4 and 5). */
+/** Following, blocks and reports. */
 internal interface SocialApi {
     @PUT("api/v1/users/{id}/follow")
     suspend fun follow(@Path("id") userId: String): NetworkRelationship

@@ -27,7 +27,7 @@ import javax.inject.Qualifier
 @Retention(AnnotationRetention.BINARY)
 internal annotation class StorageClient
 
-/** Media endpoints (docs/api.md, phase 2). */
+/** Media endpoints. */
 internal interface MediaApi {
     @POST("api/v1/media/uploads")
     suspend fun requestUpload(@Body body: UploadRequestBody): NetworkMediaUpload

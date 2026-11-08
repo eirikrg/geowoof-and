@@ -1,6 +1,6 @@
 // Generates ColorSchemes.kt for :core:designsystem with the same algorithm as Material Theme Builder,
 // for light and dark themes at standard, medium and high contrast. The colors come from the icon of the
-// app: a primary and neutrals from its sage green, and a warm clay as the accent (docs/design/README.md).
+// app: a primary and neutrals from its sage green, and a warm clay as the accent.
 //
 //   cd android/tools/theme && npm ci && node generate-colors.mjs [output-file]
 import { writeFileSync } from 'node:fs';

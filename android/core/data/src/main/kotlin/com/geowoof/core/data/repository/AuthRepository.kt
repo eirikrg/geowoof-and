@@ -16,7 +16,7 @@ import java.time.Instant
 import java.util.Locale
 import javax.inject.Inject
 
-/** Session and credentials of the user (docs/api.md, phase 1). */
+/** Session and credentials of the user. */
 interface AuthRepository {
     /** Survives process death: restored from the encrypted session file. */
     val sessionState: StateFlow<SessionState>

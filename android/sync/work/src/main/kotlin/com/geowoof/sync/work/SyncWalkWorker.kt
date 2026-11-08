@@ -13,7 +13,7 @@ import com.geowoof.core.data.repository.WalkSynchronizer
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
-/** Uploads one walk. A walk rejected by the server stays as Failed, and the user decides (docs/decisions/0009). */
+/** Uploads one walk. A walk rejected by the server stays as Failed, and the user decides. */
 @HiltWorker
 class SyncWalkWorker @AssistedInject constructor(
     @Assisted context: Context,

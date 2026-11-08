@@ -31,7 +31,7 @@ class RemoteLoadException(val error: AppError) : Exception("The list could not b
 
 /**
  * What can be found and seen of other people. It always comes from the server and it is never kept on
- * the device: what is kept could still be seen after a block or a change of visibility (docs/decisions/0009).
+ * the device: what is kept could still be seen after a block or a change of visibility.
  */
 interface PeopleRepository {
     fun searchUsers(query: String): Flow<PagingData<UserSummary>>
@@ -107,7 +107,7 @@ internal fun <T : Any> cursorPager(load: suspend (limit: Int, cursor: String?) -
 
 internal fun <T, R> NetworkPage<T>.mapItems(transform: (T) -> R) = NetworkPage(items.map(transform), nextCursor)
 
-/** Reads the pages of a list of the API, which go forward with a cursor (docs/api.md, section 3). */
+/** Reads the pages of a list of the API, which go forward with a cursor. */
 internal class CursorPagingSource<T : Any>(
     private val loadPage: suspend (limit: Int, cursor: String?) -> Outcome<NetworkPage<T>>,
 ) : PagingSource<String, T>() {

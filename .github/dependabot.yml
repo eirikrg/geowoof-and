@@ -1,14 +1,6 @@
 # Weekly dependency updates. Android Lint's own version checks are disabled in favour of these PRs.
 version: 2
 updates:
-  - package-ecosystem: nuget
-    directory: /backend
-    schedule:
-      interval: weekly
-    groups:
-      backend:
-        patterns: ["*"]
-
   - package-ecosystem: gradle
     directory: /android
     schedule:
@@ -21,16 +13,6 @@ updates:
     directory: /android/tools/theme
     schedule:
       interval: monthly
-
-  - package-ecosystem: docker-compose
-    directory: /
-    schedule:
-      interval: weekly
-
-  - package-ecosystem: docker
-    directory: /backend
-    schedule:
-      interval: weekly
 
   - package-ecosystem: github-actions
     directory: /

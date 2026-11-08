@@ -20,7 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
 
-/** What each method sends and how it reads what comes back: the contract in docs/realtime.md. */
+/** What each method sends and how it reads what comes back: the contract of the hub. */
 class LiveNetworkDataSourceTest {
     private val client = RecordingHubClient()
     private val json = Json {

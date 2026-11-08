@@ -21,7 +21,7 @@ import com.geowoof.core.network.model.NetworkWalk
 import com.geowoof.core.network.model.NetworkWalkStats
 import java.time.Instant
 
-// What comes from the server about other people and is not kept on the device (docs/decisions/0009).
+// What comes from the server about other people and is not kept on the device.
 
 /** A value from a newer API that this version does not know counts as no relationship. */
 internal fun NetworkRelationship.toModel() = Relationship(

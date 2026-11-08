@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 /**
  * Turns the positions of the device into the route of a walk: filter, smooth and write to Room at
- * once. It does nothing with maps, so tests and any screen can run without them (docs/architecture.md, 4.4).
+ * once. It does nothing with maps, so tests and any screen can run without them.
  */
 class TrackWalkUseCase @Inject constructor(
     private val location: LocationDataSource,

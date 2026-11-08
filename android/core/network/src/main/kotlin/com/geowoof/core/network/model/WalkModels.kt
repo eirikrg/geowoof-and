@@ -2,7 +2,7 @@ package com.geowoof.core.network.model
 
 import kotlinx.serialization.Serializable
 
-// Wire format of the walks (docs/api.md, phase 3).
+// Wire format of the walks.
 
 @Serializable
 data class NetworkWalkSegment(val polyline: String, val timeOffsetsMs: List<Long>)

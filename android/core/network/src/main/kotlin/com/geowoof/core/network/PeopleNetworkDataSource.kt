@@ -17,7 +17,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import javax.inject.Inject
 
-/** Search and what can be seen of other people (docs/api.md, phases 4 and 5). */
+/** Search and what can be seen of other people. */
 @Suppress("TooManyFunctions")
 internal interface PeopleApi {
     @GET("api/v1/search/users")

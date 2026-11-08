@@ -118,7 +118,7 @@ class VerifyEmailViewModel @Inject constructor(
     }
 
     private companion object {
-        /** The API accepts a new code every 60 s (docs/api.md). */
+        /** The API accepts a new code every 60 s. */
         const val RESEND_COOLDOWN_SECONDS = 60
         const val EMAIL_ALREADY_VERIFIED = "auth.email_already_verified"
     }

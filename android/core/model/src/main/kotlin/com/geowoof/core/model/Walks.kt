@@ -10,10 +10,10 @@ data class LocationFix(val position: GeoPoint, val accuracyM: Float, val timeEpo
 /** A kept point of a route. [offsetMs] counts from the start of the walk. */
 data class RoutePoint(val position: GeoPoint, val offsetMs: Long)
 
-/** A stretch without pauses: each resume opens a new one, so a pause never draws a straight line (ADR-0006). */
+/** A stretch without pauses: each resume opens a new one, so a pause never draws a straight line. */
 data class RouteSegment(val points: List<RoutePoint>)
 
-/** The limits of the API (docs/api.md). */
+/** The limits of the API. */
 object WalkLimits {
     const val MAX_DURATION_MS = 12L * 60 * 60 * 1000
     const val MAX_POINTS = 20_000
@@ -25,7 +25,7 @@ object WalkLimits {
     const val MIN_SEGMENT_POINTS = 2
 }
 
-/** The states of a walk being recorded (docs/architecture.md, 4.4). */
+/** The states of a walk being recorded. */
 enum class ActiveWalkStatus {
     /** Waiting for the first precise position: the walk starts with it. */
     Preparing,
@@ -65,7 +65,7 @@ enum class WalkVisibility {
     OnlyMe,
 }
 
-/** Walks are written offline and uploaded later (docs/decisions/0009). */
+/** Walks are written offline and uploaded later. */
 enum class WalkSyncStatus {
     PendingSync,
     Synced,

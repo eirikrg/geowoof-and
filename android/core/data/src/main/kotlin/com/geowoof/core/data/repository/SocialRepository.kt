@@ -25,7 +25,7 @@ import javax.inject.Inject
 
 /**
  * Whom the signed-in person follows, their requests and their blocks. The requests and the blocks are read
- * from Room and everything is written online (docs/decisions/0009). If a person has changed something
+ * from Room and everything is written online. If a person has changed something
  * meanwhile, the next refresh brings it.
  */
 @Suppress("TooManyFunctions")

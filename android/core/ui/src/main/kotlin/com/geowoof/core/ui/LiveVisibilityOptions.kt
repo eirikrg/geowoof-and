@@ -37,7 +37,7 @@ private fun LiveVisibility.descriptionRes(): Int = when (this) {
 
 /**
  * The three options with what each one means. With [selected] `null` none is marked, because the
- * person has to choose (docs/decisions/0007).
+ * person has to choose.
  */
 @Composable
 fun LiveVisibilityOptions(

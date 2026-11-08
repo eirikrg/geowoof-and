@@ -1,6 +1,6 @@
 package com.geowoof.core.model
 
-// Why a form field is invalid, according to the API rules (docs/api.md). Validators live in :core:domain.
+// Why a form field is invalid, according to the API rules. Validators live in :core:domain.
 
 enum class EmailIssue {
     Empty,

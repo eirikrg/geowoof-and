@@ -91,7 +91,7 @@ internal class TokenAuthenticator(
     private suspend fun refresh(refreshToken: String): RefreshResult {
         val body = RefreshBody(refreshToken)
         var outcome = apiCall(json) { refreshApi.refresh(body) }
-        // Another request rotated the same token at the same moment (docs/api.md): retry once.
+        // Another request rotated the same token at the same moment: retry once.
         if (outcome is Outcome.Failure && outcome.error.isRefreshInProgress()) {
             delay(RETRY_DELAY_MS)
             outcome = apiCall(json) { refreshApi.refresh(body) }

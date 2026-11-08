@@ -13,7 +13,7 @@ import kotlinx.coroutines.delay
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
-/** Uploads images directly to storage with signed links (docs/decisions/0010). */
+/** Uploads images directly to storage with signed links. */
 interface MediaRepository {
     /**
      * Compresses the picked image, uploads it and waits a moment for the server to process it.

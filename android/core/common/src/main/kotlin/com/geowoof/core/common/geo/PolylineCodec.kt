@@ -6,7 +6,7 @@ import kotlin.math.floor
 
 /**
  * Google's encoded polyline algorithm with precision 5 (about 1.1 m). The server has its own
- * implementation: both are tested with the vectors of docs/fixtures/polyline-vectors.json.
+ * implementation: both are tested with the same vectors, in polyline-vectors.json.
  */
 object PolylineCodec {
     private const val FACTOR = 1e5

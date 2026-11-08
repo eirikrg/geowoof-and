@@ -20,7 +20,7 @@ import javax.inject.Inject
 
 /**
  * Where the id of this device for pushes comes from. Without Firebase there is none, and everything
- * else works (ADR-0012).
+ * else works.
  */
 interface PushTokenProvider {
     /** Registers the device with the push service. The id arrives afterwards, through the messaging service. */

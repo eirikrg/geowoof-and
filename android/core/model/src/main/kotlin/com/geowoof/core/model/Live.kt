@@ -2,7 +2,7 @@ package com.geowoof.core.model
 
 import java.time.Instant
 
-/** Who can see someone on the live map while they walk (docs/realtime.md). */
+/** Who can see someone on the live map while they walk. */
 enum class LiveVisibility {
     Everyone,
     FriendsOnly,

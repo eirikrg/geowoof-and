@@ -15,7 +15,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import javax.inject.Inject
 
-// Client-side mirrors of the API rules (docs/api.md, phase 2), for instant feedback. The API stays
+// Client-side mirrors of the API rules, for instant feedback. The API stays
 // authoritative: these never replace its validation.
 
 private fun String?.tooLong(max: Int): TextIssue? = if (this != null && trim().length > max) TextIssue.TooLong else null

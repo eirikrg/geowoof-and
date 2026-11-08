@@ -11,7 +11,7 @@ import androidx.room.Transaction
 import androidx.room.Upsert
 
 // The feed is the only thing of other people that is kept on the device, so that it opens at once and without a
-// connection. Each refresh replaces it, and a block removes that person right away (docs/decisions/0009).
+// connection. Each refresh replaces it, and a block removes that person right away.
 
 /**
  * A post or a repost in the feed. What it contains goes as JSON, because it is only ever read whole. The counts

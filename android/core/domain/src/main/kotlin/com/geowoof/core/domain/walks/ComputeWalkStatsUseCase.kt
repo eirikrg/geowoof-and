@@ -9,7 +9,7 @@ import kotlin.math.roundToInt
 
 /**
  * The numbers shown while recording and until the server answers. It is the same algorithm as the
- * server, which has the last word (ADR-0006, statistics version 1).
+ * server, which has the last word.
  */
 class ComputeWalkStatsUseCase @Inject constructor() {
     operator fun invoke(segments: List<RouteSegment>, durationMs: Long): WalkStats {

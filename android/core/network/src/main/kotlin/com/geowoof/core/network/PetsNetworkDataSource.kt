@@ -16,7 +16,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import javax.inject.Inject
 
-/** Pets endpoints (docs/api.md, phase 2). */
+/** Pets endpoints. */
 internal interface PetsApi {
     @GET("api/v1/pets")
     suspend fun myPets(): NetworkPage<NetworkPet>

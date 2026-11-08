@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import javax.inject.Inject
 
-/** Pets and their weight: read from Room, written online (docs/decisions/0009). */
+/** Pets and their weight: read from Room, written online. */
 interface PetsRepository {
     val myPets: Flow<List<Pet>>
 

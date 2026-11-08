@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-/** The profile of the signed-in user: read from Room, written online (docs/decisions/0009). */
+/** The profile of the signed-in user: read from Room, written online. */
 interface ProfileRepository {
     /** `null` until it has been downloaded for the first time. */
     val myProfile: Flow<Profile?>

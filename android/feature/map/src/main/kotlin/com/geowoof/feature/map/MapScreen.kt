@@ -438,7 +438,7 @@ private fun WalkMap(
 /** Where the map stays if it cannot know where the person is: without permission or without any position. */
 private val DefaultCenter = LatLng(40.4168, -3.7038)
 
-/** A tall phone at 12 would already need more cells than the live map takes (docs/realtime.md). */
+/** A tall phone at 12 would already need more cells than the live map takes. */
 private const val DEFAULT_ZOOM = 13f
 private const val ROUTE_WIDTH = 14f
 private const val CLUSTER_ZOOM_STEP = 2f

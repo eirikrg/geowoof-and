@@ -26,7 +26,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Query
 
-/** Identity endpoints (docs/api.md, phase 1). Uses the authenticated client. */
+/** Identity endpoints. Uses the authenticated client. */
 internal interface AuthApi {
     @GET("api/v1/auth/providers")
     suspend fun providers(): NetworkAuthProviders

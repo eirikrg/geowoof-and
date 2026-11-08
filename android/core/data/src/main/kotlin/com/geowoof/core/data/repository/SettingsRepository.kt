@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-/** Read from Room, because a walk needs them without a connection, and written online (docs/decisions/0009). */
+/** Read from Room, because a walk needs them without a connection, and written online. */
 interface SettingsRepository {
     val settings: Flow<UserSettings>
 

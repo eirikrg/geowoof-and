@@ -18,7 +18,7 @@ import dagger.hilt.components.SingletonComponent
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-/** One unique work per walk, when there is a connection and with exponential backoff (docs/decisions/0009). */
+/** One unique work per walk, when there is a connection and with exponential backoff. */
 internal class WorkManagerWalkSyncScheduler @Inject constructor(@ApplicationContext private val context: Context) :
     WalkSyncScheduler {
     override fun enqueue(walkId: String) {

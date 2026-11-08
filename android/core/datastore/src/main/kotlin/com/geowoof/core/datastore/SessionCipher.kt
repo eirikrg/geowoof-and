@@ -25,7 +25,7 @@ class AeadSessionCipher(private val aead: Aead) : SessionCipher {
 
         /**
          * The Tink keyset lives in shared preferences, wrapped by a master key that never
-         * leaves the Android Keystore (docs/decisions/0005).
+         * leaves the Android Keystore.
          */
         fun withAndroidKeystore(context: Context): AeadSessionCipher {
             AeadConfig.register()

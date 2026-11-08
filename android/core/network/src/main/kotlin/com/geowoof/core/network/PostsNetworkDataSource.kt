@@ -19,7 +19,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import javax.inject.Inject
 
-/** Posts, what people do with them and the lists that show them (docs/api.md, phase 6). */
+/** Posts, what people do with them and the lists that show them. */
 @Suppress("TooManyFunctions")
 internal interface PostsApi {
     @PUT("api/v1/posts/{id}")

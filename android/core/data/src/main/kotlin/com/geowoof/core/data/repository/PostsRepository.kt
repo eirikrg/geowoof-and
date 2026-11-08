@@ -36,7 +36,7 @@ import javax.inject.Inject
 
 /**
  * Posts, and what people do with them. The feed is kept in Room so that it opens at once, and everything else
- * comes from the server: it depends on who is looking, and a block has to count at once (docs/decisions/0009).
+ * comes from the server: it depends on who is looking, and a block has to count at once.
  */
 @Suppress("TooManyFunctions")
 interface PostsRepository {

@@ -2,7 +2,7 @@ package com.geowoof.core.network.model
 
 import kotlinx.serialization.Serializable
 
-// Wire format of posts, comments, reposts and the feed (docs/api.md, phase 6).
+// Wire format of posts, comments, reposts and the feed.
 
 /** The [type] is `Image`. The videos of phase 9 add another, which this version leaves out. */
 @Serializable

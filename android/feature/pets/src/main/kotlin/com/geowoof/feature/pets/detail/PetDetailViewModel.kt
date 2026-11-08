@@ -100,7 +100,7 @@ class PetDetailViewModel @Inject constructor(
         refresh()
     }
 
-    /** What Room already has stays on screen while this runs (docs/decisions/0009). */
+    /** What Room already has stays on screen while this runs. */
     fun refresh() {
         if (actions.value.isRefreshing) return
         actions.update { it.copy(isRefreshing = true, error = null) }

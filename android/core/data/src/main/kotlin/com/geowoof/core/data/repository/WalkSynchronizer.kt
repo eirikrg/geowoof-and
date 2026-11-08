@@ -27,7 +27,7 @@ sealed interface WalkSyncResult {
 }
 
 /**
- * Sends a walk to the server: first its photos, then the walk (docs/decisions/0009). Each uploaded
+ * Sends a walk to the server: first its photos, then the walk. Each uploaded
  * photo is remembered, and repeating the `PUT` never duplicates a walk, so a retry is always safe.
  */
 interface WalkSynchronizer {

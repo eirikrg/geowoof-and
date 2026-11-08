@@ -70,7 +70,7 @@ data class FollowRequestsUiState(
     val error: AppError? = null,
 )
 
-/** What Room already has stays on screen while the list refreshes (docs/decisions/0009). */
+/** What Room already has stays on screen while the list refreshes. */
 @HiltViewModel
 class FollowRequestsViewModel @Inject constructor(private val social: SocialRepository) : ViewModel() {
     private val status = MutableStateFlow(RefreshStatus())

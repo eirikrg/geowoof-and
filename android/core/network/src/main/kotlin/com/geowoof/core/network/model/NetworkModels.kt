@@ -2,7 +2,7 @@ package com.geowoof.core.network.model
 
 import kotlinx.serialization.Serializable
 
-// Wire format of the API (docs/api.md, phase 1). Dates are ISO-8601 UTC strings.
+// Wire format of the API. Dates are ISO-8601 UTC strings.
 
 @Serializable
 data class NetworkUser(

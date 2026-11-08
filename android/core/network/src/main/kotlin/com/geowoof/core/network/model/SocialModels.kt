@@ -2,7 +2,7 @@ package com.geowoof.core.network.model
 
 import kotlinx.serialization.Serializable
 
-// Wire format of followers, blocks, reports and search (docs/api.md, phases 4 and 5).
+// Wire format of followers, blocks, reports and search.
 
 @Serializable
 data class NetworkUserSummary(

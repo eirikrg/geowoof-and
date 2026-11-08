@@ -10,7 +10,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-/** Removes the data of the account from the device when its session ends (docs/decisions/0009). */
+/** Removes the data of the account from the device when its session ends. */
 interface UserDataCleaner {
     suspend fun clear()
 }

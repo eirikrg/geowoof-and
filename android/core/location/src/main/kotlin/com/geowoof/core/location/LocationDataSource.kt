@@ -85,7 +85,7 @@ internal class AndroidLocationAccess @Inject constructor(@ApplicationContext pri
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 }
 
-/** Fused positions with high accuracy, every 4 s and without batching them (ADR-0006). */
+/** Fused positions with high accuracy, every 4 s and without batching them. */
 internal class FusedLocationDataSource @Inject constructor(
     @ApplicationContext private val context: Context,
     private val access: LocationAccess,

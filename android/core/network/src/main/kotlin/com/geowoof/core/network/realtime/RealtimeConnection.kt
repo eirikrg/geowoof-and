@@ -26,7 +26,7 @@ enum class RealtimeState {
     Connected,
 }
 
-/** The answer of the server to a call it rejected: [code] is part of the contract (docs/realtime.md). */
+/** The answer of the server to a call it rejected: [code] is part of the contract. */
 internal class HubCallException(val code: String) : Exception(code)
 
 /** The little that is asked of a SignalR connection, so that what surrounds it can be tested without one. */

@@ -54,8 +54,7 @@ interface OpenConversations {
 }
 
 /**
- * The chat: read from Room, sent through a queue, and told by the hub while the app is visible
- * (docs/decisions/0014).
+ * The chat: read from Room, sent through a queue, and told by the hub while the app is visible.
  */
 interface ChatRepository {
     val conversations: Flow<List<Conversation>>

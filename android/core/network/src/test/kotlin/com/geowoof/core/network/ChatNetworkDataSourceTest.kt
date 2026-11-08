@@ -24,7 +24,7 @@ private const val MESSAGE_JSON =
     """{"id":"m1","conversationId":"c1","senderId":"bea-id","clientMessageId":"k1","body":"Hola",""" +
         """"image":{"assetId":"a","thumbUrl":"t","mediumUrl":"m"},"sentAt":"2026-11-05T10:00:00Z","somethingNew":1}"""
 
-/** What each call sends: the contract in docs/api.md, phase 8. */
+/** What each call sends: the contract of the API. */
 class ChatNetworkDataSourceTest {
     private val server = MockWebServer()
     private lateinit var chat: RetrofitChatNetworkDataSource
@@ -113,7 +113,7 @@ class ChatNetworkDataSourceTest {
     }
 }
 
-/** What the chat hub says and how it is read: the contract in docs/realtime.md. */
+/** What the chat hub says and how it is read: the contract of the hub. */
 class ChatRealtimeDataSourceTest {
     private val client = RecordingHubClient()
 

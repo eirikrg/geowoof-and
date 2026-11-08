@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The icon is drawn on white, and the splash uses the surface of the theme (docs/design/README.md). -->
+    <!-- The icon is drawn on white, and the splash uses the surface of the theme. -->
     <color name="ic_launcher_background">#FFFFFFFF</color>
     <color name="splash_background">#FFF9FAF4</color>
 </resources>

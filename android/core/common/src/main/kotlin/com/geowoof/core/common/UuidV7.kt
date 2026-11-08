@@ -5,7 +5,7 @@ import java.util.UUID
 
 /**
  * Identifiers generated on the device, so that repeating an upload never duplicates anything.
- * Version 7 starts with the time, like every id of the API (docs/api.md).
+ * Version 7 starts with the time, like every id of the API.
  */
 object UuidV7 {
     private const val TIMESTAMP_SHIFT = 16

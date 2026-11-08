@@ -31,7 +31,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import javax.inject.Inject
 
-/** The chat of docs/api.md, phase 8. */
+/** The chat endpoints. */
 internal interface ChatApi {
     @PUT("api/v1/conversations/direct/{userId}")
     suspend fun openWith(@Path("userId") userId: String): NetworkConversation
@@ -98,7 +98,7 @@ internal class RetrofitChatNetworkDataSource @Inject constructor(private val api
     override suspend fun read(id: String, messageId: String) = apiCall(json) { api.read(id, ReadBody(messageId)) }
 }
 
-/** The notifications and the devices of docs/api.md, phase 8. */
+/** The endpoints of the notifications and the devices. */
 internal interface NotificationsApi {
     @GET("api/v1/notifications")
     suspend fun notifications(
@@ -152,7 +152,7 @@ internal class RetrofitNotificationsNetworkDataSource @Inject constructor(
 
 private const val PLATFORM = "Android"
 
-/** The chat hub of docs/realtime.md. It only tells: sending and reading go by REST. */
+/** The chat hub. It only tells: sending and reading go by REST. */
 interface ChatRealtimeDataSource {
     val state: StateFlow<RealtimeState>
 

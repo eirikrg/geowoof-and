@@ -32,7 +32,7 @@ import javax.inject.Inject
 
 /**
  * The profile of someone else, which always comes from the server: a block or a change of visibility has
- * to count at once (docs/decisions/0009). Each public function is one thing the user can do with this person.
+ * to count at once. Each public function is one thing the user can do with this person.
  */
 @Suppress("TooManyFunctions")
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -83,7 +83,7 @@ class UserProfileViewModel @Inject constructor(
         }
     }
 
-    /** The app makes one call to each module: the server does not join them (docs/decisions/0002). */
+    /** The app makes one call to each module: the server does not join them. */
     private suspend fun loadProfile(alwaysReloadWalks: Boolean) {
         val before = state.value
         val (profile, relationship, counts) = coroutineScope {

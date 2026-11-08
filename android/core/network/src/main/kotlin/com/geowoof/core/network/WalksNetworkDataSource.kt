@@ -14,7 +14,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import javax.inject.Inject
 
-/** Walks endpoints (docs/api.md, phase 3). */
+/** Walks endpoints. */
 internal interface WalksApi {
     @PUT("api/v1/walks/{id}")
     suspend fun putWalk(@Path("id") id: String, @Body body: WalkBody): NetworkWalk

@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.secrets)
 }
 
-// Firebase is optional (docs/decisions/0012): push notifications are only wired when the config exists.
+// Firebase is optional: push notifications are only wired when the config exists.
 if (file("google-services.json").exists()) {
     apply(plugin = libs.plugins.google.services.get().pluginId)
 }
