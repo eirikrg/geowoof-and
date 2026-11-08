@@ -40,4 +40,100 @@
     <string name="feature_pets_more_details">Añadir más detalles</string>
     <string name="feature_pets_weight_change">%1$s kg desde el %2$s</string>
     <string name="feature_pets_weight_no_change">Igual que el %1$s</string>
+    <string name="feature_pets_health_title">Salud</string>
+    <string name="feature_pets_health_of">Salud de %1$s</string>
+    <string name="feature_pets_health_see_all">Ver todo</string>
+    <string name="feature_pets_health_add">Añadir</string>
+    <string name="feature_pets_health_section_empty">Vacunas, desparasitaciones, citas y medicinas, y un aviso cuando toquen.</string>
+    <string name="feature_pets_health_empty_title">Aún no hay nada</string>
+    <string name="feature_pets_health_empty_message">Añade vacunas, desparasitaciones, citas con el veterinario y medicinas, y GeoWoof te avisará cuando toquen.</string>
+    <string name="feature_pets_health_vaccine">Vacuna</string>
+    <string name="feature_pets_health_deworming">Desparasitación</string>
+    <string name="feature_pets_health_vet_visit">Veterinario</string>
+    <string name="feature_pets_health_medication">Medicación</string>
+    <string name="feature_pets_health_other">Otro</string>
+    <string name="feature_pets_health_overdue">Atrasado</string>
+    <string name="feature_pets_health_upcoming">Próximo</string>
+    <string name="feature_pets_health_history">Historial</string>
+    <string name="feature_pets_health_mark_done">Marcar %1$s como hecho</string>
+    <string name="feature_pets_health_done_on">Hecho el %1$s</string>
+    <string name="feature_pets_health_today">Hoy</string>
+    <string name="feature_pets_health_tomorrow">Mañana</string>
+    <string name="feature_pets_health_day_at">%1$s a las %2$s</string>
+    <string name="feature_pets_health_no_repeat">No se repite</string>
+    <string name="feature_pets_health_every_until">%1$s hasta el %2$s</string>
+    <string name="feature_pets_health_reminder_none">Sin aviso</string>
+    <string name="feature_pets_health_reminder_on_the_day">El mismo día (una hora antes, si tiene hora)</string>
+    <string name="feature_pets_health_reminder_day_before">El día antes</string>
+    <string name="feature_pets_health_reminder_week_before">Una semana antes</string>
+    <string name="feature_pets_health_new_title">Añadir a la salud</string>
+    <string name="feature_pets_health_edit_title">Editar</string>
+    <string name="feature_pets_health_type">Tipo</string>
+    <string name="feature_pets_health_what">Qué es</string>
+    <string name="feature_pets_health_title_missing">Escribe qué es</string>
+    <string name="feature_pets_health_date">Fecha</string>
+    <string name="feature_pets_health_time">Hora</string>
+    <string name="feature_pets_health_all_day">Sin hora</string>
+    <string name="feature_pets_health_repeats">Se repite</string>
+    <string name="feature_pets_health_until">Hasta</string>
+    <string name="feature_pets_health_no_end">Sin fin</string>
+    <string name="feature_pets_health_remind">Avisarme</string>
+    <string name="feature_pets_health_already_done">Ya está hecho</string>
+    <string name="feature_pets_health_done_on_label">Hecho el</string>
+    <string name="feature_pets_health_notes">Notas</string>
+    <string name="feature_pets_health_add_to_calendar">Añadir al calendario</string>
+    <string name="feature_pets_health_no_calendar">No hay ninguna app de calendario en este móvil.</string>
+    <string name="feature_pets_health_delete_title">¿Eliminarlo?</string>
+    <string name="feature_pets_health_delete_message">Desaparece de la salud de tu mascota, con su aviso.</string>
+    <string name="feature_pets_health_notifications_off">Los avisos no pueden llegar: las notificaciones de GeoWoof están desactivadas.</string>
+    <string name="feature_pets_health_turn_on">Activarlas</string>
+    <string name="feature_pets_health_alarms_late">Los avisos pueden llegar hasta una hora tarde. Permite las alarmas y recordatorios para que lleguen a su hora.</string>
+    <string name="feature_pets_health_allow">Permitir</string>
+    <string name="feature_pets_health_notifications_title">Entérate cuando toque</string>
+    <string name="feature_pets_health_notifications_message">GeoWoof te avisa de las vacunas, desparasitaciones, citas y medicinas de tus mascotas. Puedes cambiarlo cuando quieras en los ajustes del móvil.</string>
+    <plurals name="feature_pets_health_every_days">
+        <item quantity="one">Cada día</item>
+        <item quantity="many">Cada %d días</item>
+        <item quantity="other">Cada %d días</item>
+    </plurals>
+    <plurals name="feature_pets_health_every_weeks">
+        <item quantity="one">Cada semana</item>
+        <item quantity="many">Cada %d semanas</item>
+        <item quantity="other">Cada %d semanas</item>
+    </plurals>
+    <plurals name="feature_pets_health_every_months">
+        <item quantity="one">Cada mes</item>
+        <item quantity="many">Cada %d meses</item>
+        <item quantity="other">Cada %d meses</item>
+    </plurals>
+    <plurals name="feature_pets_health_every_years">
+        <item quantity="one">Cada año</item>
+        <item quantity="many">Cada %d años</item>
+        <item quantity="other">Cada %d años</item>
+    </plurals>
+    <plurals name="feature_pets_health_in_days">
+        <item quantity="one">En %d día</item>
+        <item quantity="many">En %d días</item>
+        <item quantity="other">En %d días</item>
+    </plurals>
+    <plurals name="feature_pets_health_days_late">
+        <item quantity="one">Hace %d día</item>
+        <item quantity="many">Hace %d días</item>
+        <item quantity="other">Hace %d días</item>
+    </plurals>
+    <string-array name="feature_pets_health_vaccine_suggestions">
+        <item>Rabia</item>
+        <item>Polivalente</item>
+        <item>Leishmaniosis</item>
+        <item>Tos de las perreras</item>
+    </string-array>
+    <string-array name="feature_pets_health_deworming_suggestions">
+        <item>Interna</item>
+        <item>Externa</item>
+    </string-array>
+    <string-array name="feature_pets_health_vet_visit_suggestions">
+        <item>Revisión</item>
+        <item>Vacunación</item>
+        <item>Dentista</item>
+    </string-array>
 </resources>

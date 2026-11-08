@@ -2,6 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- A reboot wipes the alarms of the reminders of health: they are made again when it ends. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!--
+        So that the reminders ring at their time. It is not asked for: from Android 14 it starts off, and the screen of
+        the health says so, with the way to allow it. Without it they are still set, up to an hour late.
+    -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application>
         <!-- FCM addresses this device by its Firebase installation ID. Without this, register() throws. -->
@@ -16,5 +23,23 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <!-- Only the alarms of this app send it: nobody else can. -->
+        <receiver
+            android:name=".HealthReminderReceiver"
+            android:exported="false" />
+
+        <!-- The system sends these, which other apps cannot, so the receiver is exported only to hear them. -->
+        <receiver
+            android:name=".HealthRemindersRestorer"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

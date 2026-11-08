@@ -184,8 +184,9 @@ class ReplaceFriendsWithFollows : AutoMigrationSpec
         ChatMessageEntity::class,
         InboxCountersEntity::class,
         RecentPersonEntity::class,
+        HealthEventEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -195,6 +196,7 @@ class ReplaceFriendsWithFollows : AutoMigrationSpec
         AutoMigration(from = 5, to = 6),
         AutoMigration(from = 6, to = 7),
         AutoMigration(from = 7, to = 8),
+        AutoMigration(from = 8, to = 9),
     ],
 )
 abstract class GeoWoofDatabase : RoomDatabase() {
@@ -217,4 +219,6 @@ abstract class GeoWoofDatabase : RoomDatabase() {
     abstract fun activeWalkDao(): ActiveWalkDao
 
     abstract fun walkDao(): WalkDao
+
+    abstract fun healthEventDao(): HealthEventDao
 }

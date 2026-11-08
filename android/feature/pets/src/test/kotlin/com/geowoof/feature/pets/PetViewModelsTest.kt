@@ -16,6 +16,7 @@ import com.geowoof.core.model.RemoteImage
 import com.geowoof.core.model.SpeciesOtherIssue
 import com.geowoof.core.model.WeightEntry
 import com.geowoof.core.model.WeightIssue
+import com.geowoof.core.testing.FakeHealthRepository
 import com.geowoof.core.testing.FakeMediaRepository
 import com.geowoof.core.testing.FakePetsRepository
 import com.geowoof.core.testing.FakeWalksRepository
@@ -44,6 +45,7 @@ class PetViewModelsTest {
     private val photo = RemoteImage("old-photo", "thumb", "medium")
     private val luna = TestPets.pet(avatar = photo)
     private val pets = FakePetsRepository(listOf(luna))
+    private val health = FakeHealthRepository()
     private val media = FakeMediaRepository()
 
     private fun newPet() = PetEditorViewModel(SavedStateHandle(), pets, media, ValidatePetUseCase())
@@ -57,6 +59,7 @@ class PetViewModelsTest {
                 SavedStateHandle(mapOf("petId" to "luna")),
                 pets,
                 FakeWalksRepository(),
+                health,
                 ParseWeightUseCase(),
             )
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }

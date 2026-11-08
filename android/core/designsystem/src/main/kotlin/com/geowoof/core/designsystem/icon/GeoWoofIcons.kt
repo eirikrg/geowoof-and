@@ -128,6 +128,14 @@ object GeoWoofIcons {
 
     @DrawableRes val Forum: Int = R.drawable.core_designsystem_ic_forum
 
+    @DrawableRes val Vaccines: Int = R.drawable.core_designsystem_ic_vaccines
+
+    @DrawableRes val Medication: Int = R.drawable.core_designsystem_ic_medication
+
+    @DrawableRes val Stethoscope: Int = R.drawable.core_designsystem_ic_stethoscope
+
+    @DrawableRes val PestControl: Int = R.drawable.core_designsystem_ic_pest_control
+
     @DrawableRes val WifiOff: Int = R.drawable.core_designsystem_ic_wifi_off
 
     @DrawableRes val MyLocation: Int = R.drawable.core_designsystem_ic_my_location

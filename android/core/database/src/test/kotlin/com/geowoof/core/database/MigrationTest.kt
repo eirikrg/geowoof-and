@@ -179,4 +179,25 @@ class MigrationTest {
             }
         }
     }
+
+    @Test
+    fun the_health_of_the_pets_starts_empty_and_nothing_else_changes() {
+        helper.createDatabase(8).use { connection ->
+            connection.execSQL(
+                "INSERT INTO pets (id, ownerId, name, species, sex, neutered, createdAtEpochMs, updatedAtEpochMs) " +
+                    "VALUES ('luna', 'ana', 'Luna', 'Dog', 'Female', 1, 0, 0)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(9).use { connection ->
+            connection.prepare("SELECT name FROM pets").use { statement ->
+                statement.step()
+                assertEquals("Luna", statement.getText(0))
+            }
+            connection.prepare("SELECT COUNT(*) FROM health_events").use { statement ->
+                statement.step()
+                assertEquals(0L, statement.getLong(0))
+            }
+        }
+    }
 }

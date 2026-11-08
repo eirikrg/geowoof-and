@@ -14,7 +14,10 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-/** Picks a date between 1990 and today, the range that the API accepts. */
+/**
+ * Picks a date between 1990 and today, the range that the API accepts. With [allowsFuture], up to ten years from
+ * today, as what is due in the health of a pet.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun PetDateDialog(
@@ -22,10 +25,11 @@ internal fun PetDateDialog(
     onConfirm: (LocalDate) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    allowsFuture: Boolean = false,
 ) {
     val state = rememberDatePickerState(
         initialSelectedDateMillis = initialDate?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli(),
-        selectableDates = PastDates,
+        selectableDates = if (allowsFuture) DatesAhead else PastDates,
     )
     DatePickerDialog(
         onDismissRequest = onDismiss,
@@ -60,4 +64,15 @@ private val PastDates = object : SelectableDates {
     override fun isSelectableYear(year: Int): Boolean = year in FIRST_YEAR..LocalDate.now().year
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+private val DatesAhead = object : SelectableDates {
+    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+        val date = Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneOffset.UTC).toLocalDate()
+        return !date.isAfter(LocalDate.now().plusYears(YEARS_AHEAD)) && date.year >= FIRST_YEAR
+    }
+
+    override fun isSelectableYear(year: Int): Boolean = year in FIRST_YEAR..LocalDate.now().year + YEARS_AHEAD
+}
+
 private const val FIRST_YEAR = 1990
+private const val YEARS_AHEAD = 10L

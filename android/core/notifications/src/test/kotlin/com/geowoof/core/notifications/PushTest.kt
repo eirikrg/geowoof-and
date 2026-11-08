@@ -11,6 +11,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geowoof.core.data.repository.ContentChange
 import com.geowoof.core.data.repository.ContentChanges
+import com.geowoof.core.model.HealthReminderItem
 import com.geowoof.core.model.NotificationType
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.testing.FakeAuthRepository
@@ -35,6 +36,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import java.time.LocalDate
 
 private val MESSAGE = mapOf(
     "type" to "Message",
@@ -99,6 +101,8 @@ private class RecordingPresenter : NotificationPresenter {
     override fun clearConversation(conversationId: String) {
         cleared += conversationId
     }
+
+    override fun showHealthReminder(item: HealthReminderItem, dueOn: LocalDate) = Unit
 }
 
 class PushHandlerTest {

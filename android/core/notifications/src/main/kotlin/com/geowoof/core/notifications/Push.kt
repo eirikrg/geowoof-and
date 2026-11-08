@@ -11,6 +11,7 @@ import com.geowoof.core.data.repository.NotificationsRepository
 import com.geowoof.core.data.repository.OpenConversations
 import com.geowoof.core.data.repository.PushTokenProvider
 import com.geowoof.core.data.repository.SocialRepository
+import com.geowoof.core.model.HealthReminderItem
 import com.geowoof.core.model.NotificationType
 import com.geowoof.core.model.SessionState
 import com.google.android.gms.tasks.Task
@@ -32,6 +33,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
+import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -87,6 +89,9 @@ internal interface NotificationPresenter {
 
     /** The notifications of a conversation are no longer news once it is open. */
     fun clearConversation(conversationId: String)
+
+    /** Something of the health of a pet that is due on [dueOn]. */
+    fun showHealthReminder(item: HealthReminderItem, dueOn: LocalDate)
 }
 
 /**

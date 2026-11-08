@@ -5,11 +5,13 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.geowoof.core.data.repository.HealthRepository
 import com.geowoof.core.data.repository.PetsRepository
 import com.geowoof.core.data.repository.WalksRepository
 import com.geowoof.core.domain.ParseWeightUseCase
 import com.geowoof.core.domain.validatePetDate
 import com.geowoof.core.model.AppError
+import com.geowoof.core.model.HealthEvent
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.Pet
 import com.geowoof.core.model.PetDateIssue
@@ -42,6 +44,8 @@ data class PetDetailUiState(
     val pet: Pet? = null,
     val weights: List<WeightEntry> = emptyList(),
     val walkTotals: WalkTotals? = null,
+    /** What is due of its health: what is late first, and then the nearest. */
+    val healthPending: List<HealthEvent> = emptyList(),
     val isRefreshing: Boolean = false,
     val error: AppError? = null,
     val weightEditor: WeightEditorState? = null,
@@ -65,6 +69,7 @@ class PetDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val pets: PetsRepository,
     private val walks: WalksRepository,
+    private val health: HealthRepository,
     private val parseWeight: ParseWeightUseCase,
 ) : ViewModel() {
     private val petId: String = checkNotNull(savedStateHandle["petId"])
@@ -77,12 +82,14 @@ class PetDetailViewModel @Inject constructor(
             pets.observePet(petId),
             pets.observeWeights(petId),
             walks.observeTotals(petId),
+            health.events(petId),
             actions,
-        ) { pet, weights, totals, current ->
+        ) { pet, weights, totals, events, current ->
             PetDetailUiState(
                 pet = pet,
                 weights = weights,
                 walkTotals = totals,
+                healthPending = events.filterNot { it.isDone }.sortedWith(compareBy({ it.dueOn }, { it.dueAt })),
                 isRefreshing = current.isRefreshing,
                 error = current.error,
                 weightEditor = current.weightEditor,
@@ -105,7 +112,12 @@ class PetDetailViewModel @Inject constructor(
         if (actions.value.isRefreshing) return
         actions.update { it.copy(isRefreshing = true, error = null) }
         viewModelScope.launch {
-            val results = listOf(pets.refreshPet(petId), pets.refreshWeights(petId), walks.refreshTotals(petId))
+            val results = listOf(
+                pets.refreshPet(petId),
+                pets.refreshWeights(petId),
+                walks.refreshTotals(petId),
+                health.refresh(petId),
+            )
             val failure = results.filterIsInstance<Outcome.Failure>().firstOrNull()?.error
             actions.update { it.copy(isRefreshing = false, error = failure) }
         }

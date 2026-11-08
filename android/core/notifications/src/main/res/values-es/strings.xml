@@ -12,4 +12,13 @@
     <string name="core_notifications_comment_added">%1$s ha comentado tu publicación</string>
     <string name="core_notifications_post_reposted">%1$s ha reposteado tu publicación</string>
     <string name="core_notifications_user_mentioned">%1$s te ha mencionado</string>
+    <string name="core_notifications_channel_health">Salud de las mascotas</string>
+    <string name="core_notifications_health_title">%1$s: %2$s</string>
+    <string name="core_notifications_health_today">Hoy</string>
+    <string name="core_notifications_health_today_at">Hoy a las %1$s</string>
+    <string name="core_notifications_health_tomorrow">Mañana</string>
+    <string name="core_notifications_health_tomorrow_at">Mañana a las %1$s</string>
+    <string name="core_notifications_health_on">El %1$s</string>
+    <string name="core_notifications_health_on_at">El %1$s a las %2$s</string>
+    <string name="core_notifications_health_day_pattern">d \'de\' MMMM</string>
 </resources>
