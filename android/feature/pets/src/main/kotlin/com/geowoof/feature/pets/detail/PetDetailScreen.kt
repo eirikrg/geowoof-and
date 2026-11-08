@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.AlertDialog
@@ -64,12 +66,16 @@ import com.geowoof.core.model.WalkTotals
 import com.geowoof.core.model.WeightEntry
 import com.geowoof.core.model.WeightIssue
 import com.geowoof.core.ui.FormError
+import com.geowoof.core.ui.HeroRefreshBox
+import com.geowoof.core.ui.HeroTopBar
 import com.geowoof.core.ui.ImageVariant
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.WalkTotalsGrid
 import com.geowoof.core.ui.formatted
+import com.geowoof.core.ui.heroListPadding
 import com.geowoof.core.ui.labelRes
 import com.geowoof.core.ui.messageRes
+import com.geowoof.core.ui.rememberHeroCollapse
 import com.geowoof.core.ui.shortDescription
 import com.geowoof.core.ui.userMessage
 import com.geowoof.feature.pets.PetDateDialog
@@ -138,8 +144,10 @@ internal fun PetDetailContent(
     onEdit: (petId: String) -> Unit,
     onOpenWalks: (petId: String) -> Unit,
     modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState(),
 ) {
     val snackbars = remember { SnackbarHostState() }
+    val collapse = rememberHeroCollapse(listState)
     val errorMessage = uiState.error?.userMessage()
     val currentOnErrorShown by rememberUpdatedState(actions.onErrorShown)
     LaunchedEffect(errorMessage) {
@@ -152,9 +160,14 @@ internal fun PetDetailContent(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbars) },
         topBar = {
-            TopAppBar(
-                colors = heroTopBarColors(),
-                title = { Text(uiState.pet?.name.orEmpty()) },
+            // As in a profile, the photo flies from the band to the bar as the page goes up.
+            val pet = uiState.pet
+            HeroTopBar(
+                collapse = collapse,
+                title = pet?.name.orEmpty(),
+                photoSize = PetPhotoSize,
+                collapsedTitle = pet?.name,
+                collapsedSubtitle = pet?.shortDescription(),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -164,7 +177,7 @@ internal fun PetDetailContent(
                     }
                 },
                 actions = {
-                    uiState.pet?.let { pet ->
+                    pet?.let {
                         IconButton(onClick = { onEdit(pet.id) }) {
                             Icon(
                                 painter = painterResource(GeoWoofIcons.Edit),
@@ -179,19 +192,31 @@ internal fun PetDetailContent(
                         }
                     }
                 },
-            )
+            ) {
+                pet?.let {
+                    RemoteAvatar(
+                        image = it.avatar,
+                        fallbackIcon = GeoWoofIcons.Pets,
+                        contentDescription = stringResource(R.string.feature_pets_photo),
+                        size = PetPhotoSize,
+                        variant = ImageVariant.Medium,
+                    )
+                }
+            }
         },
     ) { innerPadding ->
-        PullToRefreshBox(
+        HeroRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = actions.onRefresh,
+            photoSize = PetPhotoSize,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = GeoWoofTheme.spacing.huge),
+                state = listState,
+                contentPadding = heroListPadding(),
             ) {
                 uiState.pet?.let { pet ->
                     petDetails(pet)
@@ -228,17 +253,8 @@ private fun LazyListScope.petDetails(pet: Pet) {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            HeroBand(photoSize = PetPhotoSize) {
-                HeroPhotoFrame {
-                    RemoteAvatar(
-                        image = pet.avatar,
-                        fallbackIcon = GeoWoofIcons.Pets,
-                        contentDescription = stringResource(R.string.feature_pets_photo),
-                        size = PetPhotoSize,
-                        variant = ImageVariant.Medium,
-                    )
-                }
-            }
+            // The photo is not here: it goes over the page, in HeroTopBar, so that it can reach the bar.
+            HeroBand(photoSize = PetPhotoSize) {}
             Column(
                 modifier = Modifier.padding(GeoWoofTheme.spacing.large),
                 horizontalAlignment = Alignment.CenterHorizontally,
