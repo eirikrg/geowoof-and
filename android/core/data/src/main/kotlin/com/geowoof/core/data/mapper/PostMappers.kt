@@ -59,7 +59,7 @@ internal fun NetworkTimelineItem.toModel() = TimelineItem(
     repostedAt = repostedAt?.let(Instant::parse),
 )
 
-internal fun NetworkComment.toModel() = Comment(
+internal fun NetworkComment.toModel(): Comment = Comment(
     id = id,
     postId = postId,
     author = author.toModel(),
@@ -67,6 +67,10 @@ internal fun NetworkComment.toModel() = Comment(
     mentions = mentions.map { it.toModel() },
     canDelete = canDelete,
     createdAt = Instant.parse(createdAt),
+    parentId = parentId,
+    isDeleted = isDeleted,
+    replyCount = replyCount,
+    replies = replies.map { it.toModel() },
 )
 
 internal fun NetworkPostLike.toModel() = PostLikes(likeCount, likedByMe)

@@ -55,6 +55,10 @@ data class NetworkComment(
     val mentions: List<NetworkMention> = emptyList(),
     val canDelete: Boolean = false,
     val createdAt: String,
+    val parentId: String? = null,
+    val isDeleted: Boolean = false,
+    val replyCount: Int = 0,
+    val replies: List<NetworkComment> = emptyList(),
 )
 
 @Serializable
@@ -72,4 +76,4 @@ data class PostBody(
 )
 
 @Serializable
-data class CommentBody(val text: String)
+data class CommentBody(val text: String, val parentId: String? = null)

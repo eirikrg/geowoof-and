@@ -31,7 +31,13 @@ internal fun PostDialogs(
 
         is PostDialog.ConfirmDeleteComment -> ConfirmDelete(
             title = stringResource(R.string.feature_social_delete_comment_title),
-            message = stringResource(R.string.feature_social_delete_comment_message),
+            message = stringResource(
+                if (dialog.comment.replyCount > 0) {
+                    R.string.feature_social_delete_comment_with_replies_message
+                } else {
+                    R.string.feature_social_delete_comment_message
+                },
+            ),
             onConfirm = onConfirm,
             onDismiss = onDismiss,
         )

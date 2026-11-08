@@ -32,6 +32,11 @@ data class Post(
 /** A post in the feed or on a profile, published or reposted by someone. Its [id] is not always that of the post. */
 data class TimelineItem(val id: String, val post: Post, val repostedBy: UserSummary?, val repostedAt: Instant?)
 
+/**
+ * A comment of a post, or a reply to one of them, with [parentId]: there is only one level, so a reply to a reply goes
+ * to the same thread. A comment of the post brings how many replies it has and the first of them. One that
+ * [isDeleted] only stays because of its replies, without its text.
+ */
 data class Comment(
     val id: String,
     val postId: String,
@@ -40,7 +45,17 @@ data class Comment(
     val mentions: List<Mention>,
     val canDelete: Boolean,
     val createdAt: Instant,
-)
+    val parentId: String? = null,
+    val isDeleted: Boolean = false,
+    val replyCount: Int = 0,
+    val replies: List<Comment> = emptyList(),
+) {
+    /** The comment of the post whose thread this is: itself, unless it is a reply. */
+    val threadId: String get() = parentId ?: id
+}
+
+/** A page of the replies of a comment, the oldest first. */
+data class CommentReplies(val items: List<Comment>, val nextCursor: String?)
 
 /** What is sent to publish. The [id] comes from the app, so that repeating the request does not publish twice. */
 data class NewPost(

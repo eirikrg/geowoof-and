@@ -49,6 +49,20 @@
     <string name="feature_social_comments_failed">No se han podido cargar los comentarios.</string>
     <string name="feature_social_comment_label">Añade un comentario</string>
     <string name="feature_social_send_comment">Enviar comentario</string>
+    <string name="feature_social_reply">Responder</string>
+    <string name="feature_social_reply_label">Añade una respuesta</string>
+    <string name="feature_social_replying_to">Respondiendo a @%1$s</string>
+    <string name="feature_social_cancel_reply">Cancelar respuesta</string>
+    <string name="feature_social_more_replies">Ver más respuestas</string>
+    <string name="feature_social_hide_replies">Ocultar respuestas</string>
+    <string name="feature_social_replies_failed">No se han podido cargar las respuestas. Reintentar</string>
+    <string name="feature_social_deleted_comment">Comentario eliminado</string>
+    <string name="feature_social_delete_comment_with_replies_message">Sus respuestas se quedarán, debajo de «Comentario eliminado». No se puede deshacer.</string>
+    <plurals name="feature_social_view_replies">
+        <item quantity="one">Ver %d respuesta</item>
+        <item quantity="many">Ver %d respuestas</item>
+        <item quantity="other">Ver %d respuestas</item>
+    </plurals>
     <string name="feature_social_community_error_title">No se ha podido cargar la comunidad</string>
     <string name="feature_social_post_error_title">No se ha podido cargar la publicación</string>
     <string name="feature_social_find_people">Buscar personas</string>

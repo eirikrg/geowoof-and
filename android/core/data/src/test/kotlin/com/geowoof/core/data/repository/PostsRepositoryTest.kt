@@ -106,9 +106,16 @@ private class FakePostsNetwork : PostsNetworkDataSource {
     override suspend fun comments(id: String, limit: Int, cursor: String?): Outcome<NetworkPage<NetworkComment>> =
         Outcome.Success(NetworkPage(emptyList(), null))
 
-    override suspend fun addComment(id: String, text: String): Outcome<NetworkComment> {
-        comments += text
-        return Outcome.Success(NetworkComment("comment-1", id, author(), text, createdAt = TIME))
+    override suspend fun replies(id: String, commentId: String, limit: Int, cursor: String?) = Outcome.Success(
+        NetworkPage(
+            listOf(NetworkComment("reply-1", id, author(), "@bea hola", createdAt = TIME, parentId = commentId)),
+            "next",
+        ),
+    )
+
+    override suspend fun addComment(id: String, text: String, parentId: String?): Outcome<NetworkComment> {
+        comments += listOfNotNull(parentId, text).joinToString(":")
+        return Outcome.Success(NetworkComment("comment-1", id, author(), text, createdAt = TIME, parentId = parentId))
     }
 
     override suspend fun deleteComment(id: String, commentId: String) = unitAnswer
@@ -382,6 +389,28 @@ class PostsRepositoryTest {
 
         repository.deleteComment("post-1", "comment-1")
         assertEquals(1, storedFeed().single().commentCount)
+    }
+
+    /** A reply is one more comment of the post, as the server counts them. */
+    @Test
+    fun a_reply_goes_to_its_comment_and_counts_as_a_comment() = runTest {
+        val repository = repository()
+        feedDao.upsert(timelineItem().toEntity())
+
+        val reply = repository.addComment("post-1", " @bea hola ", parentId = "comment-1")
+
+        assertEquals(listOf("comment-1:@bea hola"), network.comments)
+        assertEquals("comment-1", (reply as Outcome.Success).value.parentId)
+        assertEquals(2, storedFeed().single().commentCount)
+    }
+
+    @Test
+    fun the_replies_of_a_comment_come_page_by_page() = runTest {
+        val page = repository().replies("post-1", "comment-1", cursor = null) as Outcome.Success
+
+        assertEquals("comment-1", page.value.items.single().parentId)
+        assertEquals("comment-1", page.value.items.single().threadId)
+        assertEquals("next", page.value.nextCursor)
     }
 
     @Test
