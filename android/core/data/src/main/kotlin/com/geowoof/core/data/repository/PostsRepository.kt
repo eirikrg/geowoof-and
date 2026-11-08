@@ -15,6 +15,7 @@ import com.geowoof.core.data.session.SessionManager
 import com.geowoof.core.database.FeedDao
 import com.geowoof.core.database.FeedItemEntity
 import com.geowoof.core.model.Comment
+import com.geowoof.core.model.CommentReplies
 import com.geowoof.core.model.NewPost
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.Post
@@ -49,7 +50,11 @@ interface PostsRepository {
 
     fun savedPosts(): Flow<PagingData<Post>>
 
+    /** The comments of the post itself, each with how many replies it has and the first of them. */
     fun comments(postId: String): Flow<PagingData<Comment>>
+
+    /** A page of the replies of a comment of the post. */
+    suspend fun replies(postId: String, commentId: String, cursor: String?): Outcome<CommentReplies>
 
     suspend fun post(postId: String): Outcome<Post>
 
@@ -64,8 +69,10 @@ interface PostsRepository {
 
     suspend fun setSaved(postId: String, saved: Boolean): Outcome<Unit>
 
-    suspend fun addComment(postId: String, text: String): Outcome<Comment>
+    /** With [parentId], a reply in the thread of that comment. */
+    suspend fun addComment(postId: String, text: String, parentId: String? = null): Outcome<Comment>
 
+    /** One with replies stays as deleted, so that they keep their place. */
     suspend fun deleteComment(postId: String, commentId: String): Outcome<Unit>
 
     suspend fun reportPost(postId: String, reason: ReportReason, details: String?): Outcome<Unit>
@@ -104,6 +111,10 @@ internal class DefaultPostsRepository @Inject constructor(
         network.comments(postId, limit, cursor).map { page -> page.mapItems { it.toModel() } }
     }
 
+    override suspend fun replies(postId: String, commentId: String, cursor: String?): Outcome<CommentReplies> =
+        network.replies(postId, commentId, REPLIES_PER_PAGE, cursor)
+            .map { page -> CommentReplies(page.items.map { it.toModel() }, page.nextCursor) }
+
     override suspend fun post(postId: String): Outcome<Post> = network.post(postId).map { it.toModel() }
 
     override suspend fun publish(post: NewPost): Outcome<Post> =
@@ -139,8 +150,10 @@ internal class DefaultPostsRepository @Inject constructor(
             changes.notify(ContentChange.Posts)
         }
 
-    override suspend fun addComment(postId: String, text: String): Outcome<Comment> =
-        network.addComment(postId, text.trim()).onSuccess { feedDao.changeCommentCount(postId, 1) }.map { it.toModel() }
+    override suspend fun addComment(postId: String, text: String, parentId: String?): Outcome<Comment> =
+        network.addComment(postId, text.trim(), parentId).onSuccess {
+            feedDao.changeCommentCount(postId, 1)
+        }.map { it.toModel() }
 
     override suspend fun deleteComment(postId: String, commentId: String): Outcome<Unit> =
         network.deleteComment(postId, commentId).onSuccess { feedDao.changeCommentCount(postId, -1) }
@@ -160,6 +173,7 @@ internal class DefaultPostsRepository @Inject constructor(
         const val FEED_PAGE_SIZE = 20
         const val TARGET_POST = "Post"
         const val TARGET_COMMENT = "Comment"
+        const val REPLIES_PER_PAGE = 20
     }
 }
 

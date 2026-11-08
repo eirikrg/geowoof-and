@@ -44,6 +44,14 @@ internal interface PostsApi {
         @Query("cursor") cursor: String?,
     ): NetworkPage<NetworkComment>
 
+    @GET("api/v1/posts/{id}/comments/{commentId}/replies")
+    suspend fun replies(
+        @Path("id") id: String,
+        @Path("commentId") commentId: String,
+        @Query("limit") limit: Int,
+        @Query("cursor") cursor: String?,
+    ): NetworkPage<NetworkComment>
+
     @POST("api/v1/posts/{id}/comments")
     suspend fun addComment(@Path("id") id: String, @Body body: CommentBody): NetworkComment
 
@@ -91,7 +99,15 @@ interface PostsNetworkDataSource {
 
     suspend fun comments(id: String, limit: Int, cursor: String?): Outcome<NetworkPage<NetworkComment>>
 
-    suspend fun addComment(id: String, text: String): Outcome<NetworkComment>
+    suspend fun replies(
+        id: String,
+        commentId: String,
+        limit: Int,
+        cursor: String?,
+    ): Outcome<NetworkPage<NetworkComment>>
+
+    /** With [parentId], a reply to that comment. */
+    suspend fun addComment(id: String, text: String, parentId: String?): Outcome<NetworkComment>
 
     suspend fun deleteComment(id: String, commentId: String): Outcome<Unit>
 
@@ -123,7 +139,11 @@ internal class RetrofitPostsNetworkDataSource @Inject constructor(private val ap
     override suspend fun comments(id: String, limit: Int, cursor: String?) =
         apiCall(json) { api.comments(id, limit, cursor) }
 
-    override suspend fun addComment(id: String, text: String) = apiCall(json) { api.addComment(id, CommentBody(text)) }
+    override suspend fun replies(id: String, commentId: String, limit: Int, cursor: String?) =
+        apiCall(json) { api.replies(id, commentId, limit, cursor) }
+
+    override suspend fun addComment(id: String, text: String, parentId: String?) =
+        apiCall(json) { api.addComment(id, CommentBody(text, parentId)) }
 
     override suspend fun deleteComment(id: String, commentId: String) =
         apiCall(json) { api.deleteComment(id, commentId) }

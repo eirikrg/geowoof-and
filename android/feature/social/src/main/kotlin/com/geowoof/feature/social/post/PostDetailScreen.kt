@@ -1,6 +1,5 @@
 package com.geowoof.feature.social.post
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,8 +18,6 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -35,7 +32,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -59,11 +59,9 @@ import com.geowoof.core.model.Comment
 import com.geowoof.core.model.Post
 import com.geowoof.core.model.ReportReason
 import com.geowoof.core.model.UserSummary
-import com.geowoof.core.ui.MentionText
 import com.geowoof.core.ui.PagedContent
 import com.geowoof.core.ui.RefreshOnReturn
 import com.geowoof.core.ui.ReloadOnReturn
-import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.UserRow
 import com.geowoof.core.ui.pagedContent
 import com.geowoof.core.ui.userMessage
@@ -110,6 +108,11 @@ internal fun PostDetailScreen(
             onDismissDialog = interactions::onDismissDialog,
             onDismissMessage = interactions::onMessageShown,
             onDismissCommentFailure = viewModel::onCommentFailureShown,
+            onReply = viewModel::onReply,
+            onCancelReply = viewModel::onCancelReply,
+            onOpenReplies = viewModel::onOpenReplies,
+            onMoreReplies = viewModel::onMoreReplies,
+            onHideReplies = viewModel::onHideReplies,
             card = PostCardActions(
                 onOpenUser = onOpenUser,
                 onToggleLike = interactions::onToggleLike,
@@ -182,12 +185,13 @@ internal fun PostDetailContent(
                 PostAndComments(
                     post = post,
                     comments = comments,
+                    openThreads = uiState.openThreads,
                     myUserId = myUserId,
-                    actions = actions.card,
+                    actions = actions,
                     modifier = Modifier.weight(1f),
                 )
                 HorizontalDivider()
-                CommentField(commentText, suggestions, uiState.isSendingComment, actions)
+                CommentField(commentText, suggestions, uiState.isSendingComment, uiState.replyingTo, actions)
             }
         }
     }
@@ -216,14 +220,15 @@ private fun ShowCommentFailure(error: AppError?, snackbars: SnackbarHostState, o
 private fun PostAndComments(
     post: Post,
     comments: LazyPagingItems<Comment>,
+    openThreads: Map<String, OpenThread>,
     myUserId: String?,
-    actions: PostCardActions,
+    actions: PostDetailActions,
     modifier: Modifier = Modifier,
 ) {
     val content = comments.pagedContent()
     LazyColumn(modifier = modifier.fillMaxSize()) {
         item(key = "post") {
-            PostCard(post, repostedBy = null, myUserId = myUserId, actions = actions, enlargesPhotos = true)
+            PostCard(post, repostedBy = null, myUserId = myUserId, actions = actions.card, enlargesPhotos = true)
         }
         if (content == PagedContent.Empty || content == PagedContent.Error) {
             item(key = "empty") {
@@ -242,36 +247,9 @@ private fun PostAndComments(
             }
         }
         items(comments.itemCount, key = comments.itemKey(Comment::id)) { index ->
-            comments[index]?.let { comment -> CommentRow(comment, myUserId, actions) }
+            comments[index]?.let { comment -> CommentThread(comment, openThreads[comment.id], myUserId, actions) }
         }
     }
-}
-
-@Composable
-private fun CommentRow(comment: Comment, myUserId: String?, actions: PostCardActions, modifier: Modifier = Modifier) {
-    ListItem(
-        modifier = modifier,
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        headlineContent = {
-            Text(
-                text = comment.author.displayName,
-                modifier = Modifier.clickable { actions.onOpenUser(comment.author.id) },
-                style = MaterialTheme.typography.titleSmall,
-            )
-        },
-        supportingContent = {
-            MentionText(text = comment.text, mentions = comment.mentions, onOpenUser = actions.onOpenUser)
-        },
-        leadingContent = {
-            RemoteAvatar(
-                image = comment.author.avatar,
-                fallbackIcon = GeoWoofIcons.Person,
-                contentDescription = null,
-                size = CommentAvatarSize,
-            )
-        },
-        trailingContent = { CommentMenu(comment, myUserId, actions.onShowDialog) },
-    )
 }
 
 @Composable
@@ -279,14 +257,23 @@ private fun CommentField(
     text: TextFieldState,
     suggestions: List<UserSummary>,
     isSending: Boolean,
+    replyingTo: ReplyTarget?,
     actions: PostDetailActions,
     modifier: Modifier = Modifier,
 ) {
     val spacing = GeoWoofTheme.spacing
+    val focus = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    // Answering someone is starting to write.
+    LaunchedEffect(replyingTo) {
+        if (replyingTo != null) focus.requestFocus()
+    }
     Column(modifier = modifier) {
         suggestions.forEach { user ->
             UserRow(user = user, onClick = { actions.onChooseMention(user) })
         }
+        replyingTo?.let { ReplyingTo(it, onCancel = actions.onCancelReply) }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -296,14 +283,33 @@ private fun CommentField(
         ) {
             OutlinedTextField(
                 state = text,
-                modifier = Modifier.weight(1f),
-                label = { Text(stringResource(R.string.feature_social_comment_label)) },
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focus),
+                label = {
+                    Text(
+                        stringResource(
+                            if (replyingTo !=
+                                null
+                            ) {
+                                R.string.feature_social_reply_label
+                            } else {
+                                R.string.feature_social_comment_label
+                            },
+                        ),
+                    )
+                },
                 inputTransformation = InputTransformation.maxLength(MAX_COMMENT_LENGTH),
                 lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = MAX_COMMENT_LINES),
                 shape = MaterialTheme.shapes.large,
             )
             FilledIconButton(
-                onClick = actions.onSendComment,
+                // What was sent is read in the list: the keyboard would cover it.
+                onClick = {
+                    keyboard?.hide()
+                    focusManager.clearFocus()
+                    actions.onSendComment()
+                },
                 enabled = !isSending && text.text.isNotBlank(),
                 modifier = Modifier.size(SendButtonSize),
             ) {
@@ -318,7 +324,6 @@ private fun CommentField(
 
 private const val MAX_COMMENT_LENGTH = 1000
 private const val MAX_COMMENT_LINES = 4
-private val CommentAvatarSize = 40.dp
 private val SendButtonSize = 52.dp
 
 @PreviewLightDark

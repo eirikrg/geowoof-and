@@ -49,6 +49,19 @@
     <string name="feature_social_comments_failed">The comments could not be loaded.</string>
     <string name="feature_social_comment_label">Add a comment</string>
     <string name="feature_social_send_comment">Send comment</string>
+    <string name="feature_social_reply">Reply</string>
+    <string name="feature_social_reply_label">Add a reply</string>
+    <string name="feature_social_replying_to">Replying to @%1$s</string>
+    <string name="feature_social_cancel_reply">Cancel reply</string>
+    <string name="feature_social_more_replies">View more replies</string>
+    <string name="feature_social_hide_replies">Hide replies</string>
+    <string name="feature_social_replies_failed">The replies could not be loaded. Try again</string>
+    <string name="feature_social_deleted_comment">Comment deleted</string>
+    <string name="feature_social_delete_comment_with_replies_message">Its replies will stay, under “Comment deleted”. This cannot be undone.</string>
+    <plurals name="feature_social_view_replies">
+        <item quantity="one">View %d reply</item>
+        <item quantity="other">View %d replies</item>
+    </plurals>
     <string name="feature_social_community_error_title">The community could not be loaded</string>
     <string name="feature_social_post_error_title">The post could not be loaded</string>
     <string name="feature_social_find_people">Find people</string>

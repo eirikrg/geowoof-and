@@ -44,6 +44,7 @@ import com.geowoof.core.model.ReportReason
 import com.geowoof.core.model.SessionState
 import com.geowoof.core.model.TimelineItem
 import com.geowoof.core.model.UserSummary
+import com.geowoof.core.testing.DrainMainLooperRule
 import com.geowoof.core.testing.FakeAuthRepository
 import com.geowoof.core.testing.FakePeopleRepository
 import com.geowoof.core.testing.FakePostsRepository
@@ -72,6 +73,9 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CommunityScreenTest {
+    @get:Rule(order = -2)
+    val drainMainLooper = DrainMainLooperRule()
+
     @get:Rule
     val composeRule = createComposeRule()
 

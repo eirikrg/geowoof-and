@@ -1,5 +1,6 @@
 package com.geowoof.feature.social.post
 
+import com.geowoof.core.model.Comment
 import com.geowoof.core.model.ReportReason
 import com.geowoof.core.model.UserSummary
 
@@ -15,5 +16,10 @@ internal class PostDetailActions(
     val onDismissDialog: () -> Unit = {},
     val onDismissMessage: () -> Unit = {},
     val onDismissCommentFailure: () -> Unit = {},
+    val onReply: (Comment) -> Unit = {},
+    val onCancelReply: () -> Unit = {},
+    val onOpenReplies: (commentId: String) -> Unit = {},
+    val onMoreReplies: (commentId: String) -> Unit = {},
+    val onHideReplies: (commentId: String) -> Unit = {},
     val card: PostCardActions = PostCardActions(),
 )

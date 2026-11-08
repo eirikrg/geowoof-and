@@ -3,6 +3,7 @@ package com.geowoof.core.testing
 import androidx.paging.PagingData
 import com.geowoof.core.data.repository.PostsRepository
 import com.geowoof.core.model.Comment
+import com.geowoof.core.model.CommentReplies
 import com.geowoof.core.model.Mention
 import com.geowoof.core.model.NewPost
 import com.geowoof.core.model.Outcome
@@ -60,12 +61,29 @@ object TestPosts {
         repostedAt = repostedBy?.let { TestSocial.SINCE },
     )
 
+    @Suppress("LongParameterList")
     fun comment(
         id: String = "comment-1",
         author: UserSummary = TestSocial.user(),
         text: String = "Qué bonita",
         canDelete: Boolean = false,
-    ) = Comment(id, "post-1", author, text, emptyList(), canDelete, TestSocial.SINCE)
+        parentId: String? = null,
+        isDeleted: Boolean = false,
+        replies: List<Comment> = emptyList(),
+        replyCount: Int = replies.size,
+    ) = Comment(
+        id = id,
+        postId = "post-1",
+        author = author,
+        text = text,
+        mentions = emptyList(),
+        canDelete = canDelete,
+        createdAt = TestSocial.SINCE,
+        parentId = parentId,
+        isDeleted = isDeleted,
+        replyCount = replyCount,
+        replies = replies,
+    )
 }
 
 @Suppress("TooManyFunctions")
@@ -78,6 +96,9 @@ class FakePostsRepository : PostsRepository {
     var postResult: Outcome<Post> = Outcome.Success(TestPosts.post())
     var publishResult: Outcome<Post> = Outcome.Success(TestPosts.post())
     var addCommentResult: Outcome<Comment> = Outcome.Success(TestPosts.comment())
+
+    /** The pages of replies, by the cursor that asks for them: `null` is the first. */
+    var repliesResults: Map<String?, Outcome<CommentReplies>> = emptyMap()
     var actionResult: Outcome<Unit> = Outcome.Success(Unit)
     var likeResult: Outcome<PostLikes>? = null
     var repostResult: Outcome<PostReposts>? = null
@@ -140,8 +161,13 @@ class FakePostsRepository : PostsRepository {
 
     override suspend fun setSaved(postId: String, saved: Boolean) = record("save:$postId:$saved")
 
-    override suspend fun addComment(postId: String, text: String): Outcome<Comment> {
-        calls += "comment:$postId:$text"
+    override suspend fun replies(postId: String, commentId: String, cursor: String?): Outcome<CommentReplies> {
+        calls += "replies:$commentId:$cursor"
+        return repliesResults[cursor] ?: Outcome.Success(CommentReplies(emptyList(), null))
+    }
+
+    override suspend fun addComment(postId: String, text: String, parentId: String?): Outcome<Comment> {
+        calls += if (parentId == null) "comment:$postId:$text" else "reply:$parentId:$text"
         return addCommentResult
     }
 

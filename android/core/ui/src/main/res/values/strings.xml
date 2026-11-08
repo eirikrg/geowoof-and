@@ -142,4 +142,29 @@
     <string name="core_ui_photo_position">%1$d/%2$d</string>
     <string name="core_ui_photo_position_description">Photo %1$d of %2$d</string>
     <string name="core_ui_photo_failed">The photo could not be loaded.</string>
+    <string name="core_ui_ago_now">now</string>
+    <plurals name="core_ui_ago_minutes">
+        <item quantity="one">%dm</item>
+        <item quantity="other">%dm</item>
+    </plurals>
+    <plurals name="core_ui_ago_hours">
+        <item quantity="one">%dh</item>
+        <item quantity="other">%dh</item>
+    </plurals>
+    <plurals name="core_ui_ago_days">
+        <item quantity="one">%dd</item>
+        <item quantity="other">%dd</item>
+    </plurals>
+    <plurals name="core_ui_ago_weeks">
+        <item quantity="one">%dw</item>
+        <item quantity="other">%dw</item>
+    </plurals>
+    <plurals name="core_ui_ago_months">
+        <item quantity="one">%dmo</item>
+        <item quantity="other">%dmo</item>
+    </plurals>
+    <plurals name="core_ui_ago_years">
+        <item quantity="one">%dy</item>
+        <item quantity="other">%dy</item>
+    </plurals>
 </resources>
