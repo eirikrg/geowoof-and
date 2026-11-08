@@ -7,6 +7,6 @@
     "generate": "node generate-colors.mjs"
   },
   "dependencies": {
-    "@material/material-color-utilities": "0.3.0"
+    "@material/material-color-utilities": "0.4.0"
   }
 }
