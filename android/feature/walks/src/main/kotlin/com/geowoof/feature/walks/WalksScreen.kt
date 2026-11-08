@@ -40,8 +40,11 @@ import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Walk
 import com.geowoof.core.model.WalkTotals
+import com.geowoof.core.ui.PagedContent
 import com.geowoof.core.ui.WalkCard
 import com.geowoof.core.ui.WalkTotalsGrid
+import com.geowoof.core.ui.isRefreshing
+import com.geowoof.core.ui.pagedContent
 import com.geowoof.core.ui.userMessage
 import kotlinx.coroutines.flow.flowOf
 
@@ -80,7 +83,8 @@ internal fun WalksContent(
     val snackbars = remember { SnackbarHostState() }
     val refresh = walks.loadState.refresh
     val refreshMessage = ((refresh as? LoadState.Error)?.error as? WalkLoadException)?.error?.userMessage()
-    val hasWalks = walks.itemCount > 0
+    val content = walks.pagedContent()
+    val hasWalks = content == PagedContent.Items
     LaunchedEffect(refreshMessage, hasWalks) {
         if (refreshMessage != null && hasWalks) snackbars.showSnackbar(refreshMessage)
     }
@@ -107,17 +111,17 @@ internal fun WalksContent(
         },
     ) { innerPadding ->
         PullToRefreshBox(
-            isRefreshing = refresh is LoadState.Loading && hasWalks,
+            isRefreshing = walks.isRefreshing(content),
             onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            when {
-                hasWalks -> WalkList(uiState, walks, onOpenWalk)
-                refresh is LoadState.Loading -> LoadingWalks()
-                refresh is LoadState.Error -> NoWalksWithError(refreshMessage, onRefresh)
-                else -> NoWalks()
+            when (content) {
+                PagedContent.Items -> WalkList(uiState, walks, onOpenWalk)
+                PagedContent.Loading -> LoadingWalks()
+                PagedContent.Error -> NoWalksWithError(refreshMessage, onRefresh)
+                PagedContent.Empty -> NoWalks()
             }
         }
     }

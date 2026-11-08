@@ -25,6 +25,7 @@ import com.geowoof.core.designsystem.component.SkeletonBox
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Post
+import com.geowoof.core.ui.PagedContent
 import com.geowoof.core.ui.PostGridItem
 import com.geowoof.core.ui.userMessage
 
@@ -33,10 +34,14 @@ import com.geowoof.core.ui.userMessage
  * for everyone, and never of someone blocked. A pull needs something that scrolls, also without photos.
  */
 @Composable
-internal fun ExploreGrid(posts: LazyPagingItems<Post>, onOpenPost: (Post) -> Unit, modifier: Modifier = Modifier) {
+internal fun ExploreGrid(
+    posts: LazyPagingItems<Post>,
+    content: PagedContent,
+    onOpenPost: (Post) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val spacing = GeoWoofTheme.spacing
-    val refresh = posts.loadState.refresh
-    val isEmpty = posts.itemCount == 0
+    val failure = (posts.loadState.refresh as? LoadState.Error)?.error as? RemoteLoadException
     val loading = stringResource(com.geowoof.core.designsystem.R.string.core_designsystem_loading)
     LazyVerticalGrid(
         columns = GridCells.Fixed(COLUMNS),
@@ -50,8 +55,8 @@ internal fun ExploreGrid(posts: LazyPagingItems<Post>, onOpenPost: (Post) -> Uni
         horizontalArrangement = Arrangement.spacedBy(spacing.small),
         verticalArrangement = Arrangement.spacedBy(spacing.small),
     ) {
-        when {
-            isEmpty && refresh is LoadState.Loading -> items(SKELETON_CELLS) {
+        when (content) {
+            PagedContent.Loading -> items(SKELETON_CELLS) {
                 SkeletonBox(
                     modifier = Modifier
                         .aspectRatio(1f)
@@ -60,16 +65,16 @@ internal fun ExploreGrid(posts: LazyPagingItems<Post>, onOpenPost: (Post) -> Uni
                 )
             }
 
-            isEmpty && refresh is LoadState.Error -> item(span = { GridItemSpan(maxLineSpan) }) {
+            PagedContent.Error -> item(span = { GridItemSpan(maxLineSpan) }) {
                 ErrorState(
                     title = stringResource(R.string.feature_social_explore_error_title),
-                    message = (refresh.error as? RemoteLoadException)?.error?.userMessage().orEmpty(),
+                    message = failure?.error?.userMessage().orEmpty(),
                     retryLabel = stringResource(R.string.feature_social_retry),
                     onRetry = posts::retry,
                 )
             }
 
-            isEmpty -> item(span = { GridItemSpan(maxLineSpan) }) {
+            PagedContent.Empty -> item(span = { GridItemSpan(maxLineSpan) }) {
                 EmptyState(
                     icon = GeoWoofIcons.PhotoLibrary,
                     title = stringResource(R.string.feature_social_explore_empty_title),
@@ -78,7 +83,7 @@ internal fun ExploreGrid(posts: LazyPagingItems<Post>, onOpenPost: (Post) -> Uni
                 )
             }
 
-            else -> items(posts.itemCount, key = posts.itemKey(Post::id)) { index ->
+            PagedContent.Items -> items(posts.itemCount, key = posts.itemKey(Post::id)) { index ->
                 posts[index]?.let { post ->
                     PostGridItem(
                         image = post.media.firstOrNull(),

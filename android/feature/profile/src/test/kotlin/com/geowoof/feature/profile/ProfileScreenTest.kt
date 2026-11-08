@@ -22,6 +22,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import androidx.paging.LoadState
+import androidx.paging.LoadStates
+import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
@@ -104,7 +107,7 @@ class ProfileScreenTest {
         uiState: ProfileUiState,
         actions: ProfileActions = userActions,
         walks: List<Walk> = emptyList(),
-        posts: List<TimelineItem> = emptyList(),
+        posts: PagingData<TimelineItem> = TestSocial.pages(emptyList()),
         saved: List<Post>? = null,
     ) {
         composeRule.setContent {
@@ -112,7 +115,7 @@ class ProfileScreenTest {
                 ProfileContent(
                     uiState = uiState,
                     lists = ProfileLists(
-                        posts = flowOf(TestSocial.pages(posts)).collectAsLazyPagingItems(),
+                        posts = flowOf(posts).collectAsLazyPagingItems(),
                         walks = flowOf(TestSocial.pages(walks)).collectAsLazyPagingItems(),
                         saved = saved?.let { flowOf(TestSocial.pages(it)).collectAsLazyPagingItems() },
                     ),
@@ -546,7 +549,10 @@ class ProfileScreenTest {
 
     @Test
     fun the_photos_come_first_and_a_post_opens() {
-        show(bea(RelationshipStatus.Following), posts = listOf(TestPosts.item(TestPosts.post("post-9"))))
+        show(
+            bea(RelationshipStatus.Following),
+            posts = TestSocial.pages(listOf(TestPosts.item(TestPosts.post("post-9")))),
+        )
 
         composeRule.waitUntil(WAIT_MILLIS) {
             runCatching {
@@ -561,7 +567,7 @@ class ProfileScreenTest {
     @Test
     fun a_repost_in_the_photos_says_so() {
         val item = TestPosts.item(TestPosts.post("post-9"), repostedBy = TestSocial.user())
-        show(bea(RelationshipStatus.Following), posts = listOf(item))
+        show(bea(RelationshipStatus.Following), posts = TestSocial.pages(listOf(item)))
 
         composeRule.waitUntil(WAIT_MILLIS) {
             runCatching {
@@ -587,6 +593,25 @@ class ProfileScreenTest {
         waitFor("No photos yet")
         scrollTo("No photos yet")
         composeRule.onNodeWithText("No photos yet").assertIsDisplayed()
+    }
+
+    /** Before, the cell to add a photo was there until the photos came, and then turned into the empty state. */
+    @Test
+    fun while_your_photos_load_there_is_neither_the_add_cell_nor_the_empty_state() {
+        show(own(), ownActions, posts = PagingData.empty(LoadStates(LoadState.Loading, NOT_DONE, NOT_DONE)))
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Add photo").assertDoesNotExist()
+        composeRule.onNodeWithText("No photos yet").assertDoesNotExist()
+    }
+
+    @Test
+    fun the_cell_to_add_a_photo_is_only_there_next_to_your_photos() {
+        show(own(), ownActions, posts = TestSocial.pages(listOf(TestPosts.item(TestPosts.post("post-9")))))
+
+        scrollTo("Add photo")
+        composeRule.onNodeWithText("Add photo").assertIsDisplayed()
+        composeRule.onNodeWithText("No photos yet").assertDoesNotExist()
     }
 
     @Test
@@ -672,3 +697,5 @@ class ProfileScreenTest {
         const val WAIT_MILLIS = 5_000L
     }
 }
+
+private val NOT_DONE = LoadState.NotLoading(endOfPaginationReached = false)

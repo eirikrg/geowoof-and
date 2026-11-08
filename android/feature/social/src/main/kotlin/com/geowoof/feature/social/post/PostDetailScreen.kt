@@ -61,8 +61,10 @@ import com.geowoof.core.model.Post
 import com.geowoof.core.model.ReportReason
 import com.geowoof.core.model.UserSummary
 import com.geowoof.core.ui.MentionText
+import com.geowoof.core.ui.PagedContent
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.UserRow
+import com.geowoof.core.ui.pagedContent
 import com.geowoof.core.ui.userMessage
 import com.geowoof.feature.social.R
 import com.geowoof.feature.social.rememberPostMessages
@@ -213,15 +215,16 @@ private fun PostAndComments(
     actions: PostCardActions,
     modifier: Modifier = Modifier,
 ) {
+    val content = comments.pagedContent()
     LazyColumn(modifier = modifier.fillMaxSize()) {
         item(key = "post") {
             PostCard(post, repostedBy = null, myUserId = myUserId, actions = actions, enlargesPhotos = true)
         }
-        if (comments.itemCount == 0 && comments.loadState.refresh !is LoadState.Loading) {
+        if (content == PagedContent.Empty || content == PagedContent.Error) {
             item(key = "empty") {
                 Text(
                     text = stringResource(
-                        if (comments.loadState.refresh is LoadState.Error) {
+                        if (content == PagedContent.Error) {
                             R.string.feature_social_comments_failed
                         } else {
                             R.string.feature_social_no_comments

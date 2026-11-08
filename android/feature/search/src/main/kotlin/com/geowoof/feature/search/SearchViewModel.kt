@@ -44,6 +44,8 @@ data class SearchUiState(
     val tab: SearchTab = SearchTab.People,
     /** With less than this, the server does not search: the screen shows the recent people. */
     val hasEnoughText: Boolean = false,
+    /** What the results are for: a new one is a new list, which loads from the start. */
+    val searchedText: String = "",
     /** Those opened from here, the last one first. */
     val recent: List<UserSummary> = emptyList(),
     val isLoadingRecent: Boolean = false,
@@ -92,6 +94,7 @@ class SearchViewModel @Inject constructor(
         SearchUiState(
             tab = selected,
             hasEnoughText = current.length >= MIN_TEXT_LENGTH,
+            searchedText = current,
             recent = recentPeople.people,
             isLoadingRecent = recentPeople.isLoading,
             hasRecentFailed = recentPeople.hasFailed,

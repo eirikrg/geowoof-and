@@ -56,6 +56,9 @@ import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Post
 import com.geowoof.core.model.ReportReason
 import com.geowoof.core.model.TimelineItem
+import com.geowoof.core.ui.PagedContent
+import com.geowoof.core.ui.isRefreshing
+import com.geowoof.core.ui.pagedContent
 import com.geowoof.core.ui.userMessage
 import com.geowoof.feature.social.post.PostCard
 import com.geowoof.feature.social.post.PostCardActions
@@ -164,15 +167,18 @@ internal fun CommunityContent(
                 .padding(innerPadding),
         ) {
             CommunityTabs(selectedTab, onSelectTab)
-            val list: LazyPagingItems<*> = if (selectedTab == CommunityTab.Following) feed else explore
+            val feedContent = feed.pagedContent()
+            val exploreContent = explore.pagedContent()
+            val isFeed = selectedTab == CommunityTab.Following
+            val list: LazyPagingItems<*> = if (isFeed) feed else explore
             PullToRefreshBox(
-                isRefreshing = list.loadState.refresh is LoadState.Loading && list.itemCount > 0,
+                isRefreshing = list.isRefreshing(if (isFeed) feedContent else exploreContent),
                 onRefresh = list::refresh,
                 modifier = Modifier.fillMaxSize(),
             ) {
                 when (selectedTab) {
-                    CommunityTab.Following -> FeedList(feed, myUserId, actions, onFindPeople)
-                    CommunityTab.Explore -> ExploreGrid(explore, onOpenPost = actions.onOpenPost)
+                    CommunityTab.Following -> FeedList(feed, feedContent, myUserId, actions, onFindPeople)
+                    CommunityTab.Explore -> ExploreGrid(explore, exploreContent, onOpenPost = actions.onOpenPost)
                 }
             }
         }
@@ -196,35 +202,35 @@ private fun CommunityTabs(selected: CommunityTab, onSelect: (CommunityTab) -> Un
 @Composable
 private fun FeedList(
     feed: LazyPagingItems<TimelineItem>,
+    content: PagedContent,
     myUserId: String?,
     actions: PostCardActions,
     onFindPeople: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val refresh = feed.loadState.refresh
-    val isEmpty = feed.itemCount == 0
+    val failure = (feed.loadState.refresh as? LoadState.Error)?.error as? RemoteLoadException
     // A pull needs something that scrolls, also when the list is empty.
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         // Room for the button, which floats over the last post.
         contentPadding = PaddingValues(bottom = ListBottomPadding),
     ) {
-        when {
-            isEmpty && refresh is LoadState.Loading -> item {
+        when (content) {
+            PagedContent.Loading -> item {
                 SkeletonList(modifier = Modifier.fillParentMaxSize(), rows = 2) { SkeletonPost() }
             }
 
-            isEmpty && refresh is LoadState.Error -> item {
+            PagedContent.Error -> item {
                 ErrorState(
                     title = stringResource(R.string.feature_social_community_error_title),
-                    message = (refresh.error as? RemoteLoadException)?.error?.userMessage().orEmpty(),
+                    message = failure?.error?.userMessage().orEmpty(),
                     retryLabel = stringResource(R.string.feature_social_retry),
                     onRetry = feed::retry,
                     modifier = Modifier.fillParentMaxSize(),
                 )
             }
 
-            isEmpty -> item {
+            PagedContent.Empty -> item {
                 EmptyState(
                     icon = GeoWoofIcons.Groups,
                     title = stringResource(R.string.feature_social_community_empty_title),
@@ -239,7 +245,7 @@ private fun FeedList(
                 )
             }
 
-            else -> items(feed.itemCount, key = feed.itemKey(TimelineItem::id)) { index ->
+            PagedContent.Items -> items(feed.itemCount, key = feed.itemKey(TimelineItem::id)) { index ->
                 feed[index]?.let { item ->
                     PostCard(
                         post = item.post,

@@ -40,7 +40,9 @@ import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.PeopleListKind
 import com.geowoof.core.model.Person
 import com.geowoof.core.model.UserSummary
+import com.geowoof.core.ui.PagedContent
 import com.geowoof.core.ui.UserRow
+import com.geowoof.core.ui.pagedContent
 import com.geowoof.core.ui.userMessage
 import com.geowoof.feature.profile.R
 import kotlinx.coroutines.flow.flowOf
@@ -96,20 +98,19 @@ internal fun PeopleListContent(
         val contentModifier = Modifier
             .fillMaxSize()
             .padding(innerPadding)
-        val refresh = people.loadState.refresh
-        val isEmpty = people.itemCount == 0
-        when {
-            isEmpty && refresh is LoadState.Loading -> SkeletonList(modifier = contentModifier) { SkeletonRow() }
+        val failure = (people.loadState.refresh as? LoadState.Error)?.error as? RemoteLoadException
+        when (people.pagedContent()) {
+            PagedContent.Loading -> SkeletonList(modifier = contentModifier) { SkeletonRow() }
 
-            isEmpty && refresh is LoadState.Error -> ErrorState(
+            PagedContent.Error -> ErrorState(
                 title = stringResource(R.string.feature_profile_people_error_title),
-                message = (refresh.error as? RemoteLoadException)?.error?.userMessage().orEmpty(),
+                message = failure?.error?.userMessage().orEmpty(),
                 retryLabel = stringResource(R.string.feature_profile_retry),
                 onRetry = people::retry,
                 modifier = contentModifier,
             )
 
-            isEmpty -> EmptyState(
+            PagedContent.Empty -> EmptyState(
                 icon = GeoWoofIcons.Groups,
                 title = stringResource(kind.emptyTitleRes()),
                 message = stringResource(kind.emptyMessageRes()),
@@ -117,7 +118,7 @@ internal fun PeopleListContent(
                 modifier = contentModifier,
             )
 
-            else -> LazyColumn(modifier = contentModifier) {
+            PagedContent.Items -> LazyColumn(modifier = contentModifier) {
                 items(people.itemCount, key = people.itemKey { it.user.id }) { index ->
                     people[index]?.let { person ->
                         UserRow(person.user, onClick = { onOpenUser(person.user.id) })

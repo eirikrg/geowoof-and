@@ -43,13 +43,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemKey
 import com.geowoof.core.designsystem.component.EmptyState
 import com.geowoof.core.designsystem.component.FittedText
 import com.geowoof.core.designsystem.component.GeoWoofIllustrations
 import com.geowoof.core.designsystem.component.IconBadge
+import com.geowoof.core.designsystem.component.SkeletonBox
+import com.geowoof.core.designsystem.component.SkeletonList
 import com.geowoof.core.designsystem.icon.GeoWoofIcons
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.Pet
@@ -57,10 +58,12 @@ import com.geowoof.core.model.Post
 import com.geowoof.core.model.Profile
 import com.geowoof.core.model.TimelineItem
 import com.geowoof.core.model.Walk
+import com.geowoof.core.ui.PagedContent
 import com.geowoof.core.ui.PostGridItem
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.WalkCard
 import com.geowoof.core.ui.WalkTotalsGrid
+import com.geowoof.core.ui.pagedContent
 import com.geowoof.core.ui.shortDescription
 
 /** The tabs of a profile. Only you see [Saved], in your own. */
@@ -96,6 +99,9 @@ internal fun ProfileList(
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(ProfileTab.Photos) }
     val tabs = ProfileTab.entries.filter { it != ProfileTab.Saved || lists.saved != null }
+    val photos = lists.posts.pagedContent()
+    val walks = lists.walks.pagedContent()
+    val saved = lists.saved?.pagedContent()
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         state = listState,
@@ -131,10 +137,10 @@ internal fun ProfileList(
         } else {
             stickyHeader { ProfileTabs(tabs, selectedTab, onSelect = { selectedTab = it }) }
             when (selectedTab) {
-                ProfileTab.Photos -> photosTab(uiState, lists.posts, actions)
-                ProfileTab.Walks -> walksTab(uiState, lists.walks, actions)
+                ProfileTab.Photos -> photosTab(uiState, lists.posts, photos, actions)
+                ProfileTab.Walks -> walksTab(uiState, lists.walks, walks, actions)
                 ProfileTab.Pets -> petsTab(uiState, actions)
-                ProfileTab.Saved -> lists.saved?.let { savedTab(it, actions) }
+                ProfileTab.Saved -> if (lists.saved != null && saved != null) savedTab(lists.saved, saved, actions)
             }
         }
     }
@@ -190,61 +196,58 @@ private fun LazyListScope.gridRows(count: Int, cell: @Composable (index: Int) ->
 private fun LazyListScope.photosTab(
     uiState: ProfileUiState,
     posts: LazyPagingItems<TimelineItem>,
+    content: PagedContent,
     actions: ProfileActions,
 ) {
     val onCreatePost = actions.onCreatePost
-    if (uiState.isOwn && posts.itemCount == 0 && posts.loadState.refresh is LoadState.NotLoading) {
-        item {
-            EmptyState(
-                icon = GeoWoofIcons.PhotoLibrary,
-                title = stringResource(R.string.feature_profile_no_own_photos_title),
-                message = stringResource(R.string.feature_profile_no_own_photos),
-                illustration = GeoWoofIllustrations.EmptyPhotos,
-                action = if (onCreatePost != null) {
-                    {
-                        FilledTonalButton(onClick = onCreatePost) {
-                            Text(stringResource(R.string.feature_profile_add_photo))
-                        }
-                    }
-                } else {
-                    null
-                },
-            )
+    when (content) {
+        // Nothing that could turn out wrong: neither the cell to add a photo nor that there are none.
+        PagedContent.Loading -> {
+            item { Spacer(Modifier.height(GeoWoofTheme.spacing.medium)) }
+            gridRows(SKELETON_CELLS) { SkeletonBox(Modifier.aspectRatio(1f), MaterialTheme.shapes.small) }
         }
-        return
-    }
-    item { Spacer(Modifier.height(GeoWoofTheme.spacing.medium)) }
-    // The first cell of your own photos is the way to add another.
-    val first = if (onCreatePost != null) 1 else 0
-    gridRows(posts.itemCount + first) { index ->
-        if (onCreatePost != null && index == 0) {
-            AddPhotoCell(onCreatePost)
-        } else {
-            posts[index - first]?.let { item ->
-                PostGridItem(
-                    image = item.post.media.firstOrNull(),
-                    isRepost = item.repostedBy != null,
-                    onClick = { actions.onOpenPost(item.post.id) },
+
+        PagedContent.Empty -> item {
+            if (uiState.isOwn) {
+                EmptyState(
+                    icon = GeoWoofIcons.PhotoLibrary,
+                    title = stringResource(R.string.feature_profile_no_own_photos_title),
+                    message = stringResource(R.string.feature_profile_no_own_photos),
+                    illustration = GeoWoofIllustrations.EmptyPhotos,
+                    action = onCreatePost?.let { onClick ->
+                        {
+                            FilledTonalButton(onClick = onClick) {
+                                Text(stringResource(R.string.feature_profile_add_photo))
+                            }
+                        }
+                    },
                 )
+            } else {
+                EmptyLine(icon = GeoWoofIcons.PhotoLibrary, text = stringResource(R.string.feature_profile_no_photos))
             }
         }
-    }
-    if (posts.itemCount == 0 && posts.loadState.refresh !is LoadState.Loading) {
-        item {
-            EmptyLine(
-                icon = if (posts.loadState.refresh is LoadState.Error) {
-                    GeoWoofIcons.Error
+
+        PagedContent.Error -> item {
+            EmptyLine(icon = GeoWoofIcons.Error, text = stringResource(R.string.feature_profile_photos_failed))
+        }
+
+        PagedContent.Items -> {
+            item { Spacer(Modifier.height(GeoWoofTheme.spacing.medium)) }
+            // The first cell of your own photos is the way to add another.
+            val first = if (onCreatePost != null) 1 else 0
+            gridRows(posts.itemCount + first) { index ->
+                if (onCreatePost != null && index == 0) {
+                    AddPhotoCell(onCreatePost)
                 } else {
-                    GeoWoofIcons.PhotoLibrary
-                },
-                text = stringResource(
-                    if (posts.loadState.refresh is LoadState.Error) {
-                        R.string.feature_profile_photos_failed
-                    } else {
-                        R.string.feature_profile_no_photos
-                    },
-                ),
-            )
+                    posts[index - first]?.let { item ->
+                        PostGridItem(
+                            image = item.post.media.firstOrNull(),
+                            isRepost = item.repostedBy != null,
+                            onClick = { actions.onOpenPost(item.post.id) },
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -272,9 +275,9 @@ private fun AddPhotoCell(onClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-private fun LazyListScope.savedTab(saved: LazyPagingItems<Post>, actions: ProfileActions) {
-    if (saved.itemCount == 0) {
-        item { SavedPostsPlaceholder(saved.loadState.refresh, onRetry = saved::retry) }
+private fun LazyListScope.savedTab(saved: LazyPagingItems<Post>, content: PagedContent, actions: ProfileActions) {
+    if (content != PagedContent.Items) {
+        item { SavedPostsPlaceholder(content, onRetry = saved::retry) }
         return
     }
     item { Spacer(Modifier.height(GeoWoofTheme.spacing.small)) }
@@ -285,7 +288,12 @@ private fun LazyListScope.savedTab(saved: LazyPagingItems<Post>, actions: Profil
     }
 }
 
-private fun LazyListScope.walksTab(uiState: ProfileUiState, walks: LazyPagingItems<Walk>, actions: ProfileActions) {
+private fun LazyListScope.walksTab(
+    uiState: ProfileUiState,
+    walks: LazyPagingItems<Walk>,
+    content: PagedContent,
+    actions: ProfileActions,
+) {
     uiState.totals?.takeIf { it.walkCount > 0 }?.let { totals ->
         item {
             WalkTotalsGrid(
@@ -294,9 +302,12 @@ private fun LazyListScope.walksTab(uiState: ProfileUiState, walks: LazyPagingIte
             )
         }
     }
-    if (walks.itemCount == 0 && walks.loadState.refresh !is LoadState.Loading) {
+    if (content == PagedContent.Loading) {
+        item { SkeletonList(modifier = Modifier.padding(top = GeoWoofTheme.spacing.small), rows = SKELETON_ROWS) }
+    }
+    if (content == PagedContent.Empty || content == PagedContent.Error) {
         item {
-            val failed = walks.loadState.refresh is LoadState.Error
+            val failed = content == PagedContent.Error
             if (uiState.isOwn && !failed) {
                 EmptyState(
                     icon = GeoWoofIcons.Route,
@@ -411,6 +422,10 @@ private fun PetRow(pet: Pet, onClick: (() -> Unit)?, modifier: Modifier = Modifi
 }
 
 private const val GRID_COLUMNS = 3
+
+/** Two rows of photos and three walks: where the first ones will be, so that nothing jumps when they come. */
+private const val SKELETON_CELLS = 6
+private const val SKELETON_ROWS = 3
 private const val LARGE_FONT_SCALE = 1.3f
 private val GridSpacing = 8.dp
 private val EmptyLineIconSize = 56.dp
