@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,7 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -69,11 +67,11 @@ import com.geowoof.core.ui.FormError
 import com.geowoof.core.ui.HeroRefreshBox
 import com.geowoof.core.ui.HeroTopBar
 import com.geowoof.core.ui.ImageVariant
+import com.geowoof.core.ui.PetFacts
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.WalkTotalsGrid
 import com.geowoof.core.ui.formatted
 import com.geowoof.core.ui.heroListPadding
-import com.geowoof.core.ui.labelRes
 import com.geowoof.core.ui.messageRes
 import com.geowoof.core.ui.rememberHeroCollapse
 import com.geowoof.core.ui.shortDescription
@@ -273,69 +271,6 @@ private fun LazyListScope.petDetails(pet: Pet) {
     item { PetFacts(pet) }
 }
 
-/** What is known of the pet, in tiles: a long list made you scroll past it to reach the walks. */
-@Composable
-private fun PetFacts(pet: Pet, modifier: Modifier = Modifier) {
-    val spacing = GeoWoofTheme.spacing
-    val facts = buildList {
-        add(R.string.feature_pets_sex_label to stringResource(pet.sex.labelRes()))
-        pet.birthDate?.let { add(R.string.feature_pets_birth_date_label to it.formatted()) }
-        pet.size?.let { add(R.string.feature_pets_size_label to stringResource(it.labelRes())) }
-        pet.color?.let { add(R.string.feature_pets_color_label to it) }
-        add(
-            R.string.feature_pets_neutered_label to
-                stringResource(if (pet.neutered) R.string.feature_pets_yes else R.string.feature_pets_no),
-        )
-    }
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.large),
-        verticalArrangement = Arrangement.spacedBy(spacing.small),
-    ) {
-        facts.chunked(FACTS_PER_ROW).forEach { row ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.small)) {
-                row.forEach { (label, value) -> Fact(label, value, modifier = Modifier.weight(1f)) }
-                // A row that is not full keeps the width of its tile.
-                if (row.size < FACTS_PER_ROW) Spacer(Modifier.weight(1f))
-            }
-        }
-        pet.microchip?.let { microchip ->
-            Fact(
-                label = R.string.feature_pets_microchip_label,
-                value = microchip,
-                note = stringResource(R.string.feature_pets_microchip_private),
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
-}
-
-@Composable
-private fun Fact(label: Int, value: String, modifier: Modifier = Modifier, note: String? = null) {
-    Surface(
-        modifier = modifier.semantics(mergeDescendants = true) {},
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) {
-        Column(modifier = Modifier.padding(GeoWoofTheme.spacing.medium)) {
-            Text(
-                text = stringResource(label),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(value, style = MaterialTheme.typography.titleSmall)
-            note?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
 private fun LazyListScope.walkSection(totals: WalkTotals?, onOpenWalks: () -> Unit) {
     item {
         val spacing = GeoWoofTheme.spacing
@@ -510,4 +445,3 @@ private fun PetDetailPreview() {
 }
 
 private val PetPhotoSize = 120.dp
-private const val FACTS_PER_ROW = 2

@@ -3,9 +3,12 @@ package com.geowoof.feature.profile
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasScrollToNodeAction
@@ -156,13 +159,15 @@ class ProfileScreenTest {
         pets = listOf(TestPets.pet(), TestPets.pet(id = "toby", name = "Toby", breed = null)),
     )
 
-    private fun openPetsTab() = composeRule.onNodeWithText("Pets").performClick()
-
     private fun openWalksTab() = composeRule.onNodeWithText("Walks").performClick()
+
+    /** The page of the profile: the row of pets scrolls too, but sideways. */
+    private val page =
+        hasScrollToNodeAction() and SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
 
     /** The screen of these tests is small, and what is below the header has to come into view. */
     private fun scrollTo(text: String) {
-        composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText(text))
+        composeRule.onNode(page).performScrollToNode(hasText(text))
     }
 
     /** The pages of a list arrive through a coroutine that the clock of the test does not wait for. */
@@ -185,31 +190,60 @@ class ProfileScreenTest {
     }
 
     @Test
-    fun your_pets_are_in_their_tab_and_they_open() {
+    fun your_pets_are_circles_over_the_tabs_and_they_open() {
         show(own(), ownActions)
 
-        openPetsTab()
-
-        scrollTo("Border collie")
-        composeRule.onNodeWithText("Border collie").assertIsDisplayed()
-        // Without a breed, the species describes it.
-        scrollTo("Dog")
-        composeRule.onNodeWithText("Dog").assertIsDisplayed()
+        composeRule.onNodeWithText("Luna").assertIsDisplayed()
+        val toby = composeRule.onNodeWithText("Toby").assertIsDisplayed().getBoundsInRoot()
+        assertTrue(toby.bottom <= composeRule.onNodeWithText("Photos").getBoundsInRoot().top)
+        // There is no tab for them any more.
+        composeRule.onNodeWithText("Pets").assertDoesNotExist()
         composeRule.onNodeWithText("Toby").performClick()
         assertEquals(listOf("pet:toby"), calls)
     }
 
     @Test
-    fun it_invites_to_add_the_first_pet() {
+    fun the_last_circle_of_your_pets_adds_another() {
+        show(own(), ownActions)
+
+        val add = composeRule.onNodeWithContentDescription("Add pet").assertIsDisplayed()
+        assertTrue(add.getBoundsInRoot().left >= composeRule.onNodeWithText("Toby").getBoundsInRoot().right)
+        add.performClick()
+        assertEquals(listOf("add"), calls)
+    }
+
+    @Test
+    fun without_pets_you_only_see_the_circle_to_add_the_first() {
         show(own().copy(pets = emptyList()), ownActions)
 
-        openPetsTab()
-
-        scrollTo("No pets yet")
-        composeRule.onNodeWithText("No pets yet").assertIsDisplayed()
-        scrollTo("Add pet")
-        composeRule.onNodeWithText("Add pet").performClick()
+        composeRule.onNodeWithContentDescription("Add pet").performClick()
         assertEquals(listOf("add"), calls)
+        composeRule.onNodeWithText("No pets yet").assertDoesNotExist()
+    }
+
+    /** They have no page of their own: what their owner tells about them opens over the profile. */
+    @Test
+    fun the_pets_of_someone_else_open_over_their_profile() {
+        show(bea(RelationshipStatus.Friends).copy(pets = listOf(TestPets.pet(microchip = null))))
+
+        composeRule.onNodeWithContentDescription("Add pet").assertDoesNotExist()
+        composeRule.onNodeWithText("Border collie").assertDoesNotExist()
+        composeRule.onNodeWithText("Luna").performClick()
+
+        composeRule.onNodeWithText("Border collie").assertIsDisplayed()
+        composeRule.onNodeWithText("Le encanta el agua").assertIsDisplayed()
+        composeRule.onNodeWithText("Female").assertIsDisplayed()
+        composeRule.onNodeWithText("Microchip").assertDoesNotExist()
+        assertTrue(calls.isEmpty())
+    }
+
+    @Test
+    fun someone_without_pets_has_no_row_of_pets() {
+        show(bea(RelationshipStatus.Friends))
+
+        composeRule.onNodeWithText("Photos").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Add pet").assertDoesNotExist()
+        composeRule.onNodeWithText("New").assertDoesNotExist()
     }
 
     @Test
@@ -531,7 +565,7 @@ class ProfileScreenTest {
         // The pages arrive through a coroutine, and the list only has what fits on the screen.
         composeRule.waitUntil(WAIT_MILLIS) {
             runCatching {
-                composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("3.12 km", substring = true))
+                composeRule.onNode(page).performScrollToNode(hasText("3.12 km", substring = true))
             }.isSuccess
         }
         composeRule.onNode(hasText("3.12 km", substring = true)).performClick()
@@ -544,7 +578,7 @@ class ProfileScreenTest {
         show(bea(RelationshipStatus.None))
         openWalksTab()
 
-        composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("No walks you can see."))
+        composeRule.onNode(page).performScrollToNode(hasText("No walks you can see."))
         composeRule.onNodeWithText("No walks you can see.").assertIsDisplayed()
     }
 
@@ -557,7 +591,7 @@ class ProfileScreenTest {
 
         composeRule.waitUntil(WAIT_MILLIS) {
             runCatching {
-                composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasContentDescription("Open post"))
+                composeRule.onNode(page).performScrollToNode(hasContentDescription("Open post"))
             }.isSuccess
         }
         composeRule.onNodeWithContentDescription("Open post").performClick()
@@ -632,7 +666,7 @@ class ProfileScreenTest {
         composeRule.onNodeWithText("Saved").performClick()
         composeRule.waitUntil(WAIT_MILLIS) {
             runCatching {
-                composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("En el Retiro"))
+                composeRule.onNode(page).performScrollToNode(hasText("En el Retiro"))
             }.isSuccess
         }
         composeRule.onNodeWithText("En el Retiro").performClick()
@@ -654,7 +688,7 @@ class ProfileScreenTest {
         composeRule.onNodeWithText("Saved").performClick()
         composeRule.waitUntil(WAIT_MILLIS) {
             runCatching {
-                composeRule.onNode(hasScrollToNodeAction())
+                composeRule.onNode(page)
                     .performScrollToNode(hasText("Only you can see them", substring = true))
             }.isSuccess
         }

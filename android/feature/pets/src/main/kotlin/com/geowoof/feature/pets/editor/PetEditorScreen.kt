@@ -68,6 +68,7 @@ import com.geowoof.core.ui.rememberPhotoPicker
 import com.geowoof.feature.pets.PetDateDialog
 import com.geowoof.feature.pets.R
 import java.time.LocalDate
+import com.geowoof.core.ui.R as CoreUiR
 
 /** Without [onBack] this is an onboarding step, which offers [onSkip] instead. */
 @Composable
@@ -251,24 +252,24 @@ private fun PetDetailsFields(
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(GeoWoofTheme.spacing.medium)) {
         BirthDateAndNeutered(uiState = uiState, actions = actions)
-        LabeledChoice(stringResource(R.string.feature_pets_sex_label)) {
+        LabeledChoice(stringResource(CoreUiR.string.core_ui_pet_sex_label)) {
             SexSelector(selected = uiState.sex, onSelect = actions.onSexChange)
         }
-        LabeledChoice(stringResource(R.string.feature_pets_size_label)) {
+        LabeledChoice(stringResource(CoreUiR.string.core_ui_pet_size_label)) {
             SizeSelector(selected = uiState.size, onSelect = actions.onSizeChange)
         }
         FormTextField(
             state = fields.color,
-            label = stringResource(R.string.feature_pets_color_label),
+            label = stringResource(CoreUiR.string.core_ui_pet_color_label),
             supportingText = uiState.issues.color?.let { tooLongMessage(it) },
             isError = uiState.issues.color != null,
             keyboardOptions = WordsKeyboard,
         )
         FormTextField(
             state = fields.microchip,
-            label = stringResource(R.string.feature_pets_microchip_label),
+            label = stringResource(CoreUiR.string.core_ui_pet_microchip_label),
             supportingText = uiState.issues.microchip?.let { microchipMessage(it) }
-                ?: stringResource(R.string.feature_pets_microchip_private),
+                ?: stringResource(CoreUiR.string.core_ui_pet_microchip_private),
             isError = uiState.issues.microchip != null,
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Next),
         )
