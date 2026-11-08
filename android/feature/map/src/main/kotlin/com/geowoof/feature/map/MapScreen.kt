@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.onConsumedWindowInsetsChanged
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
@@ -34,9 +36,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -395,8 +399,10 @@ private fun WalkMap(
     val isDark = isThemeDark()
     val styleResource = mapStyleResource()
     val style = remember(context, styleResource) { MapStyleOptions.loadRawResourceStyle(context, styleResource) }
+    // The logo and the camera keep clear of the system bars, but not of what the navigation bar already covers.
+    var consumed by remember { mutableStateOf(WindowInsets(0)) }
     GoogleMap(
-        modifier = modifier,
+        modifier = modifier.onConsumedWindowInsetsChanged { consumed = it },
         cameraPositionState = cameraPositionState,
         contentDescription = stringResource(R.string.feature_map_content_description),
         // During a walk the GPS is already on for the route, and the dot has to follow it.
@@ -407,7 +413,7 @@ private fun WalkMap(
             myLocationButtonEnabled = false,
             mapToolbarEnabled = false,
         ),
-        contentPadding = WindowInsets.safeDrawing.asPaddingValues(),
+        contentPadding = WindowInsets.safeDrawing.exclude(consumed).asPaddingValues(),
         mapColorScheme = if (isDark) ComposeMapColorScheme.DARK else ComposeMapColorScheme.LIGHT,
     ) {
         // The dashed trail of the logo: the walk is drawing it.
