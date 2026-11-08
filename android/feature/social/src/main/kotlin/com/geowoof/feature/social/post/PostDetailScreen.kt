@@ -34,6 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -261,6 +263,8 @@ private fun CommentField(
 ) {
     val spacing = GeoWoofTheme.spacing
     val focus = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     // Answering someone is starting to write.
     LaunchedEffect(replyingTo) {
         if (replyingTo != null) focus.requestFocus()
@@ -300,7 +304,12 @@ private fun CommentField(
                 shape = MaterialTheme.shapes.large,
             )
             FilledIconButton(
-                onClick = actions.onSendComment,
+                // What was sent is read in the list: the keyboard would cover it.
+                onClick = {
+                    keyboard?.hide()
+                    focusManager.clearFocus()
+                    actions.onSendComment()
+                },
                 enabled = !isSending && text.text.isNotBlank(),
                 modifier = Modifier.size(SendButtonSize),
             ) {
