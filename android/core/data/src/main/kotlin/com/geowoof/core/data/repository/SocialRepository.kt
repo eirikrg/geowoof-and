@@ -68,6 +68,7 @@ internal class DefaultSocialRepository @Inject constructor(
     private val people: PeopleNetworkDataSource,
     private val dao: SocialDao,
     private val feed: FeedDao,
+    private val changes: ContentChanges,
 ) : SocialRepository {
     override val receivedRequests: Flow<List<FollowRequest>> = requests(RequestDirection.Received)
 
@@ -100,15 +101,17 @@ internal class DefaultSocialRepository @Inject constructor(
         network.follow(userId).map { it.toModel() }.onSuccess { relationship ->
             // The answer does not bring the person, and the list of sent requests shows them.
             if (relationship.status == RelationshipStatus.Requested) refreshRequests()
+            changes.notify(ContentChange.Relationships)
         }
 
     override suspend fun unfollow(userId: String): Outcome<Relationship> =
         network.unfollow(userId).map { it.toModel() }.onSuccess {
             dao.deleteRequestsWith(userId, RequestDirection.Sent.name)
+            changes.notify(ContentChange.Relationships)
         }
 
     override suspend fun removeFollower(userId: String): Outcome<Relationship> =
-        network.removeFollower(userId).map { it.toModel() }
+        network.removeFollower(userId).map { it.toModel() }.onSuccess { changes.notify(ContentChange.Relationships) }
 
     override suspend fun acceptRequest(requestId: String): Outcome<Relationship> =
         answer(requestId) { network.acceptRequest(requestId).map { it.toModel() } }
@@ -121,17 +124,22 @@ internal class DefaultSocialRepository @Inject constructor(
 
     /** If the server rejects the answer, the request has changed: the list must show how it is now. */
     private suspend fun <T> answer(requestId: String, call: suspend () -> Outcome<T>): Outcome<T> = call()
-        .onSuccess { dao.deleteRequest(requestId) }
+        .onSuccess {
+            dao.deleteRequest(requestId)
+            changes.notify(ContentChange.Relationships)
+        }
         .onFailure { error -> if (error is AppError.Api) refreshRequests() }
 
     override suspend fun block(userId: String): Outcome<Unit> = network.block(userId).onSuccess {
         dao.deleteRequestsWith(userId)
         feed.deleteAllOf(userId)
         refreshBlockedUsers()
+        changes.notify(ContentChange.Relationships)
     }
 
     override suspend fun unblock(userId: String): Outcome<Unit> = network.unblock(userId).onSuccess {
         dao.deleteBlocked(userId)
+        changes.notify(ContentChange.Relationships)
     }
 
     override suspend fun report(userId: String, reason: ReportReason, details: String?): Outcome<Unit> =

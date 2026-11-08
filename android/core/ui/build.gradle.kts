@@ -13,6 +13,7 @@ dependencies {
     api(libs.androidx.paging.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.credentials)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.androidx.credentials.playServicesAuth)

@@ -34,7 +34,6 @@ import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.LoadStates
@@ -55,6 +54,8 @@ import com.geowoof.core.model.Post
 import com.geowoof.core.model.UserSummary
 import com.geowoof.core.ui.PagedContent
 import com.geowoof.core.ui.PostGridItem
+import com.geowoof.core.ui.RefreshOnReturn
+import com.geowoof.core.ui.ReloadOnReturn
 import com.geowoof.core.ui.RemoteAvatar
 import com.geowoof.core.ui.UserRow
 import com.geowoof.core.ui.labelRes
@@ -71,13 +72,10 @@ fun SearchScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val users = viewModel.users.collectAsLazyPagingItems()
     val pets = viewModel.pets.collectAsLazyPagingItems()
-    // Back from a profile, someone may have been blocked or may have changed their name.
-    LifecycleResumeEffect(users, pets, viewModel) {
-        users.refresh()
-        pets.refresh()
-        viewModel.onReloadRecent()
-        onPauseOrDispose {}
-    }
+    // Back from a profile, the person may have blocked or followed someone, and others change their names.
+    RefreshOnReturn(users, viewModel.changes)
+    RefreshOnReturn(pets, viewModel.changes)
+    ReloadOnReturn(onReload = viewModel::onReloadRecent, changes = viewModel.changes)
     SearchContent(
         uiState = uiState,
         query = viewModel.query,

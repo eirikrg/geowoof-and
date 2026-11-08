@@ -5,9 +5,12 @@ import android.content.Context
 import com.geowoof.core.common.ApplicationScope
 import com.geowoof.core.data.repository.AuthRepository
 import com.geowoof.core.data.repository.ChatRepository
+import com.geowoof.core.data.repository.ContentChange
+import com.geowoof.core.data.repository.ContentChanges
 import com.geowoof.core.data.repository.NotificationsRepository
 import com.geowoof.core.data.repository.OpenConversations
 import com.geowoof.core.data.repository.PushTokenProvider
+import com.geowoof.core.data.repository.SocialRepository
 import com.geowoof.core.model.NotificationType
 import com.geowoof.core.model.SessionState
 import com.google.android.gms.tasks.Task
@@ -90,12 +93,16 @@ internal interface NotificationPresenter {
  * Decides what to do with a push. It brings the data up to date in any case, and it does not
  * interrupt if the conversation is on the screen. After signing out nothing is shown: the device
  * may not have been able to leave. A push can be what starts the process, so the session may still
- * be being read.
+ * be being read. Someone who starts following, or accepts a request, changes what the lists show,
+ * as when the person does it: [ContentChanges] makes them load again when they come back.
  */
+@Suppress("LongParameterList")
 internal class PushHandler @Inject constructor(
     private val auth: AuthRepository,
     private val chat: ChatRepository,
     private val notifications: NotificationsRepository,
+    private val social: SocialRepository,
+    private val changes: ContentChanges,
     private val openConversations: OpenConversations,
     private val presenter: NotificationPresenter,
     @ApplicationScope private val scope: CoroutineScope,
@@ -111,11 +118,22 @@ internal class PushHandler @Inject constructor(
 
             is PushContent.Social -> {
                 scope.launch { notifications.refreshUnreadCount() }
+                if (content.type in REQUESTS) scope.launch { social.refreshRequests() }
+                if (content.type in RELATIONSHIPS) changes.notify(ContentChange.Relationships)
                 presenter.show(content)
             }
         }
     }
 }
+
+/** The ones that change a list of requests, which Room has. */
+private val REQUESTS = setOf(NotificationType.FollowRequested, NotificationType.FollowRequestAccepted)
+
+private val RELATIONSHIPS = setOf(
+    NotificationType.UserFollowed,
+    NotificationType.FollowRequestAccepted,
+    NotificationType.FriendshipStarted,
+)
 
 private suspend fun AuthRepository.readSession(): SessionState = sessionState.first { it != SessionState.Loading }
 

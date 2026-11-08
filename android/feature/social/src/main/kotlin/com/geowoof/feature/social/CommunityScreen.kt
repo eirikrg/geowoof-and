@@ -35,7 +35,6 @@ import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.LoadStates
@@ -57,6 +56,7 @@ import com.geowoof.core.model.Post
 import com.geowoof.core.model.ReportReason
 import com.geowoof.core.model.TimelineItem
 import com.geowoof.core.ui.PagedContent
+import com.geowoof.core.ui.RefreshOnReturn
 import com.geowoof.core.ui.isRefreshing
 import com.geowoof.core.ui.pagedContent
 import com.geowoof.core.ui.userMessage
@@ -78,15 +78,14 @@ fun CommunityScreen(
 ) {
     val interactions = viewModel.interactions
     val state by interactions.state.collectAsStateWithLifecycle()
+    val feed = viewModel.feed.collectAsLazyPagingItems()
     val explore = viewModel.explore.collectAsLazyPagingItems()
     var selectedTab by rememberSaveable { mutableStateOf(CommunityTab.Following) }
-    // It comes from the server: back from a post, someone may have been blocked or have gone private.
-    LifecycleResumeEffect(explore, selectedTab) {
-        if (selectedTab == CommunityTab.Explore) explore.refresh()
-        onPauseOrDispose {}
-    }
+    // Back from following someone, from blocking them or from posting, and also after a while away.
+    RefreshOnReturn(feed, viewModel.changes, isShown = selectedTab == CommunityTab.Following)
+    RefreshOnReturn(explore, viewModel.changes, isShown = selectedTab == CommunityTab.Explore)
     CommunityContent(
-        feed = viewModel.feed.collectAsLazyPagingItems(),
+        feed = feed,
         explore = explore,
         selectedTab = selectedTab,
         onSelectTab = { selectedTab = it },

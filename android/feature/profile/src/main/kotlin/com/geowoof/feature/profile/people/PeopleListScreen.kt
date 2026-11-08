@@ -22,7 +22,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.paging.LoadState
 import androidx.paging.LoadStates
 import androidx.paging.PagingData
@@ -41,6 +40,7 @@ import com.geowoof.core.model.PeopleListKind
 import com.geowoof.core.model.Person
 import com.geowoof.core.model.UserSummary
 import com.geowoof.core.ui.PagedContent
+import com.geowoof.core.ui.RefreshOnReturn
 import com.geowoof.core.ui.UserRow
 import com.geowoof.core.ui.pagedContent
 import com.geowoof.core.ui.userMessage
@@ -56,11 +56,8 @@ internal fun PeopleListScreen(
     viewModel: PeopleListViewModel = hiltViewModel(),
 ) {
     val people = viewModel.people.collectAsLazyPagingItems()
-    // Back from a profile, someone may have stopped following or may have been blocked.
-    LifecycleResumeEffect(people) {
-        people.refresh()
-        onPauseOrDispose {}
-    }
+    // Back from a profile, the person may have followed, unfollowed or blocked someone in it.
+    RefreshOnReturn(people, viewModel.changes)
     PeopleListContent(
         kind = viewModel.kind,
         people = people,

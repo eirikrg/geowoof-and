@@ -11,6 +11,7 @@ import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.geowoof.core.data.repository.ContentChanges
 import com.geowoof.core.data.repository.RemoteLoadException
 import com.geowoof.core.designsystem.theme.GeoWoofTheme
 import com.geowoof.core.model.AppError
@@ -34,7 +35,7 @@ class NotificationsViewModelTest {
     fun opening_the_list_is_having_seen_it() {
         val notifications = FakeNotificationsRepository()
         notifications.unread.value = 3
-        val viewModel = NotificationsViewModel(notifications)
+        val viewModel = NotificationsViewModel(notifications, ContentChanges())
 
         viewModel.onOpened()
 

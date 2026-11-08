@@ -79,6 +79,7 @@ internal class DefaultPostsRepository @Inject constructor(
     private val social: SocialNetworkDataSource,
     private val feedDao: FeedDao,
     private val sessions: SessionManager,
+    private val changes: ContentChanges,
 ) : PostsRepository {
     @OptIn(ExperimentalPagingApi::class)
     override fun feed(): Flow<PagingData<TimelineItem>> = Pager(
@@ -108,10 +109,13 @@ internal class DefaultPostsRepository @Inject constructor(
     override suspend fun publish(post: NewPost): Outcome<Post> =
         network.putPost(post.id, post.toBody()).onSuccess { created ->
             feedDao.upsert(NetworkTimelineItem(id = created.id, post = created).toEntity())
+            changes.notify(ContentChange.Posts)
         }.map { it.toModel() }
 
-    override suspend fun delete(postId: String): Outcome<Unit> =
-        network.deletePost(postId).onSuccess { feedDao.deletePost(postId) }
+    override suspend fun delete(postId: String): Outcome<Unit> = network.deletePost(postId).onSuccess {
+        feedDao.deletePost(postId)
+        changes.notify(ContentChange.Posts)
+    }
 
     override suspend fun setLiked(postId: String, liked: Boolean): Outcome<PostLikes> {
         val change = if (liked) 1 else -1
@@ -126,10 +130,14 @@ internal class DefaultPostsRepository @Inject constructor(
         network.setReposted(postId, reposted).onSuccess { answer ->
             feedDao.setRepost(postId, answer.repostedByMe, answer.repostCount)
             if (!reposted) myId()?.let { feedDao.deleteRepost(postId, it) }
+            changes.notify(ContentChange.Posts)
         }.map { it.toModel() }
 
     override suspend fun setSaved(postId: String, saved: Boolean): Outcome<Unit> =
-        network.setSaved(postId, saved).onSuccess { feedDao.setSaved(postId, saved) }
+        network.setSaved(postId, saved).onSuccess {
+            feedDao.setSaved(postId, saved)
+            changes.notify(ContentChange.Posts)
+        }
 
     override suspend fun addComment(postId: String, text: String): Outcome<Comment> =
         network.addComment(postId, text.trim()).onSuccess { feedDao.changeCommentCount(postId, 1) }.map { it.toModel() }

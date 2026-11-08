@@ -67,8 +67,13 @@ class PetsAndProfileRepositoryTest {
         return sessions
     }
 
-    private suspend fun TestScope.petsRepository() =
-        DefaultPetsRepository(petsNetwork, database.petDao(), database.petWeightDao(), signedInSessions())
+    private suspend fun TestScope.petsRepository() = DefaultPetsRepository(
+        petsNetwork,
+        database.petDao(),
+        database.petWeightDao(),
+        signedInSessions(),
+        ContentChanges(),
+    )
 
     private fun pet(id: String = "luna", species: String = "Dog") = NetworkPet(
         id = id,
@@ -230,7 +235,8 @@ class PetsAndProfileRepositoryTest {
 
     @Test
     fun the_profile_is_downloaded_and_saved_locally() = runTest {
-        val repository = DefaultProfileRepository(profileNetwork, database.profileDao(), signedInSessions())
+        val repository =
+            DefaultProfileRepository(profileNetwork, database.profileDao(), signedInSessions(), ContentChanges())
         assertNull(repository.myProfile.first())
 
         repository.refresh()
@@ -241,7 +247,7 @@ class PetsAndProfileRepositoryTest {
     @Test
     fun saving_the_profile_also_updates_the_name_of_the_session() = runTest {
         val sessions = signedInSessions()
-        val repository = DefaultProfileRepository(profileNetwork, database.profileDao(), sessions)
+        val repository = DefaultProfileRepository(profileNetwork, database.profileDao(), sessions, ContentChanges())
 
         val outcome = repository.save(ProfileDraft(" Ana López ", "  ", " Madrid ", "photo"))
         runCurrent()

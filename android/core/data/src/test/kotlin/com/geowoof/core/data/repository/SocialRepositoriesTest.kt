@@ -176,7 +176,9 @@ class SocialRepositoriesTest {
     ).allowMainThreadQueries().build()
     private val network = FakeSocialNetwork()
     private val people = FakePeopleNetwork()
-    private val repository = DefaultSocialRepository(network, people, database.socialDao(), database.feedDao())
+    private val changes = ContentChanges()
+    private val repository =
+        DefaultSocialRepository(network, people, database.socialDao(), database.feedDao(), changes)
     private val peopleRepository = DefaultPeopleRepository(people)
 
     @After
@@ -216,6 +218,26 @@ class SocialRepositoriesTest {
 
         assertEquals(Outcome.Failure(AppError.Network), repository.refreshRequests())
         assertEquals(1, repository.receivedRequests.first().size)
+    }
+
+    @Test
+    fun following_unfollowing_and_blocking_tell_the_lists_that_show_it() = runTest {
+        val relationships = changes.of(ContentChange.Relationships)
+
+        repository.follow("bea-id")
+        repository.unfollow("bea-id")
+        repository.block("bea-id")
+
+        assertEquals(3, relationships.first())
+    }
+
+    @Test
+    fun what_the_server_rejects_has_changed_nothing() = runTest {
+        network.relationshipAnswer = Outcome.Failure(AppError.Network)
+
+        repository.follow("bea-id")
+
+        assertEquals(0, changes.of(ContentChange.Relationships).first())
     }
 
     @Test

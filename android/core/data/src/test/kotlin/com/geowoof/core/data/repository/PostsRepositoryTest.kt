@@ -38,6 +38,7 @@ import com.geowoof.core.network.model.NetworkTimelineItem
 import com.geowoof.core.network.model.NetworkUserSummary
 import com.geowoof.core.network.model.PostBody
 import com.geowoof.core.network.model.ReportBody
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -177,6 +178,7 @@ class PostsRepositoryTest {
     private val feedDao = database.feedDao()
     private val network = FakePostsNetwork()
     private val social = ReportsOnlyNetwork()
+    private val changes = ContentChanges()
 
     @After
     fun closeDatabase() = database.close()
@@ -186,7 +188,7 @@ class PostsRepositoryTest {
         runCurrent()
         sessions.start(networkSession(user = networkUser(username = "ana")))
         runCurrent()
-        return DefaultPostsRepository(network, social, feedDao, sessions)
+        return DefaultPostsRepository(network, social, feedDao, sessions, changes)
     }
 
     private fun emptyState() = PagingState<Int, FeedItemEntity>(emptyList(), null, PagingConfig(pageSize = 20), 0)
@@ -334,6 +336,18 @@ class PostsRepositoryTest {
         assertEquals("post-1", (answer as Outcome.Success).value.id)
         assertEquals(PostBody("Hola", "Friends", listOf("asset-1"), listOf("luna")), network.bodies.single())
         assertEquals(listOf("post-1"), storedFeed().map { it.postId })
+    }
+
+    @Test
+    fun publishing_tells_the_lists_and_a_like_does_not_because_room_has_the_numbers() = runTest {
+        val repository = repository()
+        feedDao.upsert(timelineItem().toEntity())
+
+        repository.setLiked("post-1", liked = true)
+        assertEquals(0, changes.of(ContentChange.Posts).first())
+        repository.publish(NewPost("post-2", "Hola", PostVisibility.Friends, listOf("asset-1"), emptyList()))
+
+        assertEquals(1, changes.of(ContentChange.Posts).first())
     }
 
     @Test
