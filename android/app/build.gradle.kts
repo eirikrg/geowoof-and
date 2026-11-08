@@ -13,8 +13,8 @@ if (file("google-services.json").exists()) {
     apply(plugin = libs.plugins.google.services.get().pluginId)
 }
 
-// The version is the last tag vX.Y.Z, and each pull request merged into main adds one to it. Between two
-// tags it reads like 0.9.1-3-gabc1234. GEOWOOF_VERSION wins, and without git or tags it is 0.0.0.
+// The version is the last tag vX.Y.Z, which the Release workflow publishes when asked. Between two tags it
+// reads like 0.9.1-3-gabc1234. GEOWOOF_VERSION wins, and without git or tags it is 0.0.0.
 val appVersion: String = providers.environmentVariable("GEOWOOF_VERSION").orNull
     ?: runCatching {
         providers.exec {
