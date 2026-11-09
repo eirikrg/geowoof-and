@@ -11,6 +11,7 @@ import com.geowoof.core.model.MapViewport
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.map
 import com.geowoof.core.model.onSuccess
+import com.geowoof.core.model.toEnumOr
 import com.geowoof.core.network.LiveNetworkDataSource
 import com.geowoof.core.network.model.NetworkLiveEvent
 import com.geowoof.core.network.model.NetworkLiveWalker
@@ -93,7 +94,7 @@ internal class DefaultLiveRepository @Inject constructor(
     override suspend fun <T> whileConnected(block: suspend () -> T): T = network.whileOpen(block)
 
     override suspend fun startSharing(walkId: String, petIds: List<String>): Outcome<LiveVisibility> =
-        network.startSharing(walkId, petIds).map { visibility -> LiveVisibility.valueOf(visibility) }
+        network.startSharing(walkId, petIds).map { visibility -> visibility.toEnumOr(LiveVisibility.FriendsOnly) }
 
     override suspend fun updatePosition(fix: LocationFix): Outcome<Unit> = network.updatePosition(
         latitude = fix.position.latitude,

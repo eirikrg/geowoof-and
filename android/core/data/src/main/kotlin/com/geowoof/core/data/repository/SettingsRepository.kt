@@ -7,6 +7,7 @@ import com.geowoof.core.model.LiveVisibility
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.UserSettings
 import com.geowoof.core.model.map
+import com.geowoof.core.model.toEnumOrNull
 import com.geowoof.core.network.SettingsNetworkDataSource
 import com.geowoof.core.network.model.NetworkSettings
 import com.geowoof.core.network.model.SettingsBody
@@ -66,7 +67,7 @@ internal class DefaultSettingsRepository @Inject constructor(
     }
 
     private fun UserSettingsEntity.toModel() = UserSettings(
-        liveVisibility = LiveVisibility.entries.firstOrNull { it.name == liveVisibility },
+        liveVisibility = liveVisibility.toEnumOrNull<LiveVisibility>(),
         hideStartDistanceM = hideStartDistanceM,
     )
 }

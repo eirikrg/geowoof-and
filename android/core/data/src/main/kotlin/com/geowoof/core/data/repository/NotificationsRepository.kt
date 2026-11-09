@@ -9,6 +9,7 @@ import com.geowoof.core.model.AppNotification
 import com.geowoof.core.model.NotificationType
 import com.geowoof.core.model.Outcome
 import com.geowoof.core.model.map
+import com.geowoof.core.model.toEnumOrNull
 import com.geowoof.core.network.NotificationsNetworkDataSource
 import com.geowoof.core.network.model.NetworkNotification
 import com.geowoof.core.network.model.NetworkPage
@@ -79,6 +80,6 @@ internal class DefaultNotificationsRepository @Inject constructor(
 }
 
 internal fun NetworkNotification.toModelOrNull(): AppNotification? {
-    val known = NotificationType.entries.firstOrNull { it.name == type } ?: return null
+    val known = type.toEnumOrNull<NotificationType>() ?: return null
     return AppNotification(id, known, actor.toModel(), postId, requestId, isRead, Instant.parse(createdAt))
 }

@@ -83,9 +83,12 @@ private class FakeLiveNetwork : LiveNetworkDataSource {
         return answer
     }
 
+    /** What the server answers that it applies. */
+    var visibility = "Everyone"
+
     override suspend fun startSharing(walkId: String, petIds: List<String>): Outcome<String> {
         calls += "start:$walkId:$petIds"
-        return Outcome.Success("Everyone")
+        return Outcome.Success(visibility)
     }
 
     override suspend fun updatePosition(
@@ -282,6 +285,14 @@ class LiveRepositoryTest {
     @Test
     fun starting_answers_the_visibility_being_applied() = runTest {
         assertEquals(Outcome.Success(LiveVisibility.Everyone), repository.startSharing("walk", listOf("luna")))
+    }
+
+    /** A way of sharing that the server learned after this app was installed: the walk goes on sharing. */
+    @Test
+    fun a_visibility_that_the_app_does_not_know_is_taken_as_friends_only() = runTest {
+        network.visibility = "Neighbours"
+
+        assertEquals(Outcome.Success(LiveVisibility.FriendsOnly), repository.startSharing("walk", listOf("luna")))
     }
 
     private companion object {

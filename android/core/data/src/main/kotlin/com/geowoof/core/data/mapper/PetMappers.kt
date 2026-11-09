@@ -12,6 +12,8 @@ import com.geowoof.core.model.Profile
 import com.geowoof.core.model.ProfileDraft
 import com.geowoof.core.model.RemoteImage
 import com.geowoof.core.model.WeightEntry
+import com.geowoof.core.model.toEnumOr
+import com.geowoof.core.model.toEnumOrNull
 import com.geowoof.core.network.model.NetworkPet
 import com.geowoof.core.network.model.NetworkProfile
 import com.geowoof.core.network.model.NetworkWeightEntry
@@ -73,12 +75,12 @@ internal fun PetEntity.toModel() = Pet(
     id = id,
     ownerId = ownerId,
     name = name,
-    species = PetSpecies.entries.find { it.name == species } ?: PetSpecies.Other,
+    species = species.toEnumOr(PetSpecies.Other),
     speciesOther = speciesOther,
     breed = breed,
     birthDate = birthDateEpochDay?.let(LocalDate::ofEpochDay),
-    sex = PetSex.entries.find { it.name == sex } ?: PetSex.Unknown,
-    size = PetSize.entries.find { it.name == size },
+    sex = sex.toEnumOr(PetSex.Unknown),
+    size = size.toEnumOrNull<PetSize>(),
     color = color,
     neutered = neutered,
     microchip = microchip,

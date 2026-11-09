@@ -6,6 +6,8 @@ import com.geowoof.core.model.HealthEventType
 import com.geowoof.core.model.HealthReminder
 import com.geowoof.core.model.HealthRepeat
 import com.geowoof.core.model.RepeatUnit
+import com.geowoof.core.model.toEnumOr
+import com.geowoof.core.model.toEnumOrNull
 import com.geowoof.core.network.model.HealthEventBody
 import com.geowoof.core.network.model.NetworkHealthEvent
 import com.geowoof.core.network.model.NetworkHealthRepeat
@@ -39,17 +41,17 @@ internal fun NetworkHealthEvent.toEntity() = HealthEventEntity(
 internal fun HealthEventEntity.toModel() = HealthEvent(
     id = id,
     petId = petId,
-    type = HealthEventType.entries.firstOrNull { it.name == type } ?: HealthEventType.Other,
+    type = type.toEnumOr(HealthEventType.Other),
     title = title,
     dueOn = LocalDate.ofEpochDay(dueOnEpochDay),
     dueAt = dueAtMinute?.let { LocalTime.of(it / MINUTES_PER_HOUR, it % MINUTES_PER_HOUR) },
     doneOn = doneOnEpochDay?.let(LocalDate::ofEpochDay),
     repeat = repeatEvery?.let { every ->
-        RepeatUnit.entries.firstOrNull { it.name == repeatUnit }?.let { unit ->
+        repeatUnit.toEnumOrNull<RepeatUnit>()?.let { unit ->
             HealthRepeat(every, unit, repeatUntilEpochDay?.let(LocalDate::ofEpochDay))
         }
     },
-    reminder = HealthReminder.entries.firstOrNull { it.name == reminder } ?: HealthReminder.None,
+    reminder = reminder.toEnumOr(HealthReminder.None),
     notes = notes,
     updatedAt = Instant.ofEpochMilli(updatedAtEpochMs),
 )
