@@ -62,6 +62,23 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+        // What the Release workflow publishes and the test phone runs: release (R8, not debuggable), but with the
+        // key and the package of debug, so that it installs over it and Firebase and Google sign-in keep working.
+        create("preview") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += "release"
+        }
+    }
+
+    // A preview that talks to a computer, as on the emulator, needs what debug has for it: plain HTTP and the
+    // local network. Pointing to a server with HTTPS, it only talks HTTPS.
+    if (secretProperty("API_BASE_URL").startsWith("http://")) {
+        sourceSets.getByName("preview") {
+            manifest.srcFile("src/debug/AndroidManifest.xml")
+            res.directories.add("src/debug/res")
+        }
     }
 
     packaging {
