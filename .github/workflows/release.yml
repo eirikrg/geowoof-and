@@ -25,13 +25,93 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      version: ${{ steps.publish.outputs.version }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Tag and publish the release
+        id: publish
         env:
           GITHUB_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
         run: python3 .github/scripts/release.py --other-repo eirikrg/geowoof-api --other-name Backend --version "$VERSION"
+
+  # The preview variant (R8 and not debuggable, with the key and the package of debug), pointing to the test server.
+  apk:
+    name: APK of the version
+    needs: version
+    if: needs.version.outputs.version != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: v${{ needs.version.outputs.version }}
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      # The keys are secrets of this repository, never files in it. The key of debug has to be the one the installed
+      # app was signed with: with another one, Android does not update it. The others are optional, as in any build.
+      - name: Keys
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://api.eirikrg.com/' }}
+        run: |
+          if [ -z "$DEBUG_KEYSTORE_BASE64" ]; then
+            echo "::error::The secret DEBUG_KEYSTORE_BASE64 is missing: the APK would not install over the app."
+            exit 1
+          fi
+          mkdir -p ~/.android
+          echo "$DEBUG_KEYSTORE_BASE64" | base64 --decode > ~/.android/debug.keystore
+          if [ -n "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > app/google-services.json
+          else
+            echo "::warning::GOOGLE_SERVICES_JSON_BASE64 is missing: the APK has no push notifications."
+          fi
+          [ -n "$MAPS_API_KEY" ] || echo "::warning::MAPS_API_KEY is missing: the map is empty."
+          [ -n "$GOOGLE_SERVER_CLIENT_ID" ] || echo "::warning::GOOGLE_SERVER_CLIENT_ID is missing: no sign-in with Google."
+          {
+            echo "API_BASE_URL=$API_BASE_URL"
+            if [ -n "$MAPS_API_KEY" ]; then echo "MAPS_API_KEY=$MAPS_API_KEY"; fi
+            if [ -n "$GOOGLE_SERVER_CLIENT_ID" ]; then echo "GOOGLE_SERVER_CLIENT_ID=$GOOGLE_SERVER_CLIENT_ID"; fi
+          } > secrets.properties
+
+      - name: Build
+        env:
+          GEOWOOF_VERSION: ${{ needs.version.outputs.version }}
+        run: ./gradlew :app:assemblePreview --console=plain
+
+      # The fingerprint of the certificate is public (any APK shows it): a variable says which one it must be.
+      - name: Check the key and attach the APK to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_CERT_SHA256: ${{ vars.SIGNING_CERT_SHA256 }}
+        run: |
+          apk="geowoof-$VERSION.apk"
+          cp app/build/outputs/apk/preview/app-preview.apk "$apk"
+          apksigner="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)/apksigner"
+          cert="$("$apksigner" verify --print-certs "$apk" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')"
+          echo "Signed with the certificate $cert"
+          expected="$(echo "$EXPECTED_CERT_SHA256" | tr -d ':' | tr 'A-F' 'a-f')"
+          if [ -n "$expected" ] && [ "$cert" != "$expected" ]; then
+            echo "::error::The APK is not signed with the expected key ($expected)."
+            exit 1
+          fi
+          sha256sum "$apk" > "$apk.sha256"
+          gh release upload "v$VERSION" "$apk" "$apk.sha256" --repo "$GITHUB_REPOSITORY"
