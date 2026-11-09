@@ -31,6 +31,14 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
             dependencies {
                 "testImplementation"(libs.bundle("unit-test"))
             }
+
+            // The CI runs testDebugUnitTest in every module, which here is called test: without this, the tests of
+            // these modules never ran there (2026-11-09).
+            tasks.register("testDebugUnitTest") {
+                group = "verification"
+                description = "Runs the unit tests, under the name that the Android modules use."
+                dependsOn("test")
+            }
         }
     }
 }
