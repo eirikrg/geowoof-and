@@ -10,6 +10,7 @@ import com.geowoof.core.model.PostVisibility
 import com.geowoof.core.model.RemoteImage
 import com.geowoof.core.model.TaggedPet
 import com.geowoof.core.model.TimelineItem
+import com.geowoof.core.model.toEnumOr
 import com.geowoof.core.network.model.NetworkComment
 import com.geowoof.core.network.model.NetworkMention
 import com.geowoof.core.network.model.NetworkPost
@@ -24,7 +25,7 @@ import java.time.Instant
 private const val IMAGE_TYPE = "Image"
 
 /** A value from a newer API counts as the most limited one. */
-internal fun visibilityOf(value: String) = PostVisibility.entries.find { it.name == value } ?: PostVisibility.Friends
+internal fun visibilityOf(value: String) = value.toEnumOr(PostVisibility.Friends)
 
 /** What this version cannot show, such as a video of a newer API, is left out. */
 internal fun List<NetworkPostMedia>.toImages() = filter { it.type == IMAGE_TYPE }

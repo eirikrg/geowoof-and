@@ -14,6 +14,7 @@ import com.geowoof.core.data.repository.SocialRepository
 import com.geowoof.core.model.HealthReminderItem
 import com.geowoof.core.model.NotificationType
 import com.geowoof.core.model.SessionState
+import com.geowoof.core.model.toEnumOrNull
 import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
 import com.google.firebase.installations.FirebaseInstallations
@@ -70,7 +71,7 @@ private fun Map<String, String>.toMessage(): PushContent? {
 }
 
 private fun Map<String, String>.toSocial(type: String): PushContent? {
-    val known = NotificationType.entries.firstOrNull { it.name == type } ?: return null
+    val known = type.toEnumOrNull<NotificationType>() ?: return null
     val actorId = this["actorId"]
     val actorName = this["actorName"]
     val notificationId = this["notificationId"]

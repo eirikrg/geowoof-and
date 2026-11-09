@@ -7,6 +7,7 @@ import com.geowoof.core.model.SignInMethod
 import com.geowoof.core.model.User
 import com.geowoof.core.model.UsernameAvailability
 import com.geowoof.core.model.UsernameUnavailableReason
+import com.geowoof.core.model.toEnumOrNull
 import com.geowoof.core.network.model.NetworkAuthProviders
 import com.geowoof.core.network.model.NetworkSession
 import com.geowoof.core.network.model.NetworkUser
@@ -41,7 +42,7 @@ internal fun StoredUser.toModel() = User(
     username = username,
     displayName = displayName,
     hasPassword = hasPassword,
-    signInMethods = signInMethods.mapNotNull { method -> SignInMethod.entries.find { it.name == method } }.toSet(),
+    signInMethods = signInMethods.mapNotNull { it.toEnumOrNull<SignInMethod>() }.toSet(),
     language = language,
     createdAt = Instant.ofEpochMilli(createdAtEpochMs),
     isPrivate = isPrivate,
@@ -52,5 +53,5 @@ internal fun NetworkAuthProviders.toModel() = AuthProviders(google = google)
 internal fun NetworkUsernameAvailability.toModel() = UsernameAvailability(
     username = username,
     available = available,
-    reason = reason?.let { value -> UsernameUnavailableReason.entries.find { it.name == value } },
+    reason = reason.toEnumOrNull<UsernameUnavailableReason>(),
 )

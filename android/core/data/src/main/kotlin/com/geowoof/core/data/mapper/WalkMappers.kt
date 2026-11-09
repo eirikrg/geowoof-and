@@ -16,6 +16,7 @@ import com.geowoof.core.model.WalkStats
 import com.geowoof.core.model.WalkSyncStatus
 import com.geowoof.core.model.WalkTotals
 import com.geowoof.core.model.WalkVisibility
+import com.geowoof.core.model.toEnumOr
 import com.geowoof.core.network.model.NetworkWalk
 import com.geowoof.core.network.model.NetworkWalkClientStats
 import com.geowoof.core.network.model.NetworkWalkSegment
@@ -29,7 +30,7 @@ internal fun WalkWithChildren.toModel() = Walk(
     endedAt = Instant.ofEpochMilli(walk.endedAtEpochMs),
     timeZone = walk.timeZone,
     petIds = pets.map { it.petId },
-    visibility = WalkVisibility.valueOf(walk.visibility),
+    visibility = walk.visibility.toEnumOr(WalkVisibility.OnlyMe),
     note = walk.note,
     stats = WalkStats(
         distanceM = walk.distanceM,

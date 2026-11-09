@@ -7,6 +7,7 @@ import com.geowoof.core.model.Conversation
 import com.geowoof.core.model.MessagePreview
 import com.geowoof.core.model.MessageStatus
 import com.geowoof.core.model.RemoteImage
+import com.geowoof.core.model.toEnumOr
 import com.geowoof.core.network.model.NetworkMessage
 import java.time.Instant
 
@@ -33,7 +34,7 @@ internal fun ChatMessageEntity.toModel() = ChatMessage(
     body = body,
     image = imageAssetId?.let { RemoteImage(it, imageThumbUrl, imageMediumUrl) },
     localImagePath = localImagePath,
-    status = MessageStatus.entries.firstOrNull { it.name == status } ?: MessageStatus.Failed,
+    status = status.toEnumOr(MessageStatus.Failed),
     errorCode = errorCode,
     sentAt = Instant.ofEpochMilli(sentAtEpochMs),
 )

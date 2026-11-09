@@ -417,6 +417,17 @@ class WalkRepositoriesTest {
         assertEquals("next", database.walkDao().pageKey("luna")?.nextCursor)
     }
 
+    /** Room keeps what the server said: a visibility newer than the app opened as private, instead of closing it. */
+    @OptIn(ExperimentalPagingApi::class)
+    @Test
+    fun a_visibility_that_the_app_does_not_know_does_not_break_the_walk() = runTest {
+        network.pages[null] = NetworkPage(listOf(networkWalk("a").copy(visibility = "Neighbours")), null)
+
+        WalkRemoteMediator(null, database.walkDao(), network).load(LoadType.REFRESH, emptyState())
+
+        assertEquals(WalkVisibility.OnlyMe, walks().observeWalk("a").first()?.visibility)
+    }
+
     @Test
     fun the_full_route_arrives_when_the_walk_is_opened() = runTest {
         val polyline = PolylineCodec.encode(listOf(GeoPoint(40.0, -3.0), GeoPoint(40.1, -3.0)))

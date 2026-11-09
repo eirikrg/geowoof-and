@@ -13,6 +13,7 @@ import com.geowoof.core.model.WalkStats
 import com.geowoof.core.model.WalkSyncStatus
 import com.geowoof.core.model.WalkTotals
 import com.geowoof.core.model.WalkVisibility
+import com.geowoof.core.model.toEnumOr
 import com.geowoof.core.network.model.NetworkCounts
 import com.geowoof.core.network.model.NetworkPerson
 import com.geowoof.core.network.model.NetworkPetSearchResult
@@ -25,7 +26,7 @@ import java.time.Instant
 
 /** A value from a newer API that this version does not know counts as no relationship. */
 internal fun NetworkRelationship.toModel() = Relationship(
-    status = RelationshipStatus.entries.find { it.name == status } ?: RelationshipStatus.None,
+    status = status.toEnumOr(RelationshipStatus.None),
     followsYou = followsYou,
     requestId = requestId,
     incomingRequestId = incomingRequestId,
@@ -40,7 +41,7 @@ internal fun NetworkWalkStats.toModel() = WalkTotals(walkCount, distanceM, durat
 internal fun NetworkPetSearchResult.toModel() = PetSearchResult(
     id = id,
     name = name,
-    species = PetSpecies.entries.find { it.name == species } ?: PetSpecies.Other,
+    species = species.toEnumOr(PetSpecies.Other),
     speciesOther = speciesOther,
     breed = breed,
     avatar = avatar?.toModel(),
@@ -53,7 +54,7 @@ internal fun NetworkWalk.toModel() = Walk(
     endedAt = Instant.parse(endedAt),
     timeZone = timeZone,
     petIds = petIds,
-    visibility = WalkVisibility.entries.find { it.name == visibility } ?: WalkVisibility.OnlyMe,
+    visibility = visibility.toEnumOr(WalkVisibility.OnlyMe),
     note = note,
     stats = WalkStats(distanceM, durationS, movingTimeS, averageSpeedMps, paceSecondsPerKm),
     previewPolylines = previewPolylines,
